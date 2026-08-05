@@ -1,0 +1,13 @@
+{
+  "name": "monomoney-relay",
+  "version": "1.0.0",
+  "description": "Dumb WebSocket relay for MonoMoney.io multiplayer rooms — routes messages between seats, never reads them.",
+  "type": "module",
+  "main": "relay.mjs",
+  "scripts": {
+    "start": "node relay.mjs"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}
