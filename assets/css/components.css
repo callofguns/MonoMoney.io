@@ -36,9 +36,9 @@
 .btn[disabled] { opacity: .45; cursor: not-allowed; }
 .btn[disabled]:hover { background: var(--ink-500); }
 
-.btn--primary { background: var(--violet); box-shadow: var(--shadow-lift); }
-.btn--primary:hover { background: var(--violet-lift); }
-.btn--primary[disabled]:hover { background: var(--violet); }
+.btn--primary { background: var(--accent); box-shadow: var(--shadow-lift); }
+.btn--primary:hover { background: var(--accent-lift); }
+.btn--primary[disabled]:hover { background: var(--accent); }
 
 .btn--danger { background: #a32f3c; }
 .btn--danger:hover { background: #c4394a; }
@@ -62,8 +62,8 @@
   cursor: pointer; font-size: 14px;
 }
 .icon-btn:hover { background: rgba(255,255,255,.1); color: var(--text); }
-.icon-btn--send { background: var(--violet); color: #fff; }
-.icon-btn--send:hover { background: var(--violet-lift); }
+.icon-btn--send { background: var(--accent); color: #fff; }
+.icon-btn--send:hover { background: var(--accent-lift); }
 
 /* ── fields ──────────────────────────────── */
 .field {
@@ -75,7 +75,7 @@
   color: var(--text);
 }
 .field::placeholder { color: var(--text-mut); }
-.field:focus { border-color: var(--violet); outline: none; }
+.field:focus { border-color: var(--accent); outline: none; }
 .field--sm { padding: 9px 11px; font-size: 13px; }
 .field[readonly] { color: var(--text-dim); }
 
@@ -112,10 +112,53 @@
   width: 16px; height: 16px; border-radius: 50%;
   background: #fff; transition: transform .18s;
 }
-.switch[aria-checked="true"] { background: var(--violet); }
+.switch[aria-checked="true"] { background: var(--accent); }
 .switch[aria-checked="true"]::after { transform: translateX(18px); }
 
 .rules-list { display: flex; flex-direction: column; }
+
+/* ── build status ────────────────────────── */
+.ver-chip {
+  font-family: var(--font-num); font-size: 11px; font-weight: 700;
+  color: var(--accent-lift); background: var(--accent-haze);
+  padding: 2px 6px; border-radius: 5px;
+}
+
+.status-list { display: flex; flex-direction: column; gap: 2px; }
+.status-row {
+  display: grid; grid-template-columns: 9px 1fr auto;
+  align-items: center; gap: 10px;
+  padding: 7px 8px; border-radius: var(--r-md);
+}
+.status-row.is-now { background: var(--accent-haze); }
+.status-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.status-dot.shipped { background: var(--up); }
+.status-dot.next { background: var(--accent-lift); }
+.status-dot.planned { background: var(--ink-400); border: 1px solid var(--line); }
+.status-v { font-family: var(--font-num); font-weight: 700; font-size: 12px; margin-right: 6px; }
+.status-name { font-size: 13px; color: var(--text-dim); }
+.status-tag { font-size: 11px; color: var(--text-mut); white-space: nowrap; }
+.status-more { width: 100%; margin-top: 10px; }
+
+/* full list inside the modal */
+.vgroup { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.vhead { display: flex; align-items: center; gap: 8px; color: var(--text); font-size: 14px; }
+.vhead b { font-family: var(--font-num); }
+.vtag {
+  margin-left: auto; font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase;
+  padding: 2px 8px; border-radius: 99px;
+}
+.vtag--shipped { color: var(--up); background: rgba(61, 214, 140, .12); }
+.vtag--next { color: var(--accent-lift); background: var(--accent-haze); }
+.vtag--planned { color: var(--text-mut); background: rgba(255,255,255,.05); }
+
+.vlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+.vlist li { display: flex; gap: 9px; font-size: 13px; line-height: 1.45; }
+.vlist li::before { flex: none; width: 15px; }
+.vlist li.v-shipped::before { content: "✓"; color: var(--up); font-weight: 700; }
+.vlist li.v-next::before { content: "→"; color: var(--accent-lift); font-weight: 700; }
+.vlist li.v-planned::before { content: "·"; color: var(--text-mut); font-weight: 700; }
+.vlist li.v-planned { color: var(--text-mut); }
 
 /* ── bots / players ──────────────────────── */
 .bot-list { display: flex; flex-direction: column; gap: 8px; }
@@ -132,7 +175,7 @@
   display: grid; place-items: center;
   border-radius: 50%;
   background: var(--ink-500);
-  border: 2px solid var(--pcolor, var(--violet));
+  border: 2px solid var(--pcolor, var(--accent));
   font-size: 16px;
 }
 .avatar--lg { width: 38px; height: 38px; font-size: 19px; }
@@ -148,7 +191,7 @@
   border-left: 3px solid transparent;
   transition: background .2s;
 }
-.player-row.is-turn { background: var(--violet-haze); border-left-color: var(--pcolor); }
+.player-row.is-turn { background: var(--accent-haze); border-left-color: var(--pcolor); }
 .player-row.is-out { opacity: .42; }
 .player-name { font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 6px; }
 .player-tag {
@@ -193,7 +236,7 @@
 .stock-sym {
   font-family: var(--font-num); font-size: 10px; font-weight: 700;
   text-align: center; padding: 4px 0; border-radius: var(--r-sm);
-  background: var(--scolor, var(--violet)); color: #0d0a14;
+  background: var(--scolor, var(--accent)); color: #0d0a14;
 }
 .stock-name { font-size: 13px; font-weight: 600; }
 .stock-meta { font-size: 11px; color: var(--text-mut); }
@@ -209,7 +252,7 @@
   padding: 8px 10px; background: var(--ink-700); border-radius: var(--r-md);
   font-size: 13px;
 }
-.prop-swatch { align-self: stretch; border-radius: 99px; background: var(--gcolor, var(--violet)); }
+.prop-swatch { align-self: stretch; border-radius: 99px; background: var(--gcolor, var(--accent)); }
 .prop-rent { font-family: var(--font-num); font-size: 12px; color: var(--text-mut); }
 .empty-note { color: var(--text-mut); font-size: 12.5px; text-align: center; padding: 18px 8px; }
 
@@ -222,14 +265,14 @@
 }
 .chat-empty { color: var(--text-mut); font-size: 12.5px; text-align: center; margin: auto 0; }
 .chat-msg { font-size: 13px; line-height: 1.4; }
-.chat-msg b { color: var(--pcolor, var(--violet-lift)); }
+.chat-msg b { color: var(--pcolor, var(--accent-lift)); }
 .chat-form { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-top: 10px; }
 
 /* ── modal ───────────────────────────────── */
 .modal {
   position: fixed; inset: 0; z-index: 50;
   display: grid; place-items: center;
-  background: rgba(8, 5, 14, .74);
+  background: rgba(4, 9, 18, .76);
   backdrop-filter: blur(3px);
 }
 .modal[hidden] { display: none; }

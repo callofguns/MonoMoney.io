@@ -19,7 +19,7 @@ To produce the single-file shareable build:
 node tools/build-artifact.mjs   # → dist/monomoney.html
 ```
 
-## What's built (Phase 1)
+## What works today (V1.1)
 
 - **40-tile board** rendered on canvas: 8 colour groups, 4 airports, 2 utilities,
   2 taxes, Surprise and Treasure tiles, and the four corners (START, In Prison,
@@ -31,21 +31,26 @@ node tools/build-artifact.mjs   # → dist/monomoney.html
   Prison costs three turns or $50 bail; doubles get you out early.
 - **Money already moves** — START salary, both taxes, and the vacation pot that
   taxes feed into.
-- **Table UI** — player rail with live balances, event log, chat, and the market
+- **Table UI** — blue trading-floor palette, player rail with live balances, event log, chat, and the market
   tape above the board.
 
-Purchases, rent and buildings land in Phase 2 — landing on an unclaimed tile
+Purchases, rent and buildings land in **V1.5** — landing on an unclaimed tile
 currently just reports its price.
+
+The full working / coming list lives in `src/data/versions.js` and is rendered
+in-game: **Build status** in the lobby rail, or *See what works today* on the
+home screen. Add a release there and the UI updates itself.
 
 ## Roadmap
 
-| Phase | Scope |
-| ----- | ----- |
-| 1 ✅ | Board, tile dataset, turn engine, dice, prison, taxes |
-| 2 | Buying, rent, colour sets, houses/hotels, mortgages, auctions |
-| 3 | The exchange: orders, price shocks, dividends on every lap |
-| 4 | Bot personalities make their own property and portfolio calls |
-| 5 | Trades, financial dashboard, animation polish |
+| Version | Scope | Status |
+| ------- | ----- | ------ |
+| V1 | Board, tile dataset, turn engine, dice, prison, taxes | ✅ Working |
+| V1.1 | Blue palette, version naming, in-game build status | ✅ Working |
+| V1.5 | Buying, rent, colour sets, houses/hotels, mortgages, cards | Building next |
+| V2 | The exchange: trading, price shocks, dividends every lap | Planned |
+| V2.5 | Bot personalities make their own property and portfolio calls | Planned |
+| V3 | Trades, auctions, financial dashboard | Planned |
 
 ## Layout
 
@@ -57,6 +62,7 @@ assets/css/
   components.css        cards, buttons, fields, rails, modal
   board.css             ticker, board wrap, centre console, dice
 src/
+  data/versions.js      the release ladder that drives the build-status UI
   data/board.js         the 40 tiles, colour groups, rent tables
   data/rules.js         house rules, bot personalities, listed companies
   core/rng.js           seedable RNG — same seed, same game
@@ -91,12 +97,12 @@ either owning the other.
 | 🦈 The Shark | Blocks monopolies, trades hard, times volatility to raise hotels |
 | 🃏 The Wildcard | Splits the bankroll between the tile it just hit and a hot ticker |
 
-Personalities and their weights are declared in `src/data/rules.js`; Phase 4 reads
+Personalities and their weights are declared in `src/data/rules.js`; V2.5 reads
 them to make decisions.
 
 ## The exchange
 
 Five companies trade alongside the board — SKY (airports), VLT (utilities),
 BRK (property), TCH (technology, high volatility) and AUR (finance, high dividend).
-Prices drift on the tape today; Phase 3 wires them to development on the board,
+Prices drift on the tape today; V2 wires them to development on the board,
 to Surprise cards, and to dividends paid every lap past START.

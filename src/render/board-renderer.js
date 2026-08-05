@@ -11,13 +11,13 @@ MM.FONT_BODY = 'system-ui, "Segoe UI", Roboto, sans-serif';
 MM.FONT_NUM = 'ui-monospace, "SF Mono", Consolas, monospace';
 
 const CANVAS_COLORS = {
-  plate: "#171126",
-  tile: "#241c36",
-  tileAlt: "#2a2140",
-  edge: "#3a2e56",
-  text: "#ece8f5",
-  dim: "#a79fc4",
-  mut: "#7d7499",
+  plate: "#0d1728",
+  tile: "#16243b",
+  tileAlt: "#1a2b45",
+  edge: "#2c4767",
+  text: "#e6eefb",
+  dim: "#9db3d1",
+  mut: "#6f88a8",
   gold: "#ffc24b",
   green: "#3dd68c"
 };
@@ -92,8 +92,8 @@ MM.renderer = {
 
     /* hollow centre */
     const g = ctx.createRadialGradient(L.size / 2, L.size / 2, L.size * 0.05, L.size / 2, L.size / 2, L.size * 0.5);
-    g.addColorStop(0, "rgba(124,77,255,.10)");
-    g.addColorStop(1, "rgba(10,7,18,0)");
+    g.addColorStop(0, "rgba(47,125,246,.12)");
+    g.addColorStop(1, "rgba(6,11,20,0)");
     ctx.fillStyle = g;
     ctx.fillRect(L.inner.x, L.inner.y, L.inner.w, L.inner.h);
 
@@ -171,13 +171,13 @@ MM.renderer = {
       ctx.save();
       ctx.translate(w / 2, flip ? d * 0.28 : d * 0.72);
       const size = Math.min(w, d) * 0.36;
-      if (t.type === "airport") MM.icons.plane(ctx, size, "#cfe6ff");
+      if (t.type === "airport") MM.icons.plane(ctx, size, "#bcdcff");
       else if (t.util === "power") MM.icons.bolt(ctx, size, CANVAS_COLORS.gold);
       else MM.icons.droplet(ctx, size, "#5ec8f0");
       ctx.restore();
     } else {
       /* tax · surprise · treasure */
-      const accent = t.type === "surprise" ? "#ff7ab8" : t.type === "treasure" ? CANVAS_COLORS.gold : "#9db2ff";
+      const accent = t.type === "surprise" ? "#5ac8fa" : t.type === "treasure" ? CANVAS_COLORS.gold : "#8fb4e8";
       const isTax = t.type === "tax";
       this.name(ctx, t.name, w, flip ? d * 0.8 : d * 0.2, nameSize);
 
@@ -417,7 +417,7 @@ MM.renderer = {
     ctx.fillStyle = p.hex;
     ctx.fill();
     ctx.lineWidth = 2;
-    ctx.strokeStyle = "rgba(12,9,19,.85)";
+    ctx.strokeStyle = "rgba(6,11,20,.85)";
     ctx.stroke();
 
     ctx.font = `${r * 1.15}px ${MM.FONT_BODY}`;

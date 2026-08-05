@@ -28,13 +28,13 @@ MM.createGame = function (opts) {
 
   players.push({
     id: 0, name: (opts && opts.nickname) || "You", avatar: "😀",
-    color: "var(--p1)", hex: "#8b5cf6", bot: false, personality: null,
+    color: "var(--p1)", hex: "#4e97ff", bot: false, personality: null,
     cash: settings.startingCash, pos: 0, jailed: false, jailTurns: 0,
     doubles: 0, alive: true, portfolio: {}, getOut: 0, lastDelta: 0
   });
 
   const roster = MM.PERSONALITIES.slice(0, Math.max(0, settings.players - 1));
-  const hexes = { tycoon: "#ff7a45", banker: "#37c98b", shark: "#3fa9ff", wildcard: "#ff5fa2" };
+  const hexes = { tycoon: "#ff8455", banker: "#2fd4a0", shark: "#f26a8d", wildcard: "#ffd166" };
   roster.forEach((p, n) => {
     players.push({
       id: n + 1, name: p.name, avatar: p.avatar,
@@ -107,7 +107,7 @@ MM.credit = function (s, player, amount, reason) {
 
 MM.debit = (s, player, amount, reason) => MM.credit(s, player, -amount, reason);
 
-/* Phase 2 will force asset liquidation before this can push a player under. */
+/* V1.5 will force asset liquidation before this can push a player under. */
 MM.transfer = function (s, from, to, amount, reason) {
   MM.debit(s, from, amount, reason);
   if (to) MM.credit(s, to, amount, reason);
@@ -133,14 +133,14 @@ MM.log = function (s, html, player) {
 };
 
 MM.chat = function (s, name, text, hex) {
-  const entry = { name, text, hex: hex || "#9068ff" };
+  const entry = { name, text, hex: hex || "#4e97ff" };
   s.chat.push(entry);
   MM.bus.emit("chat", entry);
 };
 
 /* ── stock tape ──────────────────────────────
-   Phase 1 only drifts prices so the ticker is alive.
-   Phase 3 replaces this with event-driven repricing. */
+   V1 only drifts prices so the ticker is alive.
+   V2 replaces this with event-driven repricing. */
 MM.driftMarket = function (s) {
   const k = MM.VOLATILITY[s.settings.volatility] || 1;
   s.stocks.forEach((st) => {

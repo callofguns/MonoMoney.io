@@ -9,34 +9,35 @@
 :root {
   color-scheme: dark;
 
-  /* ground → raised. neutrals carry a violet bias so nothing reads as flat grey */
-  --ink-900: #0c0913;
-  --ink-800: #100c19;
-  --ink-700: #171126;
-  --ink-600: #1b1529;
-  --ink-500: #251d38;
-  --ink-400: #2f2545;
-  --line:    #392d53;
+  /* ground → raised. neutrals carry a navy bias so nothing reads as flat grey */
+  --ink-900: #060b14;
+  --ink-800: #0a1120;
+  --ink-700: #101b2e;
+  --ink-600: #142238;
+  --ink-500: #1c2f4a;
+  --ink-400: #24395a;
+  --line:    #2c4767;
 
-  --text:    #ece8f5;
-  --text-dim:#a79fc4;
-  --text-mut:#7d7499;
+  --text:    #e6eefb;
+  --text-dim:#9db3d1;
+  --text-mut:#6f88a8;
 
-  --violet:      #7c4dff;
-  --violet-lift: #9068ff;
-  --violet-sink: #5c33d6;
-  --violet-haze: rgba(124, 77, 255, .18);
+  --accent:      #2f7df6;
+  --accent-lift: #4e97ff;
+  --accent-sink: #1c56b8;
+  --accent-haze: rgba(47, 125, 246, .20);
 
   --gold:  #ffc24b;
   --up:    #3dd68c;
   --down:  #ff5c6c;
   --warn:  #ffab3d;
 
-  --p1: #8b5cf6;  /* you */
-  --p2: #ff7a45;  /* tycoon */
-  --p3: #37c98b;  /* banker */
-  --p4: #3fa9ff;  /* shark */
-  --p5: #ff5fa2;  /* wildcard */
+  /* token colours stay distinct — they identify players, not the brand */
+  --p1: #4e97ff;  /* you      */
+  --p2: #ff8455;  /* tycoon   */
+  --p3: #2fd4a0;  /* banker   */
+  --p4: #f26a8d;  /* shark    */
+  --p5: #ffd166;  /* wildcard */
 
   --font-display: "Trebuchet MS", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
   --font-body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
@@ -47,7 +48,7 @@
   --r-lg: 16px;
 
   --shadow-card: 0 1px 0 rgba(255,255,255,.03) inset, 0 8px 24px rgba(0,0,0,.35);
-  --shadow-lift: 0 6px 20px rgba(92, 51, 214, .45);
+  --shadow-lift: 0 6px 20px rgba(28, 86, 184, .45);
 }
 
 * { box-sizing: border-box; }
@@ -74,7 +75,7 @@ b { font-weight: 700; }
 button, input, select { font: inherit; color: inherit; }
 
 :focus-visible {
-  outline: 2px solid var(--violet-lift);
+  outline: 2px solid var(--accent-lift);
   outline-offset: 2px;
   border-radius: var(--r-sm);
 }
@@ -98,8 +99,8 @@ button, input, select { font: inherit; color: inherit; }
   white-space: nowrap;
 }
 .brand--xl .wordmark { font-size: clamp(38px, 6vw, 64px); }
-.wordmark em { font-style: normal; color: var(--violet-lift); }
-.wordmark small { font-size: .42em; letter-spacing: -.02em; color: var(--violet-lift); }
+.wordmark em { font-style: normal; color: var(--accent-lift); }
+.wordmark small { font-size: .42em; letter-spacing: -.02em; color: var(--accent-lift); }
 .wordmark--sm { font-size: 21px; }
 
 /* rolling-die logo mark */
@@ -107,14 +108,14 @@ button, input, select { font: inherit; color: inherit; }
   position: relative;
   width: 78px; height: 78px;
   border-radius: 18px;
-  background: linear-gradient(150deg, #fff, #d8d3e8);
-  box-shadow: 0 14px 30px rgba(0,0,0,.5), inset 0 -6px 12px rgba(120,110,150,.35);
+  background: linear-gradient(150deg, #fff, #d3dceb);
+  box-shadow: 0 14px 30px rgba(0,0,0,.5), inset 0 -6px 12px rgba(96,118,150,.35);
   transform: rotate(-12deg);
   animation: die-idle 6s ease-in-out infinite;
 }
 .brand-die .pip {
   position: absolute; width: 12px; height: 12px; border-radius: 50%;
-  background: #1a1526;
+  background: #12203a;
 }
 .brand-die .pip:nth-child(1) { top: 14px; left: 14px; }
 .brand-die .pip:nth-child(2) { top: 14px; right: 14px; }
@@ -152,8 +153,8 @@ button, input, select { font: inherit; color: inherit; }
   position: relative;
   overflow: hidden;
   background:
-    radial-gradient(120% 80% at 50% 0%, #1d1435 0%, transparent 60%),
-    radial-gradient(80% 60% at 50% 100%, #241536 0%, transparent 65%),
+    radial-gradient(120% 80% at 50% 0%, #12294b 0%, transparent 60%),
+    radial-gradient(80% 60% at 50% 100%, #0d2340 0%, transparent 65%),
     var(--ink-900);
 }
 
@@ -206,9 +207,11 @@ button, input, select { font: inherit; color: inherit; }
 
 .home-foot {
   position: relative;
-  text-align: center; padding-bottom: 22px;
-  color: var(--text-mut); font-size: 12px; letter-spacing: .06em;
+  display: flex; justify-content: center;
+  padding-bottom: 18px;
+  color: var(--text-mut); font-size: 12.5px;
 }
+.home-foot .ghost-btn { display: flex; align-items: center; gap: 8px; }
 
 /* ── table shell ──────────────────────────── */
 .screen--table {
@@ -216,7 +219,7 @@ button, input, select { font: inherit; color: inherit; }
   gap: 12px;
   padding: 12px;
   background:
-    radial-gradient(90% 70% at 50% 40%, #191130 0%, transparent 70%),
+    radial-gradient(90% 70% at 50% 40%, #0f1e35 0%, transparent 70%),
     var(--ink-800);
 }
 
@@ -297,9 +300,9 @@ button, input, select { font: inherit; color: inherit; }
 .btn[disabled] { opacity: .45; cursor: not-allowed; }
 .btn[disabled]:hover { background: var(--ink-500); }
 
-.btn--primary { background: var(--violet); box-shadow: var(--shadow-lift); }
-.btn--primary:hover { background: var(--violet-lift); }
-.btn--primary[disabled]:hover { background: var(--violet); }
+.btn--primary { background: var(--accent); box-shadow: var(--shadow-lift); }
+.btn--primary:hover { background: var(--accent-lift); }
+.btn--primary[disabled]:hover { background: var(--accent); }
 
 .btn--danger { background: #a32f3c; }
 .btn--danger:hover { background: #c4394a; }
@@ -323,8 +326,8 @@ button, input, select { font: inherit; color: inherit; }
   cursor: pointer; font-size: 14px;
 }
 .icon-btn:hover { background: rgba(255,255,255,.1); color: var(--text); }
-.icon-btn--send { background: var(--violet); color: #fff; }
-.icon-btn--send:hover { background: var(--violet-lift); }
+.icon-btn--send { background: var(--accent); color: #fff; }
+.icon-btn--send:hover { background: var(--accent-lift); }
 
 /* ── fields ──────────────────────────────── */
 .field {
@@ -336,7 +339,7 @@ button, input, select { font: inherit; color: inherit; }
   color: var(--text);
 }
 .field::placeholder { color: var(--text-mut); }
-.field:focus { border-color: var(--violet); outline: none; }
+.field:focus { border-color: var(--accent); outline: none; }
 .field--sm { padding: 9px 11px; font-size: 13px; }
 .field[readonly] { color: var(--text-dim); }
 
@@ -373,10 +376,53 @@ button, input, select { font: inherit; color: inherit; }
   width: 16px; height: 16px; border-radius: 50%;
   background: #fff; transition: transform .18s;
 }
-.switch[aria-checked="true"] { background: var(--violet); }
+.switch[aria-checked="true"] { background: var(--accent); }
 .switch[aria-checked="true"]::after { transform: translateX(18px); }
 
 .rules-list { display: flex; flex-direction: column; }
+
+/* ── build status ────────────────────────── */
+.ver-chip {
+  font-family: var(--font-num); font-size: 11px; font-weight: 700;
+  color: var(--accent-lift); background: var(--accent-haze);
+  padding: 2px 6px; border-radius: 5px;
+}
+
+.status-list { display: flex; flex-direction: column; gap: 2px; }
+.status-row {
+  display: grid; grid-template-columns: 9px 1fr auto;
+  align-items: center; gap: 10px;
+  padding: 7px 8px; border-radius: var(--r-md);
+}
+.status-row.is-now { background: var(--accent-haze); }
+.status-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.status-dot.shipped { background: var(--up); }
+.status-dot.next { background: var(--accent-lift); }
+.status-dot.planned { background: var(--ink-400); border: 1px solid var(--line); }
+.status-v { font-family: var(--font-num); font-weight: 700; font-size: 12px; margin-right: 6px; }
+.status-name { font-size: 13px; color: var(--text-dim); }
+.status-tag { font-size: 11px; color: var(--text-mut); white-space: nowrap; }
+.status-more { width: 100%; margin-top: 10px; }
+
+/* full list inside the modal */
+.vgroup { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.vhead { display: flex; align-items: center; gap: 8px; color: var(--text); font-size: 14px; }
+.vhead b { font-family: var(--font-num); }
+.vtag {
+  margin-left: auto; font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase;
+  padding: 2px 8px; border-radius: 99px;
+}
+.vtag--shipped { color: var(--up); background: rgba(61, 214, 140, .12); }
+.vtag--next { color: var(--accent-lift); background: var(--accent-haze); }
+.vtag--planned { color: var(--text-mut); background: rgba(255,255,255,.05); }
+
+.vlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+.vlist li { display: flex; gap: 9px; font-size: 13px; line-height: 1.45; }
+.vlist li::before { flex: none; width: 15px; }
+.vlist li.v-shipped::before { content: "✓"; color: var(--up); font-weight: 700; }
+.vlist li.v-next::before { content: "→"; color: var(--accent-lift); font-weight: 700; }
+.vlist li.v-planned::before { content: "·"; color: var(--text-mut); font-weight: 700; }
+.vlist li.v-planned { color: var(--text-mut); }
 
 /* ── bots / players ──────────────────────── */
 .bot-list { display: flex; flex-direction: column; gap: 8px; }
@@ -393,7 +439,7 @@ button, input, select { font: inherit; color: inherit; }
   display: grid; place-items: center;
   border-radius: 50%;
   background: var(--ink-500);
-  border: 2px solid var(--pcolor, var(--violet));
+  border: 2px solid var(--pcolor, var(--accent));
   font-size: 16px;
 }
 .avatar--lg { width: 38px; height: 38px; font-size: 19px; }
@@ -409,7 +455,7 @@ button, input, select { font: inherit; color: inherit; }
   border-left: 3px solid transparent;
   transition: background .2s;
 }
-.player-row.is-turn { background: var(--violet-haze); border-left-color: var(--pcolor); }
+.player-row.is-turn { background: var(--accent-haze); border-left-color: var(--pcolor); }
 .player-row.is-out { opacity: .42; }
 .player-name { font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 6px; }
 .player-tag {
@@ -454,7 +500,7 @@ button, input, select { font: inherit; color: inherit; }
 .stock-sym {
   font-family: var(--font-num); font-size: 10px; font-weight: 700;
   text-align: center; padding: 4px 0; border-radius: var(--r-sm);
-  background: var(--scolor, var(--violet)); color: #0d0a14;
+  background: var(--scolor, var(--accent)); color: #0d0a14;
 }
 .stock-name { font-size: 13px; font-weight: 600; }
 .stock-meta { font-size: 11px; color: var(--text-mut); }
@@ -470,7 +516,7 @@ button, input, select { font: inherit; color: inherit; }
   padding: 8px 10px; background: var(--ink-700); border-radius: var(--r-md);
   font-size: 13px;
 }
-.prop-swatch { align-self: stretch; border-radius: 99px; background: var(--gcolor, var(--violet)); }
+.prop-swatch { align-self: stretch; border-radius: 99px; background: var(--gcolor, var(--accent)); }
 .prop-rent { font-family: var(--font-num); font-size: 12px; color: var(--text-mut); }
 .empty-note { color: var(--text-mut); font-size: 12.5px; text-align: center; padding: 18px 8px; }
 
@@ -483,14 +529,14 @@ button, input, select { font: inherit; color: inherit; }
 }
 .chat-empty { color: var(--text-mut); font-size: 12.5px; text-align: center; margin: auto 0; }
 .chat-msg { font-size: 13px; line-height: 1.4; }
-.chat-msg b { color: var(--pcolor, var(--violet-lift)); }
+.chat-msg b { color: var(--pcolor, var(--accent-lift)); }
 .chat-form { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-top: 10px; }
 
 /* ── modal ───────────────────────────────── */
 .modal {
   position: fixed; inset: 0; z-index: 50;
   display: grid; place-items: center;
-  background: rgba(8, 5, 14, .74);
+  background: rgba(4, 9, 18, .76);
   backdrop-filter: blur(3px);
 }
 .modal[hidden] { display: none; }
@@ -578,7 +624,7 @@ button, input, select { font: inherit; color: inherit; }
   width: 210px;
   display: flex; flex-direction: column; gap: 3px;
   padding: 10px 12px;
-  background: rgba(20, 15, 32, .97);
+  background: rgba(12, 24, 42, .97);
   border: 1px solid var(--line);
   border-radius: var(--r-md);
   box-shadow: 0 12px 30px rgba(0,0,0,.55);
@@ -599,10 +645,10 @@ button, input, select { font: inherit; color: inherit; }
   grid-template: repeat(3, 1fr) / repeat(3, 1fr);
   padding: 11px;
   border-radius: 16px;
-  background: linear-gradient(155deg, #ffffff 0%, #e9e6f2 55%, #cfc9de 100%);
+  background: linear-gradient(155deg, #ffffff 0%, #e6ecf6 55%, #c7d2e2 100%);
   box-shadow:
     0 12px 22px rgba(0,0,0,.45),
-    inset 0 -7px 12px rgba(120,110,150,.3),
+    inset 0 -7px 12px rgba(96,118,150,.3),
     inset 0 3px 6px rgba(255,255,255,.9);
   transition: transform .25s cubic-bezier(.2,.9,.3,1.4);
 }
@@ -613,7 +659,7 @@ button, input, select { font: inherit; color: inherit; }
   width: 12px; height: 12px;
   align-self: center; justify-self: center;
   border-radius: 50%;
-  background: #1b1526;
+  background: #12203a;
   box-shadow: inset 0 -1px 2px rgba(255,255,255,.35);
 }
 
@@ -630,7 +676,7 @@ button, input, select { font: inherit; color: inherit; }
   box-shadow:
     0 12px 22px rgba(0,0,0,.45),
     0 0 0 3px var(--gold),
-    inset 0 -7px 12px rgba(120,110,150,.3);
+    inset 0 -7px 12px rgba(96,118,150,.3);
 }
 
 .btn--action { min-width: 176px; font-size: 16px; padding: 13px 22px; }
@@ -714,7 +760,11 @@ button, input, select { font: inherit; color: inherit; }
       </ul>
     </div>
 
-    <footer class="home-foot">Phase 1 prototype · board, state engine &amp; dice</footer>
+    <footer class="home-foot">
+      <button class="ghost-btn" data-action="show-status">
+        <span class="ver-chip">V1.1</span> See what works today
+      </button>
+    </footer>
   </section>
 
   <!-- ══════════════ TABLE (lobby + game) ══════════════ -->
@@ -785,6 +835,8 @@ button, input, select { font: inherit; color: inherit; }
       <div class="rail-pane" data-pane="lobby">
         <div class="card card--host" id="host-card"></div>
 
+        <div class="card" id="status-card"></div>
+
         <div class="card">
           <h2 class="card-title card-title--center">Game settings</h2>
           <div class="setting">
@@ -851,6 +903,7 @@ button, input, select { font: inherit; color: inherit; }
 
         <div class="rail-actions">
           <button class="btn btn--muted btn--sm" data-action="show-rules">Rules</button>
+          <button class="btn btn--muted btn--sm" data-action="show-status"><span class="ver-chip">V1.1</span> What works</button>
           <button class="btn btn--danger btn--sm" data-action="bankrupt">Bankrupt</button>
         </div>
 
@@ -862,13 +915,13 @@ button, input, select { font: inherit; color: inherit; }
           </div>
           <div class="tab-panel is-active" data-panel="market">
             <div class="market-list" id="market-list"></div>
-            <p class="panel-note">Trading, dividends and price shocks arrive in Phase 3. Prices already drift so you can watch the tape.</p>
+            <p class="panel-note">Trading, dividends and price shocks arrive in V2. Prices already drift so you can watch the tape.</p>
           </div>
           <div class="tab-panel" data-panel="props">
             <div class="prop-list" id="prop-list"></div>
           </div>
           <div class="tab-panel" data-panel="trades">
-            <p class="panel-note">Swap property, cash and shares with other players. Unlocks with the trade engine in Phase 5.</p>
+            <p class="panel-note">Swap property, cash and shares with other players. Unlocks with the trade engine in V3.</p>
           </div>
         </div>
       </div>
@@ -886,6 +939,91 @@ button, input, select { font: inherit; color: inherit; }
 </div>
 
 <script>
+/* ── src/data/versions.js ── */
+/* ═══════════════════════════════════════════
+   Release ladder
+   One entry per update. `status` drives the whole
+   build-status UI, so adding a release here is all
+   it takes to update what the game reports.
+     shipped → playable right now
+     next    → being built
+     planned → queued
+   ═══════════════════════════════════════════ */
+window.MM = window.MM || {};
+
+MM.VERSION = "V1.1";
+
+MM.RELEASES = [
+  {
+    v: "V1", name: "Board & dice", status: "shipped",
+    items: [
+      "40-tile board with all 8 colour groups, airports, utilities and corners",
+      "Two dice with doubles, and three doubles sending you to prison",
+      "Turn engine: you play first, three bots play themselves",
+      "Token movement, prison cell, bail and the just-passing lane",
+      "START salary of $200 every lap",
+      "Earnings Tax, Premium Tax and the vacation pot they feed",
+      "Hover any tile for its price and full rent ladder",
+      "Event log, chat, player balances and the live market tape"
+    ]
+  },
+  {
+    v: "V1.1", name: "Blue table & build status", status: "shipped",
+    items: [
+      "Whole table recoloured to a blue palette",
+      "Updates numbered V1, V1.5, V2 instead of phases",
+      "Build-status list in the lobby and on the home screen",
+      "Tax tiles and player rows fixed after the first round of testing"
+    ]
+  },
+  {
+    v: "V1.5", name: "Property & rent", status: "next",
+    items: [
+      "Buy the tile you land on, or pass it to auction",
+      "Rent collection, doubled on a completed colour group",
+      "Houses and hotels, built evenly across a set",
+      "Mortgage a tile for half its cost",
+      "Surprise and Treasure card decks",
+      "Bankruptcy that hands your deeds to whoever broke you"
+    ]
+  },
+  {
+    v: "V2", name: "The exchange", status: "planned",
+    items: [
+      "Buy and sell shares in all five companies from the Market tab",
+      "Dividends paid on every lap past START",
+      "Prices that move on market events and Surprise cards",
+      "Building on the board lifting the company that owns the sector",
+      "Portfolio value folded into net worth"
+    ]
+  },
+  {
+    v: "V2.5", name: "Bot brains", status: "planned",
+    items: [
+      "The Tycoon buys and builds relentlessly",
+      "The Banker hoards dividend stock and a cash buffer",
+      "The Shark blocks monopolies and times volatile sells",
+      "The Wildcard splits its bankroll on a coin flip",
+      "Bot skill setting that actually sharpens their decisions"
+    ]
+  },
+  {
+    v: "V3", name: "Trades & dashboard", status: "planned",
+    items: [
+      "Player-to-player trades of cash, property and shares",
+      "Live auctions when a property is declined",
+      "Financial dashboard: net worth, holdings and rent income over time",
+      "Win conditions, end-of-game summary and a rematch button"
+    ]
+  }
+];
+
+MM.STATUS_LABEL = { shipped: "Working", next: "Building next", planned: "Planned" };
+
+MM.currentRelease = () => MM.RELEASES.find((r) => r.v === MM.VERSION);
+MM.releasesBy = (status) => MM.RELEASES.filter((r) => r.status === status);
+
+
 /* ── src/data/board.js ── */
 /* ═══════════════════════════════════════════════════════════
    MonoMoney.io · board dataset
@@ -902,16 +1040,16 @@ button, input, select { font: inherit; color: inherit; }
 window.MM = window.MM || {};
 
 /* Colour groups. `corp` ties a group to a listed company so that
-   development on the board can move the share price (Phase 3). */
+   development on the board can move the share price (V2). */
 MM.GROUPS = {
   NG: { name: "Nigeria",   color: "#a2653f", house: 50,  corp: "BRK" },
   IN: { name: "India",     color: "#58c6ee", house: 50,  corp: "BRK" },
-  GR: { name: "Greece",    color: "#e4457e", house: 100, corp: "BRK" },
+  GR: { name: "Greece",    color: "#e04b86", house: 100, corp: "BRK" },
   PL: { name: "Poland",    color: "#f0913a", house: 100, corp: "BRK" },
   CA: { name: "Canada",    color: "#e8453c", house: 150, corp: "BRK" },
   JP: { name: "Japan",     color: "#f3d33c", house: 150, corp: "BRK" },
   AU: { name: "Australia", color: "#3fb96b", house: 200, corp: "BRK" },
-  US: { name: "USA",       color: "#3c60e8", house: 200, corp: "BRK" }
+  US: { name: "USA",       color: "#2f4bd0", house: 200, corp: "BRK" }
 };
 
 /* rent[0] = bare · rent[1..4] = 1–4 houses · rent[5] = hotel */
@@ -980,28 +1118,29 @@ MM.groupTiles = (groupId) =>
 /* ═══ settings, personalities and the listed companies ═══ */
 window.MM = window.MM || {};
 
-/* Toggleable house rules. `phase` marks which build phase switches them on;
-   anything past Phase 1 is shown but locked so the lobby reads honestly. */
+/* Toggleable house rules. `since` is the release that switches a rule on;
+   anything later than the current build is shown but inert, so the lobby
+   never promises more than the game does. */
 MM.RULE_DEFS = [
   { id: "doubleRent", ico: "🪙", name: "x2 rent on full sets",
-    desc: "Owning every tile in a colour group doubles the base rent", on: true, phase: 2 },
+    desc: "Owning every tile in a colour group doubles the base rent", on: true, since: "V1.5" },
   { id: "vacationCash", ico: "🏝", name: "Vacation cash",
-    desc: "Taxes and fees pile up on Vacation for whoever lands there", on: true, phase: 2 },
+    desc: "Taxes and fees pile up on Vacation for whoever lands there", on: true, since: "V1.5" },
   { id: "auction", ico: "🔨", name: "Auction",
-    desc: "A declined property goes to the highest bidder instead", on: false, phase: 2 },
+    desc: "A declined property goes to the highest bidder instead", on: false, since: "V1.5" },
   { id: "noRentInPrison", ico: "🚔", name: "No rent while in prison",
-    desc: "Jailed owners collect nothing on their properties", on: false, phase: 2 },
+    desc: "Jailed owners collect nothing on their properties", on: false, since: "V1.5" },
   { id: "mortgage", ico: "🏦", name: "Mortgage",
-    desc: "Raise 50% of a tile's cost, but stop earning rent on it", on: true, phase: 2 },
+    desc: "Raise 50% of a tile's cost, but stop earning rent on it", on: true, since: "V1.5" },
   { id: "evenBuild", ico: "🏘", name: "Even build",
-    desc: "Houses go up and come down evenly across a set", on: true, phase: 2 },
+    desc: "Houses go up and come down evenly across a set", on: true, since: "V1.5" },
   { id: "dividends", ico: "📊", name: "Dividends on GO",
-    desc: "Passing START pays out on every share you hold", on: true, phase: 3 },
+    desc: "Passing START pays out on every share you hold", on: true, since: "V2" },
   { id: "insiderCards", ico: "🃏", name: "Insider Surprise cards",
-    desc: "Some Surprise cards move a company's share price", on: true, phase: 3 }
+    desc: "Some Surprise cards move a company's share price", on: true, since: "V2" }
 ];
 
-/* Bot personalities — Phase 4 reads `weights`, Phase 1 only shows them off. */
+/* Bot personalities — V2.5 reads `weights`; today they only show them off. */
 MM.PERSONALITIES = [
   {
     id: "tycoon", tag: "Buys everything", name: "The Tycoon", avatar: "🎩", color: "var(--p2)",
@@ -1025,15 +1164,15 @@ MM.PERSONALITIES = [
   }
 ];
 
-/* The five listed companies. Phase 3 turns these into a live order book. */
+/* The five listed companies. V2 turns these into a live order book. */
 MM.STOCKS = [
-  { sym: "SKY", name: "Skyline Air Group", sector: "Airports",  color: "#3fa9ff",
+  { sym: "SKY", name: "Skyline Air Group", sector: "Airports",  color: "#4e97ff",
     price: 120, yield: 0.05, vol: 0.05 },
   { sym: "VLT", name: "Voltaic Power",     sector: "Utilities", color: "#ffc24b",
     price: 95,  yield: 0.06, vol: 0.04 },
   { sym: "BRK", name: "Brickstone Realty", sector: "Property",  color: "#ff8a5c",
     price: 150, yield: 0.03, vol: 0.06 },
-  { sym: "TCH", name: "Helix Tech",        sector: "Technology",color: "#a06bff",
+  { sym: "TCH", name: "Helix Tech",        sector: "Technology",color: "#7ab8ff",
     price: 210, yield: 0.01, vol: 0.11 },
   { sym: "AUR", name: "Aurum Bank",        sector: "Finance",   color: "#3dd68c",
     price: 80,  yield: 0.08, vol: 0.03 }
@@ -1139,13 +1278,13 @@ MM.createGame = function (opts) {
 
   players.push({
     id: 0, name: (opts && opts.nickname) || "You", avatar: "😀",
-    color: "var(--p1)", hex: "#8b5cf6", bot: false, personality: null,
+    color: "var(--p1)", hex: "#4e97ff", bot: false, personality: null,
     cash: settings.startingCash, pos: 0, jailed: false, jailTurns: 0,
     doubles: 0, alive: true, portfolio: {}, getOut: 0, lastDelta: 0
   });
 
   const roster = MM.PERSONALITIES.slice(0, Math.max(0, settings.players - 1));
-  const hexes = { tycoon: "#ff7a45", banker: "#37c98b", shark: "#3fa9ff", wildcard: "#ff5fa2" };
+  const hexes = { tycoon: "#ff8455", banker: "#2fd4a0", shark: "#f26a8d", wildcard: "#ffd166" };
   roster.forEach((p, n) => {
     players.push({
       id: n + 1, name: p.name, avatar: p.avatar,
@@ -1218,7 +1357,7 @@ MM.credit = function (s, player, amount, reason) {
 
 MM.debit = (s, player, amount, reason) => MM.credit(s, player, -amount, reason);
 
-/* Phase 2 will force asset liquidation before this can push a player under. */
+/* V1.5 will force asset liquidation before this can push a player under. */
 MM.transfer = function (s, from, to, amount, reason) {
   MM.debit(s, from, amount, reason);
   if (to) MM.credit(s, to, amount, reason);
@@ -1244,14 +1383,14 @@ MM.log = function (s, html, player) {
 };
 
 MM.chat = function (s, name, text, hex) {
-  const entry = { name, text, hex: hex || "#9068ff" };
+  const entry = { name, text, hex: hex || "#4e97ff" };
   s.chat.push(entry);
   MM.bus.emit("chat", entry);
 };
 
 /* ── stock tape ──────────────────────────────
-   Phase 1 only drifts prices so the ticker is alive.
-   Phase 3 replaces this with event-driven repricing. */
+   V1 only drifts prices so the ticker is alive.
+   V2 replaces this with event-driven repricing. */
 MM.driftMarket = function (s) {
   const k = MM.VOLATILITY[s.settings.volatility] || 1;
   s.stocks.forEach((st) => {
@@ -1382,7 +1521,7 @@ MM.turn = {
   passGo(s, p) {
     MM.credit(s, p, MM.GO_SALARY, "salary");
     MM.log(s, `<b>${p.name}</b> passed START and collected <span class="money">${MM.money(MM.GO_SALARY)}</span>`, p);
-    MM.bus.emit("pass-go", p); /* Phase 3 hangs dividends off this */
+    MM.bus.emit("pass-go", p); /* V2 hangs dividends off this */
   },
 
   async sendToPrison(s, p) {
@@ -1778,13 +1917,13 @@ MM.FONT_BODY = 'system-ui, "Segoe UI", Roboto, sans-serif';
 MM.FONT_NUM = 'ui-monospace, "SF Mono", Consolas, monospace';
 
 const CANVAS_COLORS = {
-  plate: "#171126",
-  tile: "#241c36",
-  tileAlt: "#2a2140",
-  edge: "#3a2e56",
-  text: "#ece8f5",
-  dim: "#a79fc4",
-  mut: "#7d7499",
+  plate: "#0d1728",
+  tile: "#16243b",
+  tileAlt: "#1a2b45",
+  edge: "#2c4767",
+  text: "#e6eefb",
+  dim: "#9db3d1",
+  mut: "#6f88a8",
   gold: "#ffc24b",
   green: "#3dd68c"
 };
@@ -1859,8 +1998,8 @@ MM.renderer = {
 
     /* hollow centre */
     const g = ctx.createRadialGradient(L.size / 2, L.size / 2, L.size * 0.05, L.size / 2, L.size / 2, L.size * 0.5);
-    g.addColorStop(0, "rgba(124,77,255,.10)");
-    g.addColorStop(1, "rgba(10,7,18,0)");
+    g.addColorStop(0, "rgba(47,125,246,.12)");
+    g.addColorStop(1, "rgba(6,11,20,0)");
     ctx.fillStyle = g;
     ctx.fillRect(L.inner.x, L.inner.y, L.inner.w, L.inner.h);
 
@@ -1938,13 +2077,13 @@ MM.renderer = {
       ctx.save();
       ctx.translate(w / 2, flip ? d * 0.28 : d * 0.72);
       const size = Math.min(w, d) * 0.36;
-      if (t.type === "airport") MM.icons.plane(ctx, size, "#cfe6ff");
+      if (t.type === "airport") MM.icons.plane(ctx, size, "#bcdcff");
       else if (t.util === "power") MM.icons.bolt(ctx, size, CANVAS_COLORS.gold);
       else MM.icons.droplet(ctx, size, "#5ec8f0");
       ctx.restore();
     } else {
       /* tax · surprise · treasure */
-      const accent = t.type === "surprise" ? "#ff7ab8" : t.type === "treasure" ? CANVAS_COLORS.gold : "#9db2ff";
+      const accent = t.type === "surprise" ? "#5ac8fa" : t.type === "treasure" ? CANVAS_COLORS.gold : "#8fb4e8";
       const isTax = t.type === "tax";
       this.name(ctx, t.name, w, flip ? d * 0.8 : d * 0.2, nameSize);
 
@@ -2184,7 +2323,7 @@ MM.renderer = {
     ctx.fillStyle = p.hex;
     ctx.fill();
     ctx.lineWidth = 2;
-    ctx.strokeStyle = "rgba(12,9,19,.85)";
+    ctx.strokeStyle = "rgba(6,11,20,.85)";
     ctx.stroke();
 
     ctx.font = `${r * 1.15}px ${MM.FONT_BODY}`;
@@ -2338,6 +2477,7 @@ MM.panels = {
       rules: el("#rules-list"),
       market: el("#market-list"),
       props: el("#prop-list"),
+      status: el("#status-card"),
       ticker: el("#ticker-track"),
       log: el("#log-feed"),
       chat: el("#chat-feed"),
@@ -2405,13 +2545,35 @@ MM.panels = {
     }).join("");
   },
 
+  /* one row per release — green = playable, blue = being built */
+  renderStatus() {
+    if (!this.refs.status) return;
+    this.refs.status.innerHTML = `
+      <h2 class="card-title card-title--center">Build status</h2>
+      <div class="status-list">
+        ${MM.RELEASES.map((r) => `
+          <div class="status-row ${r.v === MM.VERSION ? "is-now" : ""}">
+            <span class="status-dot ${r.status}"></span>
+            <div>
+              <span class="status-v">${r.v}</span>
+              <span class="status-name">${r.name}</span>
+            </div>
+            <span class="status-tag">${r.v === MM.VERSION ? "you're here" : MM.STATUS_LABEL[r.status]}</span>
+          </div>`).join("")}
+      </div>
+      <button class="btn btn--muted btn--sm status-more" data-action="show-status">See the full list</button>`;
+
+    this.refs.status.querySelector(".status-more")
+      .addEventListener("click", () => MM.screens.statusModal());
+  },
+
   renderRules() {
     const s = MM.state;
     if (!this.refs.rules) return;
     this.refs.rules.innerHTML = MM.RULE_DEFS.map((r) => `
       <div class="setting">
         <span class="setting-ico">${r.ico}</span>
-        <div class="setting-body"><b>${r.name}</b><i>${r.desc}${r.phase > 1 ? " · phase " + r.phase : ""}</i></div>
+        <div class="setting-body"><b>${r.name}</b><i>${r.desc}${r.since ? " · " + r.since : ""}</i></div>
         <button class="switch" role="switch" data-rule="${r.id}" aria-checked="${s.rules[r.id]}" aria-label="${r.name}"></button>
       </div>`).join("");
 
@@ -2465,11 +2627,11 @@ MM.panels = {
     if (!s || !this.refs.props) return;
     const mine = MM.tilesOf(s, 0);
     if (!mine.length) {
-      this.refs.props.innerHTML = `<p class="empty-note">You don't own anything yet. Land on an unclaimed tile to buy it — purchases open in Phase 2.</p>`;
+      this.refs.props.innerHTML = `<p class="empty-note">You don't own anything yet. Land on an unclaimed tile to buy it — purchases open in V1.5.</p>`;
       return;
     }
     this.refs.props.innerHTML = mine.map((t) => {
-      const color = t.group ? MM.GROUPS[t.group].color : "#7c4dff";
+      const color = t.group ? MM.GROUPS[t.group].color : "#2f7df6";
       return `<div class="prop-row" style="--gcolor:${color}">
         <div class="prop-swatch"></div>
         <div>${t.name}</div>
@@ -2585,6 +2747,26 @@ MM.screens = {
 
   closeModal() { this.modalEl.hidden = true; },
 
+  /* the plain-language answer to "what works, what's coming" */
+  statusModal() {
+    const group = (r) => `
+      <div class="vgroup">
+        <div class="vhead">
+          <span class="status-dot ${r.status}"></span>
+          <b>${r.v}</b> ${r.name}
+          <span class="vtag vtag--${r.status}">${r.v === MM.VERSION ? "you're playing this" : MM.STATUS_LABEL[r.status]}</span>
+        </div>
+        <ul class="vlist">
+          ${r.items.map((i) => `<li class="v-${r.status}">${i}</li>`).join("")}
+        </ul>
+      </div>`;
+
+    this.modal(`What works today · ${MM.VERSION}`, `
+      <p>Everything with a green tick is playable right now. Everything below it
+      is on the way, in the order it'll arrive.</p>
+      ${MM.RELEASES.map(group).join("")}`);
+  },
+
   rulesModal() {
     this.modal("How MonoMoney works", `
       <p>Two dice, forty tiles, and a stock exchange running alongside the board.
@@ -2599,12 +2781,9 @@ MM.screens = {
       </ul>
       <h3>Built so far</h3>
       <ul>
-        <li><b>Phase 1</b> — board, tiles, turn engine, dice, prison, taxes, the vacation pot. <i>You're here.</i></li>
-        <li><b>Phase 2</b> — buying, rent, colour sets, houses, hotels, mortgages.</li>
-        <li><b>Phase 3</b> — the exchange: orders, price shocks, dividends on every lap.</li>
-        <li><b>Phase 4</b> — the four bot personalities make their own calls.</li>
-        <li><b>Phase 5</b> — trades, auctions and the financial dashboard.</li>
-      </ul>`);
+        ${MM.RELEASES.map((r) => `<li><b>${r.v}</b> — ${r.name}${r.v === MM.VERSION ? " <i>You're here.</i>" : ""}</li>`).join("")}
+      </ul>
+      <p>Open <b>Build status</b> in the lobby for the full working / coming list.</p>`);
   },
 
   marketModal() {
@@ -2617,7 +2796,7 @@ MM.screens = {
       the realty stock, a bought-up airport lifts the airline.</p>
       <ul>${rows}</ul>
       <p>Dividends land every time you pass START. The tape above the board is
-      already live; trading opens in Phase 3.</p>`);
+      already live; trading opens in V2.</p>`);
   }
 };
 
@@ -2691,6 +2870,7 @@ MM.app = {
     document.getElementById("room-link").value = "https://monomoney.io/" + s.room;
     MM.panels.renderRules();
     MM.panels.renderBots();
+    MM.panels.renderStatus();
     MM.panels.renderAll();
     MM.panels.renderTicker();
     MM.renderer.invalidate();
@@ -2718,6 +2898,8 @@ MM.app = {
       b.addEventListener("click", () => MM.screens.rulesModal()));
     document.querySelectorAll('[data-action="show-market-intro"]').forEach((b) =>
       b.addEventListener("click", () => MM.screens.marketModal()));
+    document.querySelectorAll('[data-action="show-status"]').forEach((b) =>
+      b.addEventListener("click", () => MM.screens.statusModal()));
     document.querySelectorAll('[data-action="toggle-sound"]').forEach((b) =>
       b.addEventListener("click", () => {
         MM.sfx.on = !MM.sfx.on;

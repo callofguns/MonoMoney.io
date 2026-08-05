@@ -1,28 +1,29 @@
 /* ═══ settings, personalities and the listed companies ═══ */
 window.MM = window.MM || {};
 
-/* Toggleable house rules. `phase` marks which build phase switches them on;
-   anything past Phase 1 is shown but locked so the lobby reads honestly. */
+/* Toggleable house rules. `since` is the release that switches a rule on;
+   anything later than the current build is shown but inert, so the lobby
+   never promises more than the game does. */
 MM.RULE_DEFS = [
   { id: "doubleRent", ico: "🪙", name: "x2 rent on full sets",
-    desc: "Owning every tile in a colour group doubles the base rent", on: true, phase: 2 },
+    desc: "Owning every tile in a colour group doubles the base rent", on: true, since: "V1.5" },
   { id: "vacationCash", ico: "🏝", name: "Vacation cash",
-    desc: "Taxes and fees pile up on Vacation for whoever lands there", on: true, phase: 2 },
+    desc: "Taxes and fees pile up on Vacation for whoever lands there", on: true, since: "V1.5" },
   { id: "auction", ico: "🔨", name: "Auction",
-    desc: "A declined property goes to the highest bidder instead", on: false, phase: 2 },
+    desc: "A declined property goes to the highest bidder instead", on: false, since: "V1.5" },
   { id: "noRentInPrison", ico: "🚔", name: "No rent while in prison",
-    desc: "Jailed owners collect nothing on their properties", on: false, phase: 2 },
+    desc: "Jailed owners collect nothing on their properties", on: false, since: "V1.5" },
   { id: "mortgage", ico: "🏦", name: "Mortgage",
-    desc: "Raise 50% of a tile's cost, but stop earning rent on it", on: true, phase: 2 },
+    desc: "Raise 50% of a tile's cost, but stop earning rent on it", on: true, since: "V1.5" },
   { id: "evenBuild", ico: "🏘", name: "Even build",
-    desc: "Houses go up and come down evenly across a set", on: true, phase: 2 },
+    desc: "Houses go up and come down evenly across a set", on: true, since: "V1.5" },
   { id: "dividends", ico: "📊", name: "Dividends on GO",
-    desc: "Passing START pays out on every share you hold", on: true, phase: 3 },
+    desc: "Passing START pays out on every share you hold", on: true, since: "V2" },
   { id: "insiderCards", ico: "🃏", name: "Insider Surprise cards",
-    desc: "Some Surprise cards move a company's share price", on: true, phase: 3 }
+    desc: "Some Surprise cards move a company's share price", on: true, since: "V2" }
 ];
 
-/* Bot personalities — Phase 4 reads `weights`, Phase 1 only shows them off. */
+/* Bot personalities — V2.5 reads `weights`; today they only show them off. */
 MM.PERSONALITIES = [
   {
     id: "tycoon", tag: "Buys everything", name: "The Tycoon", avatar: "🎩", color: "var(--p2)",
@@ -46,15 +47,15 @@ MM.PERSONALITIES = [
   }
 ];
 
-/* The five listed companies. Phase 3 turns these into a live order book. */
+/* The five listed companies. V2 turns these into a live order book. */
 MM.STOCKS = [
-  { sym: "SKY", name: "Skyline Air Group", sector: "Airports",  color: "#3fa9ff",
+  { sym: "SKY", name: "Skyline Air Group", sector: "Airports",  color: "#4e97ff",
     price: 120, yield: 0.05, vol: 0.05 },
   { sym: "VLT", name: "Voltaic Power",     sector: "Utilities", color: "#ffc24b",
     price: 95,  yield: 0.06, vol: 0.04 },
   { sym: "BRK", name: "Brickstone Realty", sector: "Property",  color: "#ff8a5c",
     price: 150, yield: 0.03, vol: 0.06 },
-  { sym: "TCH", name: "Helix Tech",        sector: "Technology",color: "#a06bff",
+  { sym: "TCH", name: "Helix Tech",        sector: "Technology",color: "#7ab8ff",
     price: 210, yield: 0.01, vol: 0.11 },
   { sym: "AUR", name: "Aurum Bank",        sector: "Finance",   color: "#3dd68c",
     price: 80,  yield: 0.08, vol: 0.03 }

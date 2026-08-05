@@ -12,6 +12,7 @@ MM.panels = {
       rules: el("#rules-list"),
       market: el("#market-list"),
       props: el("#prop-list"),
+      status: el("#status-card"),
       ticker: el("#ticker-track"),
       log: el("#log-feed"),
       chat: el("#chat-feed"),
@@ -79,13 +80,35 @@ MM.panels = {
     }).join("");
   },
 
+  /* one row per release — green = playable, blue = being built */
+  renderStatus() {
+    if (!this.refs.status) return;
+    this.refs.status.innerHTML = `
+      <h2 class="card-title card-title--center">Build status</h2>
+      <div class="status-list">
+        ${MM.RELEASES.map((r) => `
+          <div class="status-row ${r.v === MM.VERSION ? "is-now" : ""}">
+            <span class="status-dot ${r.status}"></span>
+            <div>
+              <span class="status-v">${r.v}</span>
+              <span class="status-name">${r.name}</span>
+            </div>
+            <span class="status-tag">${r.v === MM.VERSION ? "you're here" : MM.STATUS_LABEL[r.status]}</span>
+          </div>`).join("")}
+      </div>
+      <button class="btn btn--muted btn--sm status-more" data-action="show-status">See the full list</button>`;
+
+    this.refs.status.querySelector(".status-more")
+      .addEventListener("click", () => MM.screens.statusModal());
+  },
+
   renderRules() {
     const s = MM.state;
     if (!this.refs.rules) return;
     this.refs.rules.innerHTML = MM.RULE_DEFS.map((r) => `
       <div class="setting">
         <span class="setting-ico">${r.ico}</span>
-        <div class="setting-body"><b>${r.name}</b><i>${r.desc}${r.phase > 1 ? " · phase " + r.phase : ""}</i></div>
+        <div class="setting-body"><b>${r.name}</b><i>${r.desc}${r.since ? " · " + r.since : ""}</i></div>
         <button class="switch" role="switch" data-rule="${r.id}" aria-checked="${s.rules[r.id]}" aria-label="${r.name}"></button>
       </div>`).join("");
 
@@ -139,11 +162,11 @@ MM.panels = {
     if (!s || !this.refs.props) return;
     const mine = MM.tilesOf(s, 0);
     if (!mine.length) {
-      this.refs.props.innerHTML = `<p class="empty-note">You don't own anything yet. Land on an unclaimed tile to buy it — purchases open in Phase 2.</p>`;
+      this.refs.props.innerHTML = `<p class="empty-note">You don't own anything yet. Land on an unclaimed tile to buy it — purchases open in V1.5.</p>`;
       return;
     }
     this.refs.props.innerHTML = mine.map((t) => {
-      const color = t.group ? MM.GROUPS[t.group].color : "#7c4dff";
+      const color = t.group ? MM.GROUPS[t.group].color : "#2f7df6";
       return `<div class="prop-row" style="--gcolor:${color}">
         <div class="prop-swatch"></div>
         <div>${t.name}</div>

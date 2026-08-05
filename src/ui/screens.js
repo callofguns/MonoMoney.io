@@ -52,6 +52,26 @@ MM.screens = {
 
   closeModal() { this.modalEl.hidden = true; },
 
+  /* the plain-language answer to "what works, what's coming" */
+  statusModal() {
+    const group = (r) => `
+      <div class="vgroup">
+        <div class="vhead">
+          <span class="status-dot ${r.status}"></span>
+          <b>${r.v}</b> ${r.name}
+          <span class="vtag vtag--${r.status}">${r.v === MM.VERSION ? "you're playing this" : MM.STATUS_LABEL[r.status]}</span>
+        </div>
+        <ul class="vlist">
+          ${r.items.map((i) => `<li class="v-${r.status}">${i}</li>`).join("")}
+        </ul>
+      </div>`;
+
+    this.modal(`What works today · ${MM.VERSION}`, `
+      <p>Everything with a green tick is playable right now. Everything below it
+      is on the way, in the order it'll arrive.</p>
+      ${MM.RELEASES.map(group).join("")}`);
+  },
+
   rulesModal() {
     this.modal("How MonoMoney works", `
       <p>Two dice, forty tiles, and a stock exchange running alongside the board.
@@ -66,12 +86,9 @@ MM.screens = {
       </ul>
       <h3>Built so far</h3>
       <ul>
-        <li><b>Phase 1</b> — board, tiles, turn engine, dice, prison, taxes, the vacation pot. <i>You're here.</i></li>
-        <li><b>Phase 2</b> — buying, rent, colour sets, houses, hotels, mortgages.</li>
-        <li><b>Phase 3</b> — the exchange: orders, price shocks, dividends on every lap.</li>
-        <li><b>Phase 4</b> — the four bot personalities make their own calls.</li>
-        <li><b>Phase 5</b> — trades, auctions and the financial dashboard.</li>
-      </ul>`);
+        ${MM.RELEASES.map((r) => `<li><b>${r.v}</b> — ${r.name}${r.v === MM.VERSION ? " <i>You're here.</i>" : ""}</li>`).join("")}
+      </ul>
+      <p>Open <b>Build status</b> in the lobby for the full working / coming list.</p>`);
   },
 
   marketModal() {
@@ -84,6 +101,6 @@ MM.screens = {
       the realty stock, a bought-up airport lifts the airline.</p>
       <ul>${rows}</ul>
       <p>Dividends land every time you pass START. The tape above the board is
-      already live; trading opens in Phase 3.</p>`);
+      already live; trading opens in V2.</p>`);
   }
 };

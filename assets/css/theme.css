@@ -5,34 +5,35 @@
 :root {
   color-scheme: dark;
 
-  /* ground → raised. neutrals carry a violet bias so nothing reads as flat grey */
-  --ink-900: #0c0913;
-  --ink-800: #100c19;
-  --ink-700: #171126;
-  --ink-600: #1b1529;
-  --ink-500: #251d38;
-  --ink-400: #2f2545;
-  --line:    #392d53;
+  /* ground → raised. neutrals carry a navy bias so nothing reads as flat grey */
+  --ink-900: #060b14;
+  --ink-800: #0a1120;
+  --ink-700: #101b2e;
+  --ink-600: #142238;
+  --ink-500: #1c2f4a;
+  --ink-400: #24395a;
+  --line:    #2c4767;
 
-  --text:    #ece8f5;
-  --text-dim:#a79fc4;
-  --text-mut:#7d7499;
+  --text:    #e6eefb;
+  --text-dim:#9db3d1;
+  --text-mut:#6f88a8;
 
-  --violet:      #7c4dff;
-  --violet-lift: #9068ff;
-  --violet-sink: #5c33d6;
-  --violet-haze: rgba(124, 77, 255, .18);
+  --accent:      #2f7df6;
+  --accent-lift: #4e97ff;
+  --accent-sink: #1c56b8;
+  --accent-haze: rgba(47, 125, 246, .20);
 
   --gold:  #ffc24b;
   --up:    #3dd68c;
   --down:  #ff5c6c;
   --warn:  #ffab3d;
 
-  --p1: #8b5cf6;  /* you */
-  --p2: #ff7a45;  /* tycoon */
-  --p3: #37c98b;  /* banker */
-  --p4: #3fa9ff;  /* shark */
-  --p5: #ff5fa2;  /* wildcard */
+  /* token colours stay distinct — they identify players, not the brand */
+  --p1: #4e97ff;  /* you      */
+  --p2: #ff8455;  /* tycoon   */
+  --p3: #2fd4a0;  /* banker   */
+  --p4: #f26a8d;  /* shark    */
+  --p5: #ffd166;  /* wildcard */
 
   --font-display: "Trebuchet MS", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
   --font-body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
@@ -43,7 +44,7 @@
   --r-lg: 16px;
 
   --shadow-card: 0 1px 0 rgba(255,255,255,.03) inset, 0 8px 24px rgba(0,0,0,.35);
-  --shadow-lift: 0 6px 20px rgba(92, 51, 214, .45);
+  --shadow-lift: 0 6px 20px rgba(28, 86, 184, .45);
 }
 
 * { box-sizing: border-box; }
@@ -70,7 +71,7 @@ b { font-weight: 700; }
 button, input, select { font: inherit; color: inherit; }
 
 :focus-visible {
-  outline: 2px solid var(--violet-lift);
+  outline: 2px solid var(--accent-lift);
   outline-offset: 2px;
   border-radius: var(--r-sm);
 }
@@ -94,8 +95,8 @@ button, input, select { font: inherit; color: inherit; }
   white-space: nowrap;
 }
 .brand--xl .wordmark { font-size: clamp(38px, 6vw, 64px); }
-.wordmark em { font-style: normal; color: var(--violet-lift); }
-.wordmark small { font-size: .42em; letter-spacing: -.02em; color: var(--violet-lift); }
+.wordmark em { font-style: normal; color: var(--accent-lift); }
+.wordmark small { font-size: .42em; letter-spacing: -.02em; color: var(--accent-lift); }
 .wordmark--sm { font-size: 21px; }
 
 /* rolling-die logo mark */
@@ -103,14 +104,14 @@ button, input, select { font: inherit; color: inherit; }
   position: relative;
   width: 78px; height: 78px;
   border-radius: 18px;
-  background: linear-gradient(150deg, #fff, #d8d3e8);
-  box-shadow: 0 14px 30px rgba(0,0,0,.5), inset 0 -6px 12px rgba(120,110,150,.35);
+  background: linear-gradient(150deg, #fff, #d3dceb);
+  box-shadow: 0 14px 30px rgba(0,0,0,.5), inset 0 -6px 12px rgba(96,118,150,.35);
   transform: rotate(-12deg);
   animation: die-idle 6s ease-in-out infinite;
 }
 .brand-die .pip {
   position: absolute; width: 12px; height: 12px; border-radius: 50%;
-  background: #1a1526;
+  background: #12203a;
 }
 .brand-die .pip:nth-child(1) { top: 14px; left: 14px; }
 .brand-die .pip:nth-child(2) { top: 14px; right: 14px; }

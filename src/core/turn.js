@@ -102,7 +102,7 @@ MM.turn = {
   passGo(s, p) {
     MM.credit(s, p, MM.GO_SALARY, "salary");
     MM.log(s, `<b>${p.name}</b> passed START and collected <span class="money">${MM.money(MM.GO_SALARY)}</span>`, p);
-    MM.bus.emit("pass-go", p); /* Phase 3 hangs dividends off this */
+    MM.bus.emit("pass-go", p); /* V2 hangs dividends off this */
   },
 
   async sendToPrison(s, p) {

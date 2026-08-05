@@ -13,16 +13,16 @@
 window.MM = window.MM || {};
 
 /* Colour groups. `corp` ties a group to a listed company so that
-   development on the board can move the share price (Phase 3). */
+   development on the board can move the share price (V2). */
 MM.GROUPS = {
   NG: { name: "Nigeria",   color: "#a2653f", house: 50,  corp: "BRK" },
   IN: { name: "India",     color: "#58c6ee", house: 50,  corp: "BRK" },
-  GR: { name: "Greece",    color: "#e4457e", house: 100, corp: "BRK" },
+  GR: { name: "Greece",    color: "#e04b86", house: 100, corp: "BRK" },
   PL: { name: "Poland",    color: "#f0913a", house: 100, corp: "BRK" },
   CA: { name: "Canada",    color: "#e8453c", house: 150, corp: "BRK" },
   JP: { name: "Japan",     color: "#f3d33c", house: 150, corp: "BRK" },
   AU: { name: "Australia", color: "#3fb96b", house: 200, corp: "BRK" },
-  US: { name: "USA",       color: "#3c60e8", house: 200, corp: "BRK" }
+  US: { name: "USA",       color: "#2f4bd0", house: 200, corp: "BRK" }
 };
 
 /* rent[0] = bare · rent[1..4] = 1–4 houses · rent[5] = hotel */

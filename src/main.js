@@ -66,6 +66,7 @@ MM.app = {
     document.getElementById("room-link").value = "https://monomoney.io/" + s.room;
     MM.panels.renderRules();
     MM.panels.renderBots();
+    MM.panels.renderStatus();
     MM.panels.renderAll();
     MM.panels.renderTicker();
     MM.renderer.invalidate();
@@ -93,6 +94,8 @@ MM.app = {
       b.addEventListener("click", () => MM.screens.rulesModal()));
     document.querySelectorAll('[data-action="show-market-intro"]').forEach((b) =>
       b.addEventListener("click", () => MM.screens.marketModal()));
+    document.querySelectorAll('[data-action="show-status"]').forEach((b) =>
+      b.addEventListener("click", () => MM.screens.statusModal()));
     document.querySelectorAll('[data-action="toggle-sound"]').forEach((b) =>
       b.addEventListener("click", () => {
         MM.sfx.on = !MM.sfx.on;

@@ -56,7 +56,11 @@
       </ul>
     </div>
 
-    <footer class="home-foot">Phase 1 prototype · board, state engine &amp; dice</footer>
+    <footer class="home-foot">
+      <button class="ghost-btn" data-action="show-status">
+        <span class="ver-chip">V1.1</span> See what works today
+      </button>
+    </footer>
   </section>
 
   <!-- ══════════════ TABLE (lobby + game) ══════════════ -->
@@ -127,6 +131,8 @@
       <div class="rail-pane" data-pane="lobby">
         <div class="card card--host" id="host-card"></div>
 
+        <div class="card" id="status-card"></div>
+
         <div class="card">
           <h2 class="card-title card-title--center">Game settings</h2>
           <div class="setting">
@@ -193,6 +199,7 @@
 
         <div class="rail-actions">
           <button class="btn btn--muted btn--sm" data-action="show-rules">Rules</button>
+          <button class="btn btn--muted btn--sm" data-action="show-status"><span class="ver-chip">V1.1</span> What works</button>
           <button class="btn btn--danger btn--sm" data-action="bankrupt">Bankrupt</button>
         </div>
 
@@ -204,13 +211,13 @@
           </div>
           <div class="tab-panel is-active" data-panel="market">
             <div class="market-list" id="market-list"></div>
-            <p class="panel-note">Trading, dividends and price shocks arrive in Phase 3. Prices already drift so you can watch the tape.</p>
+            <p class="panel-note">Trading, dividends and price shocks arrive in V2. Prices already drift so you can watch the tape.</p>
           </div>
           <div class="tab-panel" data-panel="props">
             <div class="prop-list" id="prop-list"></div>
           </div>
           <div class="tab-panel" data-panel="trades">
-            <p class="panel-note">Swap property, cash and shares with other players. Unlocks with the trade engine in Phase 5.</p>
+            <p class="panel-note">Swap property, cash and shares with other players. Unlocks with the trade engine in V3.</p>
           </div>
         </div>
       </div>
@@ -227,6 +234,7 @@
   </div>
 </div>
 
+<script src="src/data/versions.js"></script>
 <script src="src/data/board.js"></script>
 <script src="src/data/rules.js"></script>
 <script src="src/core/rng.js"></script>

@@ -9,8 +9,8 @@
   position: relative;
   overflow: hidden;
   background:
-    radial-gradient(120% 80% at 50% 0%, #1d1435 0%, transparent 60%),
-    radial-gradient(80% 60% at 50% 100%, #241536 0%, transparent 65%),
+    radial-gradient(120% 80% at 50% 0%, #12294b 0%, transparent 60%),
+    radial-gradient(80% 60% at 50% 100%, #0d2340 0%, transparent 65%),
     var(--ink-900);
 }
 
@@ -63,9 +63,11 @@
 
 .home-foot {
   position: relative;
-  text-align: center; padding-bottom: 22px;
-  color: var(--text-mut); font-size: 12px; letter-spacing: .06em;
+  display: flex; justify-content: center;
+  padding-bottom: 18px;
+  color: var(--text-mut); font-size: 12.5px;
 }
+.home-foot .ghost-btn { display: flex; align-items: center; gap: 8px; }
 
 /* ── table shell ──────────────────────────── */
 .screen--table {
@@ -73,7 +75,7 @@
   gap: 12px;
   padding: 12px;
   background:
-    radial-gradient(90% 70% at 50% 40%, #191130 0%, transparent 70%),
+    radial-gradient(90% 70% at 50% 40%, #0f1e35 0%, transparent 70%),
     var(--ink-800);
 }
 
