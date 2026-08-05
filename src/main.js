@@ -55,6 +55,12 @@ MM.app = {
     const relayField = document.getElementById("relay-url");
     if (relayField) relayField.value = MM.net.relayUrl || "";
 
+    /* whoever's OWN connection just dropped won't get a fresh roster
+       telling them so — this is the one thing that fires regardless */
+    MM.net.onRoster(() => {
+      document.getElementById("net-status").hidden = !MM.net.connectionLost;
+    });
+
     /* a game object exists from the lobby on, so the board has something to show */
     this.newGame("You");
     MM.screens.show("home");

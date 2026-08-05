@@ -83,6 +83,7 @@ MM.net = {
     this.saveRelayUrl(relayUrl);
     await this._connect(relayUrl);
     this._role = "host";
+    this._lastConnect = { role: "host", name, relayUrl };
     return new Promise((resolve, reject) => {
       this._pendingHello = { resolve, reject };
       this.ws.send(JSON.stringify({ type: "hello", role: "host", name, clientId: this.clientId }));
@@ -93,7 +94,7 @@ MM.net = {
     this.saveRelayUrl(relayUrl);
     await this._connect(relayUrl);
     this._role = "guest";
-    this._lastJoin = { code, name, relayUrl };
+    this._lastConnect = { role: "guest", name, relayUrl, room: (code || "").toUpperCase() };
     return new Promise((resolve, reject) => {
       this._pendingHello = { resolve, reject };
       this.ws.send(JSON.stringify({ type: "hello", role: "guest", room: (code || "").toUpperCase(), name, clientId: this.clientId }));
@@ -101,6 +102,9 @@ MM.net = {
   },
 
   leave() {
+    this._lastConnect = null;
+    clearTimeout(this._reconnectTimer);
+    this._reconnecting = false;
     if (this.ws) { try { this.ws.close(); } catch (e) { /* already gone */ } }
     this.enabled = false;
     this.isHost = false;
@@ -108,6 +112,7 @@ MM.net = {
     this.mySeat = 0;
     this.roomCode = null;
     this.roster = [];
+    this.connectionLost = false;
   },
 
   lockRoom() {
@@ -119,10 +124,43 @@ MM.net = {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) this.ws.send(JSON.stringify(msg));
   },
 
+  /* A dropped socket doesn't mean the game is over — it usually just
+     means a phone browser got backgrounded (iOS is aggressive about
+     killing background WebSockets) and came back a few seconds later.
+     Retry with backoff, and retry immediately the moment the tab is
+     visible again rather than waiting out whatever delay is pending. */
   _onClose() {
-    if (!this.enabled) return; /* a deliberate leave() already reset everything */
+    if (!this.enabled || !this._lastConnect) return; /* a deliberate leave() already reset everything */
     this.connectionLost = true;
     this._fireRoster();
+    this._scheduleReconnect(1000);
+  },
+
+  _scheduleReconnect(delayMs) {
+    if (this._reconnecting) return;
+    this._reconnecting = true;
+    clearTimeout(this._reconnectTimer);
+    this._reconnectTimer = setTimeout(() => this._attemptReconnect(delayMs), delayMs);
+  },
+
+  async _attemptReconnect(prevDelay) {
+    this._reconnecting = false;
+    if (!this.enabled || !this._lastConnect) return;
+    const { role, name, relayUrl, room } = this._lastConnect;
+    try {
+      await this._connect(relayUrl);
+      await new Promise((resolve, reject) => {
+        this._pendingHello = { resolve, reject };
+        this.ws.send(JSON.stringify({
+          type: "hello", role, name, clientId: this.clientId,
+          room: role === "guest" ? room : undefined
+        }));
+      });
+      this.connectionLost = false;
+      this._fireRoster();
+    } catch (e) {
+      this._scheduleReconnect(Math.min((prevDelay || 1000) * 1.6, 8000));
+    }
   },
 
   /* ── the wire protocol ──────────────────── */
@@ -313,3 +351,16 @@ MM.bus.on("*", ({ type, payload }) => {
   if (type === "state") { MM.net.scheduleStateSync(); return; }
   MM.net.send({ type: "bus", event: type, payload });
 });
+
+/* a phone browser coming back to the foreground is exactly the moment
+   worth reconnecting immediately, rather than waiting out whatever
+   backoff delay happened to be pending when it was backgrounded */
+if (typeof document !== "undefined") {
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState !== "visible") return;
+    if (!MM.net.enabled || !MM.net.connectionLost) return;
+    clearTimeout(MM.net._reconnectTimer);
+    MM.net._reconnecting = false;
+    MM.net._scheduleReconnect(0);
+  });
+}
