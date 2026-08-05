@@ -9,7 +9,7 @@
    ═══════════════════════════════════════════ */
 window.MM = window.MM || {};
 
-MM.VERSION = "V1.5";
+MM.VERSION = "V2";
 
 MM.RELEASES = [
   {
@@ -50,17 +50,21 @@ MM.RELEASES = [
     ]
   },
   {
-    v: "V2", name: "The exchange", status: "next",
+    v: "V2", name: "The exchange", status: "shipped",
     items: [
       "Buy and sell shares in all five companies from the Market tab",
-      "Dividends paid on every lap past START",
-      "Prices that move on market events and Surprise cards",
-      "Building on the board lifting the company that owns the sector",
-      "Portfolio value folded into net worth"
+      "Dividends paid every time you pass START",
+      "Price charts: a sparkline per listing, a full chart in the trade panel",
+      "Twelve market headlines that move a company or the whole tape",
+      "Four insider cards in the decks that move a share price",
+      "Fundamentals: airports lift SKY, utilities lift VLT, houses lift BRK, cash in play lifts AUR",
+      "Your own orders nudge the price — big trades cost you",
+      "Shares sell before deeds get mortgaged when you're short",
+      "Portfolio value and dividends folded into net worth"
     ]
   },
   {
-    v: "V2.5", name: "Bot brains", status: "planned",
+    v: "V2.5", name: "Bot brains", status: "next",
     items: [
       "The Tycoon buys and builds relentlessly",
       "The Banker hoards dividend stock and a cash buffer",

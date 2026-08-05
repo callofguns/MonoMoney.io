@@ -30,6 +30,7 @@ MM.prop = {
     MM.debit(s, player, cost, "purchase");
     s.ownership[tile.i] = player.id;
     MM.log(s, `<b>${player.name}</b> bought ${tile.name} for <span class="money">${MM.money(cost)}</span>`, player);
+    MM.market.onDeed(s, tile);
     MM.bus.emit("bought", { player, tile, cost });
     MM.bus.emit("state", s);
   },
@@ -71,6 +72,7 @@ MM.prop = {
     s.houses[tile.i] = (s.houses[tile.i] || 0) + 1;
     const what = s.houses[tile.i] === 5 ? "a hotel" : "a house";
     MM.log(s, `<b>${player.name}</b> built ${what} on ${tile.name} for <span class="money">${MM.money(cost)}</span>`, player);
+    MM.market.onBuild(s, tile);
     MM.bus.emit("built", { player, tile });
     MM.bus.emit("state", s);
     return true;
@@ -143,6 +145,9 @@ MM.prop = {
 
   /* Sell buildings first, then mortgage — cheapest deeds go last. */
   raiseCash(s, player, target) {
+    /* shares are the most liquid thing anyone holds */
+    if (player.cash < target) MM.market.liquidateFor(s, player, target);
+
     const owned = () => MM.tilesOf(s, player.id).sort((a, b) => b.price - a.price);
 
     let guard = 200;

@@ -48,16 +48,18 @@ MM.PERSONALITIES = [
 ];
 
 /* The five listed companies. V2 turns these into a live order book. */
+/* Identity colours are the first five slots of the validated categorical
+   palette, in this order — swapping them around fails the CVD checks. */
 MM.STOCKS = [
-  { sym: "SKY", name: "Skyline Air Group", sector: "Airports",  color: "#4e97ff",
+  { sym: "SKY", name: "Skyline Air Group", sector: "Airports",   color: "#3987e5",
     price: 120, yield: 0.05, vol: 0.05 },
-  { sym: "VLT", name: "Voltaic Power",     sector: "Utilities", color: "#ffc24b",
+  { sym: "VLT", name: "Voltaic Power",     sector: "Utilities",  color: "#d95926",
     price: 95,  yield: 0.06, vol: 0.04 },
-  { sym: "BRK", name: "Brickstone Realty", sector: "Property",  color: "#ff8a5c",
+  { sym: "BRK", name: "Brickstone Realty", sector: "Property",   color: "#199e70",
     price: 150, yield: 0.03, vol: 0.06 },
-  { sym: "TCH", name: "Helix Tech",        sector: "Technology",color: "#7ab8ff",
+  { sym: "TCH", name: "Helix Tech",        sector: "Technology", color: "#c98500",
     price: 210, yield: 0.01, vol: 0.11 },
-  { sym: "AUR", name: "Aurum Bank",        sector: "Finance",   color: "#3dd68c",
+  { sym: "AUR", name: "Aurum Bank",        sector: "Finance",    color: "#d55181",
     price: 80,  yield: 0.08, vol: 0.03 }
 ];
 

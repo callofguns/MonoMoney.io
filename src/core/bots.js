@@ -10,6 +10,7 @@ window.MM = window.MM || {};
 MM.bots = {
   RESERVE: 120,        /* cash a bot likes to keep in hand   */
   BUILD_FLOOR: 450,    /* won't spend below this on building */
+  INVEST_FLOOR: 800,   /* cash above this can go into shares    */
 
   reserve(s, p) {
     return this.RESERVE + (s.settings.botSkill === "ruthless" ? 0 : 60);
@@ -47,5 +48,17 @@ MM.bots = {
       const held = MM.tilesOf(s, p.id).find((t) => MM.prop.canUnmortgage(s, p, t));
       if (held) MM.prop.unmortgage(s, p, held);
     }
+
+    this.invest(s, p);
+  },
+
+  /* Baseline investing: park spare cash in the best dividend on offer.
+     V2.5 gives each personality its own view of the tape. */
+  invest(s, p) {
+    if (p.cash < this.INVEST_FLOOR) return;
+    const spend = Math.floor((p.cash - this.INVEST_FLOOR) * 0.5);
+    const pick = s.stocks.slice().sort((a, b) => b.yield - a.yield)[0];
+    const qty = Math.floor(spend / pick.price);
+    if (qty > 0) MM.market.buy(s, p, pick.sym, qty);
   }
 };

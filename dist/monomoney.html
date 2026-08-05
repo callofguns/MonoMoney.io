@@ -510,6 +510,64 @@ button, input, select { font: inherit; color: inherit; }
 .stock-chg.up { color: var(--up); }
 .stock-chg.down { color: var(--down); }
 
+/* ── exchange ────────────────────────────── */
+.stock-row--btn {
+  width: 100%;
+  grid-template-columns: 30px minmax(0, 1fr) auto auto;
+  border: 0; text-align: left; cursor: pointer;
+  font: inherit; color: inherit;
+  transition: background .15s;
+}
+.stock-row--btn:hover { background: var(--ink-500); }
+.stock-id { min-width: 0; }
+.stock-id .stock-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.spark { display: block; opacity: .9; }
+
+.port-strip {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+  padding: 10px; margin-bottom: 8px;
+  background: var(--ink-700); border-radius: var(--r-md);
+  text-align: center;
+}
+.port-strip span { display: block; font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-mut); }
+.port-strip b { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 14px; }
+.port-strip b.up { color: var(--up); }
+
+.trade-head { display: grid; grid-template-columns: auto 30px 1fr; gap: 10px; align-items: center; margin-bottom: 10px; }
+.trade-price { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; }
+.trade-price b { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 26px; letter-spacing: -.02em; }
+
+.chart { width: 100%; height: auto; display: block; border-radius: var(--r-sm); }
+.chart-grid { stroke: rgba(255,255,255,.07); stroke-width: 1; }
+.chart-scale {
+  display: flex; justify-content: space-between;
+  font-family: var(--font-num); font-size: 10.5px; color: var(--text-mut);
+  margin: 2px 2px 10px;
+}
+
+.trade-stats {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+  padding: 9px; margin-bottom: 10px;
+  background: var(--ink-700); border-radius: var(--r-md); text-align: center;
+}
+.trade-stats span { display: block; font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-mut); }
+.trade-stats b { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 13px; }
+.trade-stats b.up { color: var(--up); }
+
+.qty-row { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+.qty-value {
+  min-width: 44px; text-align: center;
+  font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 15px; font-weight: 700;
+}
+.chip-btn {
+  padding: 4px 9px; border: 0; border-radius: var(--r-sm);
+  background: var(--ink-500); color: var(--text-dim);
+  font-size: 11.5px; font-weight: 600; cursor: pointer;
+}
+.chip-btn:hover { background: var(--accent); color: #fff; }
+.trade-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
 .prop-list { display: flex; flex-direction: column; gap: 6px; }
 .prop-row {
   display: grid; grid-template-columns: 4px 1fr auto; gap: 10px; align-items: center;
@@ -615,6 +673,23 @@ button, input, select { font: inherit; color: inherit; }
 .tape-item .px { color: var(--text-dim); }
 .tape-item .chg.up { color: var(--up); }
 .tape-item .chg.down { color: var(--down); }
+
+/* a headline takes the tape over for a few seconds */
+.market-flash {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 14px;
+  background: var(--ink-500);
+  font-size: 12.5px; color: var(--text-dim);
+  opacity: 0; transform: translateY(-100%);
+  transition: opacity .25s, transform .25s;
+  pointer-events: none;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.market-flash.is-live { opacity: 1; transform: translateY(0); }
+.market-flash b { font-family: var(--font-num); font-weight: 700; }
+.market-flash b.up { color: var(--up); }
+.market-flash b.down { color: var(--down); }
 
 /* ── board ───────────────────────────────── */
 .board-wrap {
@@ -889,6 +964,7 @@ button, input, select { font: inherit; color: inherit; }
     <main class="table-main">
       <div class="ticker" id="ticker" aria-label="Market ticker">
         <div class="ticker-track" id="ticker-track"></div>
+        <div class="market-flash" id="market-flash" role="status"></div>
       </div>
 
       <div class="board-wrap" id="board-wrap">
@@ -995,8 +1071,7 @@ button, input, select { font: inherit; color: inherit; }
             <button class="tab" data-tab="trades" role="tab">Trades</button>
           </div>
           <div class="tab-panel is-active" data-panel="market">
-            <div class="market-list" id="market-list"></div>
-            <p class="panel-note">Trading, dividends and price shocks arrive in V2. Prices already drift so you can watch the tape.</p>
+            <div id="market-panel"></div>
           </div>
           <div class="tab-panel" data-panel="props">
             <div class="prop-list" id="prop-list"></div>
@@ -1032,7 +1107,7 @@ button, input, select { font: inherit; color: inherit; }
    ═══════════════════════════════════════════ */
 window.MM = window.MM || {};
 
-MM.VERSION = "V1.5";
+MM.VERSION = "V2";
 
 MM.RELEASES = [
   {
@@ -1073,17 +1148,21 @@ MM.RELEASES = [
     ]
   },
   {
-    v: "V2", name: "The exchange", status: "next",
+    v: "V2", name: "The exchange", status: "shipped",
     items: [
       "Buy and sell shares in all five companies from the Market tab",
-      "Dividends paid on every lap past START",
-      "Prices that move on market events and Surprise cards",
-      "Building on the board lifting the company that owns the sector",
-      "Portfolio value folded into net worth"
+      "Dividends paid every time you pass START",
+      "Price charts: a sparkline per listing, a full chart in the trade panel",
+      "Twelve market headlines that move a company or the whole tape",
+      "Four insider cards in the decks that move a share price",
+      "Fundamentals: airports lift SKY, utilities lift VLT, houses lift BRK, cash in play lifts AUR",
+      "Your own orders nudge the price — big trades cost you",
+      "Shares sell before deeds get mortgaged when you're short",
+      "Portfolio value and dividends folded into net worth"
     ]
   },
   {
-    v: "V2.5", name: "Bot brains", status: "planned",
+    v: "V2.5", name: "Bot brains", status: "next",
     items: [
       "The Tycoon buys and builds relentlessly",
       "The Banker hoards dividend stock and a cash buffer",
@@ -1250,16 +1329,18 @@ MM.PERSONALITIES = [
 ];
 
 /* The five listed companies. V2 turns these into a live order book. */
+/* Identity colours are the first five slots of the validated categorical
+   palette, in this order — swapping them around fails the CVD checks. */
 MM.STOCKS = [
-  { sym: "SKY", name: "Skyline Air Group", sector: "Airports",  color: "#4e97ff",
+  { sym: "SKY", name: "Skyline Air Group", sector: "Airports",   color: "#3987e5",
     price: 120, yield: 0.05, vol: 0.05 },
-  { sym: "VLT", name: "Voltaic Power",     sector: "Utilities", color: "#ffc24b",
+  { sym: "VLT", name: "Voltaic Power",     sector: "Utilities",  color: "#d95926",
     price: 95,  yield: 0.06, vol: 0.04 },
-  { sym: "BRK", name: "Brickstone Realty", sector: "Property",  color: "#ff8a5c",
+  { sym: "BRK", name: "Brickstone Realty", sector: "Property",   color: "#199e70",
     price: 150, yield: 0.03, vol: 0.06 },
-  { sym: "TCH", name: "Helix Tech",        sector: "Technology",color: "#7ab8ff",
+  { sym: "TCH", name: "Helix Tech",        sector: "Technology", color: "#c98500",
     price: 210, yield: 0.01, vol: 0.11 },
-  { sym: "AUR", name: "Aurum Bank",        sector: "Finance",   color: "#3dd68c",
+  { sym: "AUR", name: "Aurum Bank",        sector: "Finance",    color: "#d55181",
     price: 80,  yield: 0.08, vol: 0.03 }
 ];
 
@@ -1281,6 +1362,27 @@ MM.BOT_LINES = {
   passGo:   ["dividend day", "salary secured", "another lap, another payout"],
   bigMoney: ["cash is king", "I'll take it", "noted."]
 };
+
+
+/* ── src/data/market-events.js ── */
+/* ═══ headlines that move the tape ═══
+   `sym` moves one company; `all` moves every listing. */
+window.MM = window.MM || {};
+
+MM.MARKET_EVENTS = [
+  { sym: "SKY", pct: 0.09,  head: "Open-skies deal signed — Skyline Air adds four routes" },
+  { sym: "SKY", pct: -0.10, head: "Fuel prices spike and the airlines get squeezed" },
+  { sym: "VLT", pct: 0.07,  head: "Heatwave drives record demand at Voltaic Power" },
+  { sym: "VLT", pct: -0.06, head: "Regulator caps household tariffs" },
+  { sym: "BRK", pct: 0.11,  head: "Housing boom — Brickstone lands a city contract" },
+  { sym: "BRK", pct: -0.09, head: "Construction costs bite into Brickstone margins" },
+  { sym: "TCH", pct: 0.16,  head: "Helix Tech ships the chip everyone was waiting for" },
+  { sym: "TCH", pct: -0.14, head: "Helix Tech guidance disappoints the street" },
+  { sym: "AUR", pct: 0.06,  head: "Aurum Bank beats on lending income" },
+  { sym: "AUR", pct: -0.07, head: "A rate cut squeezes Aurum Bank's margins" },
+  { all: 0.05,  head: "Risk-on session — the whole board rallies" },
+  { all: -0.06, head: "Profit taking hits every listing" }
+];
 
 
 /* ── src/data/cards.js ── */
@@ -1318,7 +1420,11 @@ MM.DECKS = {
     { text: "Advance to the nearest utility. Rent is ten times your roll.",
       effect: { type: "nearest", kind: "utility", multiplier: 10 } },
     { text: "You are elected chair of the board — pay each player $50.",
-      effect: { type: "payEach", amount: 50 } }
+      effect: { type: "payEach", amount: 50 } },
+    { text: "A tip you probably shouldn't have heard: Helix Tech is about to pop.",
+      insider: true, effect: { type: "stock", sym: "TCH", pct: 0.14 } },
+    { text: "A substation fire takes Voltaic Power offline for a week.",
+      insider: true, effect: { type: "stock", sym: "VLT", pct: -0.11 } }
   ],
 
   treasure: [
@@ -1337,7 +1443,11 @@ MM.DECKS = {
     { text: "You inherit $100.", effect: { type: "cash", amount: 100 } },
     { text: "Street repairs: $40 per house, $115 per hotel.",
       effect: { type: "repairs", house: 40, hotel: 115 } },
-    { text: "Second prize in a beauty contest — collect $10.", effect: { type: "cash", amount: 10 } }
+    { text: "Second prize in a beauty contest — collect $10.", effect: { type: "cash", amount: 10 } },
+    { text: "Brickstone Realty wins the city regeneration contract.",
+      insider: true, effect: { type: "stock", sym: "BRK", pct: 0.12 } },
+    { text: "Aurum Bank restates last quarter's earnings. Ouch.",
+      insider: true, effect: { type: "stock", sym: "AUR", pct: -0.09 } }
   ]
 };
 
@@ -1425,7 +1535,7 @@ MM.createGame = function (opts) {
     id: 0, name: (opts && opts.nickname) || "You", avatar: "😀",
     color: "var(--p1)", hex: "#4e97ff", bot: false, personality: null,
     cash: settings.startingCash, pos: 0, jailed: false, jailTurns: 0,
-    doubles: 0, alive: true, portfolio: {}, getOut: 0, lastDelta: 0
+    doubles: 0, alive: true, portfolio: {}, getOut: 0, lastDelta: 0, divTotal: 0
   });
 
   const roster = MM.PERSONALITIES.slice(0, Math.max(0, settings.players - 1));
@@ -1435,7 +1545,7 @@ MM.createGame = function (opts) {
       id: n + 1, name: p.name, avatar: p.avatar,
       color: p.color, hex: hexes[p.id], bot: true, personality: p.id,
       cash: settings.startingCash, pos: 0, jailed: false, jailTurns: 0,
-      doubles: 0, alive: true, portfolio: {}, getOut: 0, lastDelta: 0
+      doubles: 0, alive: true, portfolio: {}, getOut: 0, lastDelta: 0, divTotal: 0
     });
   });
 
@@ -1450,13 +1560,15 @@ MM.createGame = function (opts) {
     piles: {},              /* shuffled card piles           */
     houses: {},             /* tileIndex → 0–5 (5 = hotel)   */
     mortgaged: {},          /* tileIndex → true              */
-    stocks: MM.STOCKS.map((s) => Object.assign({}, s, { open: s.price, prev: s.price })),
+    stocks: MM.STOCKS.map((s) => Object.assign({}, s, { open: s.price, prev: s.price, base: s.price })),
     vacationPot: 0,
+    headline: null,
     log: [],
     chat: [],
     room: "room-" + Math.random().toString(36).slice(2, 7)
   };
 
+  MM.market.init(state);
   MM.state = state;
   return state;
 };
@@ -1538,6 +1650,15 @@ MM.bankrupt = function (s, debtor, creditor, reason) {
     }
   });
 
+  /* shares transfer with the estate; to the bank they simply vanish */
+  Object.keys(debtor.portfolio).forEach((sym) => {
+    const qty = debtor.portfolio[sym];
+    if (qty > 0 && creditor && creditor.alive) {
+      creditor.portfolio[sym] = (creditor.portfolio[sym] || 0) + qty;
+    }
+    debtor.portfolio[sym] = 0;
+  });
+
   if (creditor && creditor.alive) {
     if (debtor.cash > 0) MM.credit(s, creditor, debtor.cash, "estate");
     MM.prop.estateTo(s, debtor, creditor);
@@ -1548,6 +1669,7 @@ MM.bankrupt = function (s, debtor, creditor, reason) {
   }
 
   debtor.cash = 0;
+  MM.market.onBankrupt(s);
   MM.bus.emit("bankrupt", { debtor, creditor });
   MM.bus.emit("state", s);
 };
@@ -1565,18 +1687,8 @@ MM.chat = function (s, name, text, hex) {
   MM.bus.emit("chat", entry);
 };
 
-/* ── stock tape ──────────────────────────────
-   V1 only drifts prices so the ticker is alive.
-   V2 replaces this with event-driven repricing. */
-MM.driftMarket = function (s) {
-  const k = MM.VOLATILITY[s.settings.volatility] || 1;
-  s.stocks.forEach((st) => {
-    st.prev = st.price;
-    const move = st.price * st.vol * k * s.rng.gauss() * 0.5;
-    st.price = Math.max(5, Math.round((st.price + move) * 100) / 100);
-  });
-  MM.bus.emit("market", s.stocks);
-};
+/* the tape moves through the exchange now — see core/market.js */
+MM.driftMarket = (s) => MM.market.tick(s);
 
 
 /* ── src/core/dice.js ── */
@@ -1591,6 +1703,202 @@ MM.rollDice = function (rng) {
 
 /* Rig a roll — used by tests and by the "3 doubles" demo in the rules modal. */
 MM.fixedRoll = (a, b) => ({ a, b, sum: a + b, isDouble: a === b, rolled: true });
+
+
+/* ── src/core/market.js ── */
+/* ═══════════════════════════════════════════
+   The exchange
+   Five listings, priced by three forces:
+     · fundamentals — what's actually been built and bought
+     · headlines    — random events and insider cards
+     · flow         — the price impact of your own orders
+   ═══════════════════════════════════════════ */
+window.MM = window.MM || {};
+
+MM.market = {
+  HISTORY: 48,
+  IMPACT: 0.0015,     /* price impact per share traded, capped below */
+  MAX_IMPACT: 0.03,
+
+  stock(s, sym) { return s.stocks.find((x) => x.sym === sym); },
+  held(player, sym) { return player.portfolio[sym] || 0; },
+
+  /* Seed a little prior history so the charts read as a market that was
+     already running when you sat down, rather than a single dot. */
+  init(s) {
+    s.stocks.forEach((st) => {
+      st.anchor = st.price;
+      const past = [st.price];
+      let v = st.price;
+      for (let i = 0; i < 13; i++) {
+        v = this.clamp(v - v * st.vol * s.rng.gauss() * 0.4);
+        past.unshift(v);
+      }
+      st.history = past;
+    });
+  },
+
+  /* ── what the board says a company is worth ─ */
+  fundamentals(s) {
+    let houses = 0, airports = 0, utilities = 0, cash = 0;
+    MM.BOARD.forEach((t) => {
+      if (s.ownership[t.i] === undefined) return;
+      if (t.type === "airport") airports += 1;
+      if (t.type === "utility") utilities += 1;
+      houses += s.houses[t.i] || 0;
+    });
+    MM.livePlayers(s).forEach((p) => { cash += p.cash; });
+
+    return {
+      SKY: 1 + 0.07 * airports,
+      VLT: 1 + 0.09 * utilities,
+      BRK: 1 + 0.028 * houses,
+      TCH: 1,
+      AUR: 1 + Math.min(0.5, cash / 40000)
+    };
+  },
+
+  /* ── one round of trading ───────────────── */
+  tick(s) {
+    const k = MM.VOLATILITY[s.settings.volatility] || 1;
+    const fund = this.fundamentals(s);
+
+    s.stocks.forEach((st) => {
+      st.prev = st.price;
+      st.anchor = st.base * (fund[st.sym] || 1);
+      const pull = (st.anchor - st.price) * 0.08;
+      const noise = st.price * st.vol * k * s.rng.gauss() * 0.5;
+      st.price = this.clamp(st.price + pull + noise);
+    });
+
+    if (s.rng.chance(0.32 * k)) this.fireEvent(s);
+
+    this.record(s);
+    MM.bus.emit("market", s.stocks);
+  },
+
+  clamp(v) { return Math.max(5, Math.round(v * 100) / 100); },
+
+  record(s) {
+    s.stocks.forEach((st) => {
+      st.history.push(st.price);
+      if (st.history.length > this.HISTORY) st.history.shift();
+    });
+  },
+
+  /* ── headlines ──────────────────────────── */
+  fireEvent(s) {
+    const e = s.rng.pick(MM.MARKET_EVENTS);
+    if (e.all !== undefined) {
+      s.stocks.forEach((st) => { st.price = this.clamp(st.price * (1 + e.all)); });
+    } else {
+      const st = this.stock(s, e.sym);
+      st.price = this.clamp(st.price * (1 + e.pct));
+    }
+    const move = e.all !== undefined ? e.all : e.pct;
+    s.headline = { text: e.head, sym: e.sym || "ALL", pct: move };
+    MM.log(s, `📰 ${e.head} — <b>${e.sym || "the market"}</b> ${move > 0 ? "+" : ""}${Math.round(move * 100)}%`);
+    MM.bus.emit("headline", s.headline);
+  },
+
+  /* a one-off move from a card or a board event */
+  shock(s, sym, pct, why) {
+    const st = this.stock(s, sym);
+    if (!st) return;
+    st.price = this.clamp(st.price * (1 + pct));
+    if (why) {
+      s.headline = { text: why, sym, pct };
+      MM.bus.emit("headline", s.headline);
+    }
+    MM.bus.emit("market", s.stocks);
+  },
+
+  /* ── trading ────────────────────────────── */
+  cost(s, sym, qty) { return Math.round(this.stock(s, sym).price * qty); },
+
+  maxBuy(s, player, sym) { return Math.floor(player.cash / this.stock(s, sym).price); },
+
+  buy(s, player, sym, qty) {
+    const st = this.stock(s, sym);
+    if (!st || qty <= 0) return false;
+    const bill = this.cost(s, sym, qty);
+    if (player.cash < bill) return false;
+
+    MM.debit(s, player, bill, "shares");
+    player.portfolio[sym] = this.held(player, sym) + qty;
+    st.price = this.clamp(st.price * (1 + Math.min(this.MAX_IMPACT, this.IMPACT * qty)));
+
+    MM.log(s, `<b>${player.name}</b> bought <b>${qty}</b> ${sym} for <span class="money">${MM.money(bill)}</span>`, player);
+    this.after(s);
+    return true;
+  },
+
+  sell(s, player, sym, qty) {
+    const st = this.stock(s, sym);
+    const have = this.held(player, sym);
+    if (!st || qty <= 0 || have < qty) return false;
+
+    const proceeds = this.cost(s, sym, qty);
+    MM.credit(s, player, proceeds, "shares");
+    player.portfolio[sym] = have - qty;
+    st.price = this.clamp(st.price * (1 - Math.min(this.MAX_IMPACT, this.IMPACT * qty)));
+
+    MM.log(s, `<b>${player.name}</b> sold <b>${qty}</b> ${sym} for <span class="money">${MM.money(proceeds)}</span>`, player);
+    this.after(s);
+    return true;
+  },
+
+  after(s) {
+    MM.bus.emit("market", s.stocks);
+    MM.bus.emit("state", s);
+  },
+
+  /* ── dividends, paid on every lap ───────── */
+  dividends(s, player) {
+    if (!s.rules.dividends) return 0;
+    let total = 0;
+    s.stocks.forEach((st) => {
+      const qty = this.held(player, st.sym);
+      if (qty) total += Math.round(qty * st.price * st.yield);
+    });
+    if (total > 0) {
+      MM.credit(s, player, total, "dividends");
+      player.divTotal = (player.divTotal || 0) + total;
+      MM.log(s, `<b>${player.name}</b> collected <span class="money">${MM.money(total)}</span> in dividends`, player);
+    }
+    return total;
+  },
+
+  /* ── board events that move a price ─────── */
+  onBuild(s, tile) {
+    const corp = tile.group ? MM.GROUPS[tile.group].corp : null;
+    if (corp) this.shock(s, corp, 0.012);
+  },
+
+  onDeed(s, tile) {
+    if (tile.type === "airport") this.shock(s, "SKY", 0.02);
+    else if (tile.type === "utility") this.shock(s, "VLT", 0.025);
+  },
+
+  onBankrupt(s) { this.shock(s, "AUR", -0.05, "A player folds — Aurum Bank writes off the loans"); },
+
+  /* ── raising cash: shares go before deeds ─ */
+  liquidateFor(s, player, target) {
+    let guard = 60;
+    while (player.cash < target && guard-- > 0) {
+      const holdings = s.stocks
+        .filter((st) => this.held(player, st.sym) > 0)
+        .sort((a, b) => a.yield - b.yield);          /* keep the income earners longest */
+      if (!holdings.length) break;
+
+      const st = holdings[0];
+      const need = target - player.cash;
+      const qty = Math.min(this.held(player, st.sym), Math.max(1, Math.ceil(need / st.price)));
+      this.sell(s, player, st.sym, qty);
+    }
+    return player.cash;
+  }
+};
 
 
 /* ── src/core/property.js ── */
@@ -1626,6 +1934,7 @@ MM.prop = {
     MM.debit(s, player, cost, "purchase");
     s.ownership[tile.i] = player.id;
     MM.log(s, `<b>${player.name}</b> bought ${tile.name} for <span class="money">${MM.money(cost)}</span>`, player);
+    MM.market.onDeed(s, tile);
     MM.bus.emit("bought", { player, tile, cost });
     MM.bus.emit("state", s);
   },
@@ -1667,6 +1976,7 @@ MM.prop = {
     s.houses[tile.i] = (s.houses[tile.i] || 0) + 1;
     const what = s.houses[tile.i] === 5 ? "a hotel" : "a house";
     MM.log(s, `<b>${player.name}</b> built ${what} on ${tile.name} for <span class="money">${MM.money(cost)}</span>`, player);
+    MM.market.onBuild(s, tile);
     MM.bus.emit("built", { player, tile });
     MM.bus.emit("state", s);
     return true;
@@ -1739,6 +2049,9 @@ MM.prop = {
 
   /* Sell buildings first, then mortgage — cheapest deeds go last. */
   raiseCash(s, player, target) {
+    /* shares are the most liquid thing anyone holds */
+    if (player.cash < target) MM.market.liquidateFor(s, player, target);
+
     const owned = () => MM.tilesOf(s, player.id).sort((a, b) => b.price - a.price);
 
     let guard = 200;
@@ -1780,7 +2093,8 @@ window.MM = window.MM || {};
 MM.cards = {
   /* shuffle a fresh pile whenever one runs out */
   refill(s, kind) {
-    const pile = MM.DECKS[kind].slice();
+    /* insider cards only exist when the house rule is on */
+    const pile = MM.DECKS[kind].filter((c) => s.rules.insiderCards || !c.insider);
     for (let i = pile.length - 1; i > 0; i--) {
       const j = Math.floor(s.rng.float() * (i + 1));
       [pile[i], pile[j]] = [pile[j], pile[i]];
@@ -1838,6 +2152,14 @@ MM.cards = {
         } else {
           MM.log(s, `<b>${player.name}</b> owns nothing to repair`, player);
         }
+        break;
+      }
+
+      case "stock": {
+        const st = MM.market.stock(s, e.sym);
+        const before = st.price;
+        MM.market.shock(s, e.sym, e.pct, card.text);
+        MM.log(s, `<b>${e.sym}</b> moved from <span class="money">$${before.toFixed(2)}</span> to <span class="money">$${st.price.toFixed(2)}</span>`, player);
         break;
       }
 
@@ -1904,6 +2226,7 @@ window.MM = window.MM || {};
 MM.bots = {
   RESERVE: 120,        /* cash a bot likes to keep in hand   */
   BUILD_FLOOR: 450,    /* won't spend below this on building */
+  INVEST_FLOOR: 800,   /* cash above this can go into shares    */
 
   reserve(s, p) {
     return this.RESERVE + (s.settings.botSkill === "ruthless" ? 0 : 60);
@@ -1941,6 +2264,18 @@ MM.bots = {
       const held = MM.tilesOf(s, p.id).find((t) => MM.prop.canUnmortgage(s, p, t));
       if (held) MM.prop.unmortgage(s, p, held);
     }
+
+    this.invest(s, p);
+  },
+
+  /* Baseline investing: park spare cash in the best dividend on offer.
+     V2.5 gives each personality its own view of the tape. */
+  invest(s, p) {
+    if (p.cash < this.INVEST_FLOOR) return;
+    const spend = Math.floor((p.cash - this.INVEST_FLOOR) * 0.5);
+    const pick = s.stocks.slice().sort((a, b) => b.yield - a.yield)[0];
+    const qty = Math.floor(spend / pick.price);
+    if (qty > 0) MM.market.buy(s, p, pick.sym, qty);
   }
 };
 
@@ -2140,7 +2475,8 @@ MM.turn = {
   passGo(s, p) {
     MM.credit(s, p, MM.GO_SALARY, "salary");
     MM.log(s, `<b>${p.name}</b> passed START and collected <span class="money">${MM.money(MM.GO_SALARY)}</span>`, p);
-    MM.bus.emit("pass-go", p); /* V2 hangs dividends off this */
+    MM.market.dividends(s, p);
+    MM.bus.emit("pass-go", p);
   },
 
   async sendToPrison(s, p) {
@@ -3260,6 +3596,206 @@ MM.deal = {
 };
 
 
+/* ── src/ui/market-ui.js ── */
+/* ═══════════════════════════════════════════
+   The Market tab: a list of listings, and a
+   trade panel for whichever one you open.
+   Charts are inline SVG — one series each, so the
+   line carries direction and the label carries the
+   number; never colour alone.
+   ═══════════════════════════════════════════ */
+window.MM = window.MM || {};
+
+MM.marketUI = {
+  open: null,      /* symbol currently expanded */
+  qty: 1,
+
+  mount(el) {
+    this.el = el;
+    MM.bus.on("headline", (h) => this.flash(h));
+  },
+
+  render() {
+    const s = MM.state;
+    if (!s || !this.el) return;
+    this.el.innerHTML = this.open ? this.tradePanel(s, this.open) : this.list(s);
+    this.bind(s);
+  },
+
+  /* ── list view ──────────────────────────── */
+  list(s) {
+    const you = s.players[0];
+    const rows = s.stocks.map((st) => {
+      const chg = ((st.price - st.open) / st.open) * 100;
+      const dir = chg >= 0 ? "up" : "down";
+      const qty = MM.market.held(you, st.sym);
+      return `
+        <button class="stock-row stock-row--btn" data-sym="${st.sym}">
+          <div class="stock-sym" style="--scolor:${st.color}">${st.sym}</div>
+          <div class="stock-id">
+            <div class="stock-name">${st.name}</div>
+            <div class="stock-meta">${qty ? `You hold ${qty}` : `${st.sector} · ${(st.yield * 100).toFixed(0)}% yield`}</div>
+          </div>
+          ${this.spark(st, 64, 24)}
+          <div class="stock-price">
+            <b>$${st.price.toFixed(2)}</b>
+            <span class="stock-chg ${dir}">${chg >= 0 ? "▲" : "▼"} ${Math.abs(chg).toFixed(1)}%</span>
+          </div>
+        </button>`;
+    }).join("");
+
+    const worth = MM.portfolioValue(s, you);
+    return `
+      <div class="port-strip">
+        <div><span>Cash</span><b>${MM.money(you.cash)}</b></div>
+        <div><span>Holdings</span><b>${MM.money(worth)}</b></div>
+        <div><span>Dividends</span><b class="up">${MM.money(you.divTotal || 0)}</b></div>
+      </div>
+      <div class="market-list">${rows}</div>
+      <p class="panel-note">Dividends land every time you pass START. Building on the board lifts the company that owns the sector.</p>`;
+  },
+
+  /* ── one listing, with the trade controls ── */
+  tradePanel(s, sym) {
+    const st = MM.market.stock(s, sym);
+    const you = s.players[0];
+    const qty = this.qty;
+    const held = MM.market.held(you, sym);
+    const chg = ((st.price - st.open) / st.open) * 100;
+    const dir = chg >= 0 ? "up" : "down";
+    const cost = MM.market.cost(s, sym, qty);
+    const canBuy = you.cash >= cost && you.alive;
+    const canSell = held >= qty && you.alive;
+    const lo = Math.min(...st.history);
+    const hi = Math.max(...st.history);
+
+    return `
+      <div class="trade-head">
+        <button class="mini-btn" data-back="1" title="Back to the market">←</button>
+        <div class="stock-sym" style="--scolor:${st.color}">${st.sym}</div>
+        <div class="stock-id">
+          <div class="stock-name">${st.name}</div>
+          <div class="stock-meta">${st.sector} · ${(st.yield * 100).toFixed(0)}% per lap</div>
+        </div>
+      </div>
+
+      <div class="trade-price">
+        <b>$${st.price.toFixed(2)}</b>
+        <span class="stock-chg ${dir}">${chg >= 0 ? "▲" : "▼"} ${Math.abs(chg).toFixed(2)}% today</span>
+      </div>
+
+      ${this.chart(st)}
+      <div class="chart-scale"><span>low $${lo.toFixed(0)}</span><span>high $${hi.toFixed(0)}</span></div>
+
+      <div class="trade-stats">
+        <div><span>You hold</span><b>${held}</b></div>
+        <div><span>Position</span><b>${MM.money(held * st.price)}</b></div>
+        <div><span>Per lap</span><b class="up">${MM.money(Math.round(held * st.price * st.yield))}</b></div>
+      </div>
+
+      <div class="qty-row">
+        <button class="mini-btn" data-qty="-1">−</button>
+        <span class="qty-value">${qty}</span>
+        <button class="mini-btn" data-qty="1">＋</button>
+        <button class="chip-btn" data-qty="5">+5</button>
+        <button class="chip-btn" data-qty="max">Max</button>
+      </div>
+
+      <div class="trade-actions">
+        <button class="btn btn--primary btn--sm" data-trade="buy" ${canBuy ? "" : "disabled"}>Buy · ${MM.money(cost)}</button>
+        <button class="btn btn--muted btn--sm" data-trade="sell" ${canSell ? "" : "disabled"}>Sell · ${MM.money(cost)}</button>
+      </div>`;
+  },
+
+  /* ── charts ─────────────────────────────── */
+  points(hist, w, h, pad) {
+    const lo = Math.min(...hist);
+    const hi = Math.max(...hist);
+    const span = hi - lo;
+    const step = hist.length > 1 ? (w - pad * 2) / (hist.length - 1) : 0;
+    /* a dead-flat series belongs on the midline, not the floor */
+    return hist.map((v, i) => [
+      pad + i * step,
+      span === 0 ? h / 2 : pad + (1 - (v - lo) / span) * (h - pad * 2)
+    ]);
+  },
+
+  spark(st, w, h) {
+    const hist = st.history.length > 1 ? st.history : [st.price, st.price];
+    const pts = this.points(hist, w, h, 3);
+    const rising = hist[hist.length - 1] >= hist[0];
+    const stroke = rising ? "var(--up)" : "var(--down)";
+    const line = pts.map((p) => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ");
+    const last = pts[pts.length - 1];
+    return `
+      <svg class="spark" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true">
+        <polyline points="${line}" fill="none" stroke="${stroke}" stroke-width="2"
+                  stroke-linejoin="round" stroke-linecap="round" />
+        <circle cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="2.5" fill="${stroke}" />
+      </svg>`;
+  },
+
+  chart(st) {
+    const w = 300, h = 110;
+    const hist = st.history.length > 1 ? st.history : [st.price, st.price];
+    const pts = this.points(hist, w, h, 8);
+    const rising = hist[hist.length - 1] >= hist[0];
+    const stroke = rising ? "var(--up)" : "var(--down)";
+    const line = pts.map((p) => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ");
+    const area = `${pts[0][0]},${h} ${line} ${pts[pts.length - 1][0]},${h}`;
+    const last = pts[pts.length - 1];
+
+    return `
+      <svg class="chart" viewBox="0 0 ${w} ${h}" role="img"
+           aria-label="${st.sym} price over the last ${hist.length} rounds">
+        <line x1="0" y1="${h / 2}" x2="${w}" y2="${h / 2}" class="chart-grid" />
+        <polygon points="${area}" fill="${stroke}" opacity=".12" />
+        <polyline points="${line}" fill="none" stroke="${stroke}" stroke-width="2"
+                  stroke-linejoin="round" stroke-linecap="round" />
+        <circle cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="4" fill="${stroke}"
+                stroke="var(--ink-600)" stroke-width="2" />
+      </svg>`;
+  },
+
+  /* ── wiring ─────────────────────────────── */
+  bind(s) {
+    const you = s.players[0];
+
+    this.el.querySelectorAll("[data-sym]").forEach((row) =>
+      row.addEventListener("click", () => { this.open = row.dataset.sym; this.qty = 1; this.render(); }));
+
+    const back = this.el.querySelector("[data-back]");
+    if (back) back.addEventListener("click", () => { this.open = null; this.render(); });
+
+    this.el.querySelectorAll("[data-qty]").forEach((b) =>
+      b.addEventListener("click", () => {
+        const v = b.dataset.qty;
+        if (v === "max") this.qty = Math.max(1, MM.market.maxBuy(s, you, this.open));
+        else this.qty = Math.max(1, this.qty + (+v));
+        this.render();
+      }));
+
+    this.el.querySelectorAll("[data-trade]").forEach((b) =>
+      b.addEventListener("click", () => {
+        const sym = this.open;
+        if (b.dataset.trade === "buy") MM.market.buy(s, you, sym, this.qty);
+        else MM.market.sell(s, you, sym, this.qty);
+        this.render();
+      }));
+  },
+
+  /* ── headline banner over the tape ──────── */
+  flash(h) {
+    const el = document.getElementById("market-flash");
+    if (!el) return;
+    el.innerHTML = `<b class="${h.pct >= 0 ? "up" : "down"}">${h.sym} ${h.pct >= 0 ? "+" : ""}${Math.round(h.pct * 100)}%</b> ${h.text}`;
+    el.classList.add("is-live");
+    clearTimeout(this._flash);
+    this._flash = setTimeout(() => el.classList.remove("is-live"), 5200);
+  }
+};
+
+
 /* ── src/ui/panels.js ── */
 /* ═══ side rails, log, chat and the market tape ═══ */
 window.MM = window.MM || {};
@@ -3273,7 +3809,7 @@ MM.panels = {
       host: el("#host-card"),
       bots: el("#bot-list"),
       rules: el("#rules-list"),
-      market: el("#market-list"),
+      market: el("#market-panel"),
       props: el("#prop-list"),
       status: el("#status-card"),
       ticker: el("#ticker-track"),
@@ -3288,6 +3824,7 @@ MM.panels = {
     MM.bus.on("log", (e) => this.pushLog(e));
     MM.bus.on("chat", (e) => this.pushChat(e));
     MM.bus.on("cash", (e) => this.cashPop(e));
+    MM.marketUI.mount(this.refs.market);
   },
 
   renderAll() {
@@ -3308,8 +3845,11 @@ MM.panels = {
         : "";
       const deeds = MM.tilesOf(s, p.id).length;
       const sets = MM.prop.setsOwned(s, p.id).length;
-      const holdings = deeds
-        ? `${deeds} deed${deeds > 1 ? "s" : ""}${sets ? ` · ${sets} set${sets > 1 ? "s" : ""}` : ""}`
+      const shares = s.stocks.reduce((n, st) => n + MM.market.held(p, st.sym), 0);
+      const holdings = deeds || shares
+        ? [deeds ? `${deeds} deed${deeds > 1 ? "s" : ""}` : null,
+           sets ? `${sets} set${sets > 1 ? "s" : ""}` : null,
+           shares ? `${shares} share${shares > 1 ? "s" : ""}` : null].filter(Boolean).join(" · ")
         : null;
 
       const sub = !p.alive ? "Bankrupt"
@@ -3392,25 +3932,7 @@ MM.panels = {
   },
 
   /* ── market ─────────────────────────────── */
-  renderMarket() {
-    const s = MM.state;
-    if (!s || !this.refs.market) return;
-    this.refs.market.innerHTML = s.stocks.map((st) => {
-      const chg = ((st.price - st.open) / st.open) * 100;
-      const dir = chg >= 0 ? "up" : "down";
-      return `<div class="stock-row">
-        <div class="stock-sym" style="--scolor:${st.color}">${st.sym}</div>
-        <div>
-          <div class="stock-name">${st.name}</div>
-          <div class="stock-meta">${st.sector} · ${(st.yield * 100).toFixed(0)}% yield</div>
-        </div>
-        <div class="stock-price">
-          <b>$${st.price.toFixed(2)}</b>
-          <span class="stock-chg ${dir}">${chg >= 0 ? "▲" : "▼"} ${Math.abs(chg).toFixed(1)}%</span>
-        </div>
-      </div>`;
-    }).join("");
-  },
+  renderMarket() { MM.marketUI.render(); },
 
   renderTicker() {
     const s = MM.state;

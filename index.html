@@ -106,6 +106,7 @@
     <main class="table-main">
       <div class="ticker" id="ticker" aria-label="Market ticker">
         <div class="ticker-track" id="ticker-track"></div>
+        <div class="market-flash" id="market-flash" role="status"></div>
       </div>
 
       <div class="board-wrap" id="board-wrap">
@@ -212,8 +213,7 @@
             <button class="tab" data-tab="trades" role="tab">Trades</button>
           </div>
           <div class="tab-panel is-active" data-panel="market">
-            <div class="market-list" id="market-list"></div>
-            <p class="panel-note">Trading, dividends and price shocks arrive in V2. Prices already drift so you can watch the tape.</p>
+            <div id="market-panel"></div>
           </div>
           <div class="tab-panel" data-panel="props">
             <div class="prop-list" id="prop-list"></div>
@@ -239,11 +239,13 @@
 <script src="src/data/versions.js"></script>
 <script src="src/data/board.js"></script>
 <script src="src/data/rules.js"></script>
+<script src="src/data/market-events.js"></script>
 <script src="src/data/cards.js"></script>
 <script src="src/core/rng.js"></script>
 <script src="src/core/emitter.js"></script>
 <script src="src/core/state.js"></script>
 <script src="src/core/dice.js"></script>
+<script src="src/core/market.js"></script>
 <script src="src/core/property.js"></script>
 <script src="src/core/cards.js"></script>
 <script src="src/core/bots.js"></script>
@@ -254,6 +256,7 @@
 <script src="src/render/board-renderer.js"></script>
 <script src="src/ui/dice-ui.js"></script>
 <script src="src/ui/deal.js"></script>
+<script src="src/ui/market-ui.js"></script>
 <script src="src/ui/panels.js"></script>
 <script src="src/ui/screens.js"></script>
 <script src="src/main.js"></script>

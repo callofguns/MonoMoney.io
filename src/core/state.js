@@ -31,7 +31,7 @@ MM.createGame = function (opts) {
     id: 0, name: (opts && opts.nickname) || "You", avatar: "😀",
     color: "var(--p1)", hex: "#4e97ff", bot: false, personality: null,
     cash: settings.startingCash, pos: 0, jailed: false, jailTurns: 0,
-    doubles: 0, alive: true, portfolio: {}, getOut: 0, lastDelta: 0
+    doubles: 0, alive: true, portfolio: {}, getOut: 0, lastDelta: 0, divTotal: 0
   });
 
   const roster = MM.PERSONALITIES.slice(0, Math.max(0, settings.players - 1));
@@ -41,7 +41,7 @@ MM.createGame = function (opts) {
       id: n + 1, name: p.name, avatar: p.avatar,
       color: p.color, hex: hexes[p.id], bot: true, personality: p.id,
       cash: settings.startingCash, pos: 0, jailed: false, jailTurns: 0,
-      doubles: 0, alive: true, portfolio: {}, getOut: 0, lastDelta: 0
+      doubles: 0, alive: true, portfolio: {}, getOut: 0, lastDelta: 0, divTotal: 0
     });
   });
 
@@ -56,13 +56,15 @@ MM.createGame = function (opts) {
     piles: {},              /* shuffled card piles           */
     houses: {},             /* tileIndex → 0–5 (5 = hotel)   */
     mortgaged: {},          /* tileIndex → true              */
-    stocks: MM.STOCKS.map((s) => Object.assign({}, s, { open: s.price, prev: s.price })),
+    stocks: MM.STOCKS.map((s) => Object.assign({}, s, { open: s.price, prev: s.price, base: s.price })),
     vacationPot: 0,
+    headline: null,
     log: [],
     chat: [],
     room: "room-" + Math.random().toString(36).slice(2, 7)
   };
 
+  MM.market.init(state);
   MM.state = state;
   return state;
 };
@@ -144,6 +146,15 @@ MM.bankrupt = function (s, debtor, creditor, reason) {
     }
   });
 
+  /* shares transfer with the estate; to the bank they simply vanish */
+  Object.keys(debtor.portfolio).forEach((sym) => {
+    const qty = debtor.portfolio[sym];
+    if (qty > 0 && creditor && creditor.alive) {
+      creditor.portfolio[sym] = (creditor.portfolio[sym] || 0) + qty;
+    }
+    debtor.portfolio[sym] = 0;
+  });
+
   if (creditor && creditor.alive) {
     if (debtor.cash > 0) MM.credit(s, creditor, debtor.cash, "estate");
     MM.prop.estateTo(s, debtor, creditor);
@@ -154,6 +165,7 @@ MM.bankrupt = function (s, debtor, creditor, reason) {
   }
 
   debtor.cash = 0;
+  MM.market.onBankrupt(s);
   MM.bus.emit("bankrupt", { debtor, creditor });
   MM.bus.emit("state", s);
 };
@@ -171,15 +183,5 @@ MM.chat = function (s, name, text, hex) {
   MM.bus.emit("chat", entry);
 };
 
-/* ── stock tape ──────────────────────────────
-   V1 only drifts prices so the ticker is alive.
-   V2 replaces this with event-driven repricing. */
-MM.driftMarket = function (s) {
-  const k = MM.VOLATILITY[s.settings.volatility] || 1;
-  s.stocks.forEach((st) => {
-    st.prev = st.price;
-    const move = st.price * st.vol * k * s.rng.gauss() * 0.5;
-    st.price = Math.max(5, Math.round((st.price + move) * 100) / 100);
-  });
-  MM.bus.emit("market", s.stocks);
-};
+/* the tape moves through the exchange now — see core/market.js */
+MM.driftMarket = (s) => MM.market.tick(s);

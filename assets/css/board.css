@@ -29,6 +29,23 @@
 .tape-item .chg.up { color: var(--up); }
 .tape-item .chg.down { color: var(--down); }
 
+/* a headline takes the tape over for a few seconds */
+.market-flash {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 14px;
+  background: var(--ink-500);
+  font-size: 12.5px; color: var(--text-dim);
+  opacity: 0; transform: translateY(-100%);
+  transition: opacity .25s, transform .25s;
+  pointer-events: none;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.market-flash.is-live { opacity: 1; transform: translateY(0); }
+.market-flash b { font-family: var(--font-num); font-weight: 700; }
+.market-flash b.up { color: var(--up); }
+.market-flash b.down { color: var(--down); }
+
 /* ── board ───────────────────────────────── */
 .board-wrap {
   position: relative;

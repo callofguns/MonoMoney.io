@@ -4,7 +4,8 @@ window.MM = window.MM || {};
 MM.cards = {
   /* shuffle a fresh pile whenever one runs out */
   refill(s, kind) {
-    const pile = MM.DECKS[kind].slice();
+    /* insider cards only exist when the house rule is on */
+    const pile = MM.DECKS[kind].filter((c) => s.rules.insiderCards || !c.insider);
     for (let i = pile.length - 1; i > 0; i--) {
       const j = Math.floor(s.rng.float() * (i + 1));
       [pile[i], pile[j]] = [pile[j], pile[i]];
@@ -62,6 +63,14 @@ MM.cards = {
         } else {
           MM.log(s, `<b>${player.name}</b> owns nothing to repair`, player);
         }
+        break;
+      }
+
+      case "stock": {
+        const st = MM.market.stock(s, e.sym);
+        const before = st.price;
+        MM.market.shock(s, e.sym, e.pct, card.text);
+        MM.log(s, `<b>${e.sym}</b> moved from <span class="money">$${before.toFixed(2)}</span> to <span class="money">$${st.price.toFixed(2)}</span>`, player);
         break;
       }
 

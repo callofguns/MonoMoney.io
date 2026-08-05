@@ -32,7 +32,11 @@ MM.DECKS = {
     { text: "Advance to the nearest utility. Rent is ten times your roll.",
       effect: { type: "nearest", kind: "utility", multiplier: 10 } },
     { text: "You are elected chair of the board — pay each player $50.",
-      effect: { type: "payEach", amount: 50 } }
+      effect: { type: "payEach", amount: 50 } },
+    { text: "A tip you probably shouldn't have heard: Helix Tech is about to pop.",
+      insider: true, effect: { type: "stock", sym: "TCH", pct: 0.14 } },
+    { text: "A substation fire takes Voltaic Power offline for a week.",
+      insider: true, effect: { type: "stock", sym: "VLT", pct: -0.11 } }
   ],
 
   treasure: [
@@ -51,6 +55,10 @@ MM.DECKS = {
     { text: "You inherit $100.", effect: { type: "cash", amount: 100 } },
     { text: "Street repairs: $40 per house, $115 per hotel.",
       effect: { type: "repairs", house: 40, hotel: 115 } },
-    { text: "Second prize in a beauty contest — collect $10.", effect: { type: "cash", amount: 10 } }
+    { text: "Second prize in a beauty contest — collect $10.", effect: { type: "cash", amount: 10 } },
+    { text: "Brickstone Realty wins the city regeneration contract.",
+      insider: true, effect: { type: "stock", sym: "BRK", pct: 0.12 } },
+    { text: "Aurum Bank restates last quarter's earnings. Ouch.",
+      insider: true, effect: { type: "stock", sym: "AUR", pct: -0.09 } }
   ]
 };

@@ -10,7 +10,7 @@ MM.panels = {
       host: el("#host-card"),
       bots: el("#bot-list"),
       rules: el("#rules-list"),
-      market: el("#market-list"),
+      market: el("#market-panel"),
       props: el("#prop-list"),
       status: el("#status-card"),
       ticker: el("#ticker-track"),
@@ -25,6 +25,7 @@ MM.panels = {
     MM.bus.on("log", (e) => this.pushLog(e));
     MM.bus.on("chat", (e) => this.pushChat(e));
     MM.bus.on("cash", (e) => this.cashPop(e));
+    MM.marketUI.mount(this.refs.market);
   },
 
   renderAll() {
@@ -45,8 +46,11 @@ MM.panels = {
         : "";
       const deeds = MM.tilesOf(s, p.id).length;
       const sets = MM.prop.setsOwned(s, p.id).length;
-      const holdings = deeds
-        ? `${deeds} deed${deeds > 1 ? "s" : ""}${sets ? ` · ${sets} set${sets > 1 ? "s" : ""}` : ""}`
+      const shares = s.stocks.reduce((n, st) => n + MM.market.held(p, st.sym), 0);
+      const holdings = deeds || shares
+        ? [deeds ? `${deeds} deed${deeds > 1 ? "s" : ""}` : null,
+           sets ? `${sets} set${sets > 1 ? "s" : ""}` : null,
+           shares ? `${shares} share${shares > 1 ? "s" : ""}` : null].filter(Boolean).join(" · ")
         : null;
 
       const sub = !p.alive ? "Bankrupt"
@@ -129,25 +133,7 @@ MM.panels = {
   },
 
   /* ── market ─────────────────────────────── */
-  renderMarket() {
-    const s = MM.state;
-    if (!s || !this.refs.market) return;
-    this.refs.market.innerHTML = s.stocks.map((st) => {
-      const chg = ((st.price - st.open) / st.open) * 100;
-      const dir = chg >= 0 ? "up" : "down";
-      return `<div class="stock-row">
-        <div class="stock-sym" style="--scolor:${st.color}">${st.sym}</div>
-        <div>
-          <div class="stock-name">${st.name}</div>
-          <div class="stock-meta">${st.sector} · ${(st.yield * 100).toFixed(0)}% yield</div>
-        </div>
-        <div class="stock-price">
-          <b>$${st.price.toFixed(2)}</b>
-          <span class="stock-chg ${dir}">${chg >= 0 ? "▲" : "▼"} ${Math.abs(chg).toFixed(1)}%</span>
-        </div>
-      </div>`;
-    }).join("");
-  },
+  renderMarket() { MM.marketUI.render(); },
 
   renderTicker() {
     const s = MM.state;
