@@ -117,3 +117,36 @@
   .rail--right { order: 3; }
   .card--chat { min-height: 220px; }
 }
+
+/* ── phone layout ──────────────────────────
+   The board is the one thing worth losing scroll position over, so it
+   stays pinned while the player list, market and properties — the
+   controls you're actually reaching for mid-game — scroll underneath
+   it. Chat and the (currently cosmetic) share card drop below those:
+   useful, but not what you're looking at turn to turn. */
+@media (max-width: 640px) {
+  .screen--table { padding: 8px; gap: 8px; }
+
+  .table-main {
+    position: sticky; top: 0; z-index: 4;
+    gap: 6px;
+    margin: -8px -8px 0;
+    padding: 8px 8px 6px;
+    background: var(--ink-800);
+    box-shadow: 0 10px 18px rgba(0,0,0,.4);
+  }
+
+  .rail--right { order: 2; }
+  .rail--left { order: 3; }
+
+  .card { padding: 11px; }
+  .rail { gap: 8px; }
+
+  /* the version badge is redundant here (it's already in Build Status and
+     the home footer) and its width is exactly what pushes "What works"
+     onto a second line, stretching the whole button row to match */
+  .rail-actions-row .ver-chip { display: none; }
+
+  /* room for the home-indicator on notched phones */
+  .chat-form { padding-bottom: env(safe-area-inset-bottom, 0); }
+}

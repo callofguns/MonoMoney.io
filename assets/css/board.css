@@ -52,6 +52,15 @@
   flex: 1; min-height: 0;
   display: grid; place-items: center;
 }
+
+/* On the phone layout .table-main no longer fills a fixed-height column
+   (the page scrolls instead), so flex:1 has no real space to grow into —
+   width becomes the only dimension worth trusting. aspect-ratio gives
+   the renderer's resize() a real, predictable height to read instead of
+   whatever a height-less flex column happens to collapse to. */
+@media (max-width: 640px) {
+  .board-wrap { flex: none; width: 100%; aspect-ratio: 1 / 1; }
+}
 #board {
   display: block;
   border-radius: var(--r-lg);

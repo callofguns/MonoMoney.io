@@ -9,7 +9,7 @@
    ═══════════════════════════════════════════ */
 window.MM = window.MM || {};
 
-MM.VERSION = "V3.0.1";
+MM.VERSION = "V3.1";
 
 MM.RELEASES = [
   {
@@ -102,6 +102,18 @@ MM.RELEASES = [
       "The dice tumble for a full second before settling",
       "Tokens now step across the board more slowly",
       "Auction bids and bot card reveals hold a beat longer too"
+    ]
+  },
+  {
+    v: "V3.1", name: "Built for phones", status: "shipped",
+    items: [
+      "The board itself was the problem: it was capped at 320px on a phone regardless of screen size — now it fills the width, sticks to the top of the screen as you scroll, and stays legible on anything from an iPhone SE to a Pro Max",
+      "No hover on a touchscreen, so tapping a tile now shows the same price-and-rent card hover does on desktop",
+      "Player list, actions and the Market/Properties/Trades tabs now come right after the board — chat and the share link moved below them",
+      "Every button, tab and toggle sized up to a real touch target on a touchscreen, independent of screen width",
+      "Text inputs no longer trigger iOS's zoom-on-focus",
+      "No more 300ms tap delay or the grey flash Android/iOS show on every button press",
+      "A widescreen table (net worth, game over) fades at the edge to signal it scrolls sideways, instead of just clipping"
     ]
   }
 ];

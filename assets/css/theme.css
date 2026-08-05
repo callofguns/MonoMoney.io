@@ -70,6 +70,15 @@ b { font-weight: 700; }
 
 button, input, select { font: inherit; color: inherit; }
 
+/* every tap should register immediately, with none of the mobile-browser
+   defaults (the ~300ms double-tap-zoom wait, the grey flash on tap,
+   long-press callouts) that read as "this isn't really a button" */
+button, .tab, .partner-chip, .switch, .mini-btn, [role="tab"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
 :focus-visible {
   outline: 2px solid var(--accent-lift);
   outline-offset: 2px;

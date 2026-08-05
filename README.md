@@ -19,7 +19,7 @@ To produce the single-file shareable build:
 node tools/build-artifact.mjs   # → dist/monomoney.html
 ```
 
-## What works today (V3.0.1)
+## What works today (V3.1)
 
 - **40-tile board** rendered on canvas: 8 colour groups, 4 airports, 2 utilities,
   2 taxes, Surprise and Treasure tiles, and the four corners (START, In Prison,
@@ -66,6 +66,12 @@ node tools/build-artifact.mjs   # → dist/monomoney.html
   tile, a bot deciding whether to buy, staying in prison, the gap before the next
   player. The dice tumble a full second before settling, tokens step across the
   board more slowly, and bots take longer to act, scaled by bot skill.
+- **Built for phones** — the board fills the screen width and stays pinned to the
+  top as you scroll, instead of being capped at a fixed 320px square. Tapping a
+  tile shows the same price/rent card hover does on desktop. Player list and the
+  Market/Properties/Trades tabs sit right below the board; chat moved down. Every
+  button, tab and toggle sizes up to a real touch target on a touchscreen, and
+  text inputs no longer trigger iOS's zoom-on-focus.
 
 The full working / coming list lives in `src/data/versions.js` and is rendered
 in-game: **Build status** in the lobby rail, or *See what works today* on the
@@ -86,6 +92,7 @@ queued, as it is right now — V3 closed out the original roadmap).
 | V2.5 | Bot personalities make their own property and portfolio calls | ✅ Working |
 | V3 | Trades and a net-worth dashboard | ✅ Working |
 | V3.0.1 | Slower, more readable turn pacing | ✅ Working |
+| V3.1 | Built for phones — a bigger board, real touch targets, tap-to-inspect | ✅ Working |
 
 ## Layout
 
@@ -193,3 +200,33 @@ completed round, feeding a shared line chart used by both the Dashboard button a
 the game-over screen. Player identity colours are reused as-is, not freshly chosen —
 they already mean "this player" everywhere else on the table (token, avatar, chat),
 so the chart draws on an encoding that exists rather than inventing a new one.
+
+## Phones
+
+The board's size used to come from `.board-wrap { flex: 1 }` filling whatever
+vertical space its flex column had left — true on desktop, where the layout fills
+the viewport, but meaningless once the phone breakpoint drops that column to
+`height: auto` so the page can scroll instead. With no real space to fill, the
+renderer's own `Math.max(320, …)` floor was the only thing stopping the board from
+collapsing, and it fired every time: the board was hard-capped at 320px on every
+phone regardless of screen size. Below `640px` `.board-wrap` switches to
+`aspect-ratio: 1` instead, so its height comes from its width — a dimension the
+grid actually constrains — and the board now uses the full screen width on
+anything from an iPhone SE to a Pro Max.
+
+`.table-main` (ticker + board + dice/log) is `position: sticky; top: 0` on that
+same breakpoint, so it's still in view while the player list, market and
+properties — what you're actually reaching for between rolls — scroll underneath
+it. Chat and the share-link card, both lower priority once a game is running,
+moved below those in the stacking order.
+
+There's no hover on a touchscreen, so `board-renderer.js` binds `touchstart`/
+`touchend` alongside the existing `mousemove` and shows the same tile tooltip on a
+tap, held open for a few seconds rather than requiring continuous contact. A tap
+that turns out to be the start of a scroll (moved more than 12px) is left alone,
+so swiping the sticky board out of the way still works.
+
+Touch-target sizing lives under `@media (pointer: coarse)` rather than a width
+breakpoint — it's a touch laptop or a tablet in a wide window that needs a bigger
+switch or tab just as much as a phone does, regardless of how much horizontal
+space happens to be available.

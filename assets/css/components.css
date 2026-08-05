@@ -486,7 +486,14 @@
 
 .chart--net { margin-top: 4px; }
 
-.net-table-scroll { overflow-x: auto; margin-top: 10px; }
+/* the breakdown has five columns and the modal doesn't; a right-edge fade
+   plus a little breathing room past the last column signals "swipe me"
+   instead of just clipping "Rent earned" mid-word */
+.net-table-scroll {
+  overflow-x: auto; margin-top: 10px;
+  mask-image: linear-gradient(90deg, #000 92%, transparent);
+}
+.net-table-scroll .net-table { padding-right: 14px; }
 .net-table { min-width: 460px; }
 .net-table-head, .net-table-row {
   display: grid; grid-template-columns: 14px 84px repeat(4, 1fr);
@@ -506,3 +513,28 @@
 
 /* the game-over screen has one real action — no separate "Got it" to confuse it with */
 .modal.modal--single-action .modal-card > [data-action="close-modal"] { display: none; }
+
+/* ── touch targets ────────────────────────────────────────
+   Gated on the input actually being coarse (a finger, not a mouse) so a
+   touch-enabled laptop or a tablet in a wide window gets these too,
+   independent of viewport width — this is about the pointer, not the
+   screen size. Apple/Google both call ~44px the comfortable floor. */
+@media (pointer: coarse) {
+  .icon-btn { width: 40px; height: 40px; font-size: 15px; }
+  .mini-btn { width: 38px; height: 38px; font-size: 14px; }
+  .chip-btn { padding: 8px 13px; font-size: 12.5px; }
+  .btn--sm { padding: 11px 14px; }
+  .tab { padding: 12px 4px; }
+  .switch { width: 46px; height: 26px; }
+  .switch::after { width: 20px; height: 20px; }
+  .switch[aria-checked="true"]::after { transform: translateX(20px); }
+  .partner-chip { padding: 8px 13px 8px 6px; }
+  .partner-chip .avatar { width: 26px; height: 26px; }
+  .qty-value--sm { min-width: 26px; }
+
+  /* a field under 16px makes iOS Safari zoom in on focus — jarring
+     mid-game, so every text input clears that floor on a touch device */
+  .field, .trade-cash-input { font-size: 16px; }
+  .field--sm { padding: 11px 12px; }
+  .trade-cash-input { padding: 6px 4px; }
+}

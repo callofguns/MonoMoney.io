@@ -74,6 +74,15 @@ b { font-weight: 700; }
 
 button, input, select { font: inherit; color: inherit; }
 
+/* every tap should register immediately, with none of the mobile-browser
+   defaults (the ~300ms double-tap-zoom wait, the grey flash on tap,
+   long-press callouts) that read as "this isn't really a button" */
+button, .tab, .partner-chip, .switch, .mini-btn, [role="tab"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
 :focus-visible {
   outline: 2px solid var(--accent-lift);
   outline-offset: 2px;
@@ -260,6 +269,39 @@ button, input, select { font: inherit; color: inherit; }
   .rail--left { order: 2; }
   .rail--right { order: 3; }
   .card--chat { min-height: 220px; }
+}
+
+/* ── phone layout ──────────────────────────
+   The board is the one thing worth losing scroll position over, so it
+   stays pinned while the player list, market and properties — the
+   controls you're actually reaching for mid-game — scroll underneath
+   it. Chat and the (currently cosmetic) share card drop below those:
+   useful, but not what you're looking at turn to turn. */
+@media (max-width: 640px) {
+  .screen--table { padding: 8px; gap: 8px; }
+
+  .table-main {
+    position: sticky; top: 0; z-index: 4;
+    gap: 6px;
+    margin: -8px -8px 0;
+    padding: 8px 8px 6px;
+    background: var(--ink-800);
+    box-shadow: 0 10px 18px rgba(0,0,0,.4);
+  }
+
+  .rail--right { order: 2; }
+  .rail--left { order: 3; }
+
+  .card { padding: 11px; }
+  .rail { gap: 8px; }
+
+  /* the version badge is redundant here (it's already in Build Status and
+     the home footer) and its width is exactly what pushes "What works"
+     onto a second line, stretching the whole button row to match */
+  .rail-actions-row .ver-chip { display: none; }
+
+  /* room for the home-indicator on notched phones */
+  .chat-form { padding-bottom: env(safe-area-inset-bottom, 0); }
 }
 
 
@@ -752,7 +794,14 @@ button, input, select { font: inherit; color: inherit; }
 
 .chart--net { margin-top: 4px; }
 
-.net-table-scroll { overflow-x: auto; margin-top: 10px; }
+/* the breakdown has five columns and the modal doesn't; a right-edge fade
+   plus a little breathing room past the last column signals "swipe me"
+   instead of just clipping "Rent earned" mid-word */
+.net-table-scroll {
+  overflow-x: auto; margin-top: 10px;
+  mask-image: linear-gradient(90deg, #000 92%, transparent);
+}
+.net-table-scroll .net-table { padding-right: 14px; }
 .net-table { min-width: 460px; }
 .net-table-head, .net-table-row {
   display: grid; grid-template-columns: 14px 84px repeat(4, 1fr);
@@ -772,6 +821,31 @@ button, input, select { font: inherit; color: inherit; }
 
 /* the game-over screen has one real action — no separate "Got it" to confuse it with */
 .modal.modal--single-action .modal-card > [data-action="close-modal"] { display: none; }
+
+/* ── touch targets ────────────────────────────────────────
+   Gated on the input actually being coarse (a finger, not a mouse) so a
+   touch-enabled laptop or a tablet in a wide window gets these too,
+   independent of viewport width — this is about the pointer, not the
+   screen size. Apple/Google both call ~44px the comfortable floor. */
+@media (pointer: coarse) {
+  .icon-btn { width: 40px; height: 40px; font-size: 15px; }
+  .mini-btn { width: 38px; height: 38px; font-size: 14px; }
+  .chip-btn { padding: 8px 13px; font-size: 12.5px; }
+  .btn--sm { padding: 11px 14px; }
+  .tab { padding: 12px 4px; }
+  .switch { width: 46px; height: 26px; }
+  .switch::after { width: 20px; height: 20px; }
+  .switch[aria-checked="true"]::after { transform: translateX(20px); }
+  .partner-chip { padding: 8px 13px 8px 6px; }
+  .partner-chip .avatar { width: 26px; height: 26px; }
+  .qty-value--sm { min-width: 26px; }
+
+  /* a field under 16px makes iOS Safari zoom in on focus — jarring
+     mid-game, so every text input clears that floor on a touch device */
+  .field, .trade-cash-input { font-size: 16px; }
+  .field--sm { padding: 11px 12px; }
+  .trade-cash-input { padding: 6px 4px; }
+}
 
 
 /* ── assets/css/board.css ── */
@@ -828,6 +902,15 @@ button, input, select { font: inherit; color: inherit; }
   position: relative;
   flex: 1; min-height: 0;
   display: grid; place-items: center;
+}
+
+/* On the phone layout .table-main no longer fills a fixed-height column
+   (the page scrolls instead), so flex:1 has no real space to grow into —
+   width becomes the only dimension worth trusting. aspect-ratio gives
+   the renderer's resize() a real, predictable height to read instead of
+   whatever a height-less flex column happens to collapse to. */
+@media (max-width: 640px) {
+  .board-wrap { flex: none; width: 100%; aspect-ratio: 1 / 1; }
 }
 #board {
   display: block;
@@ -1245,7 +1328,7 @@ button, input, select { font: inherit; color: inherit; }
    ═══════════════════════════════════════════ */
 window.MM = window.MM || {};
 
-MM.VERSION = "V3.0.1";
+MM.VERSION = "V3.1";
 
 MM.RELEASES = [
   {
@@ -1338,6 +1421,18 @@ MM.RELEASES = [
       "The dice tumble for a full second before settling",
       "Tokens now step across the board more slowly",
       "Auction bids and bot card reveals hold a beat longer too"
+    ]
+  },
+  {
+    v: "V3.1", name: "Built for phones", status: "shipped",
+    items: [
+      "The board itself was the problem: it was capped at 320px on a phone regardless of screen size — now it fills the width, sticks to the top of the screen as you scroll, and stays legible on anything from an iPhone SE to a Pro Max",
+      "No hover on a touchscreen, so tapping a tile now shows the same price-and-rent card hover does on desktop",
+      "Player list, actions and the Market/Properties/Trades tabs now come right after the board — chat and the share link moved below them",
+      "Every button, tab and toggle sized up to a real touch target on a touchscreen, independent of screen width",
+      "Text inputs no longer trigger iOS's zoom-on-focus",
+      "No more 300ms tap delay or the grey flash Android/iOS show on every button press",
+      "A widescreen table (net worth, game over) fades at the edge to signal it scrolls sideways, instead of just clipping"
     ]
   }
 ];
@@ -3527,7 +3622,14 @@ MM.renderer = {
 
     new ResizeObserver(() => this.resize()).observe(wrap);
     canvas.addEventListener("mousemove", (e) => this.onHover(e));
-    canvas.addEventListener("mouseleave", () => { this.hover = -1; this.tip.hidden = true; });
+    canvas.addEventListener("mouseleave", () => {
+      /* touch taps can fire a compatibility mouseleave right behind them —
+         don't let that immediately cancel a tooltip someone just tapped for */
+      if (Date.now() - (this._lastTouch || 0) < 500) return;
+      this.hover = -1;
+      this.tip.hidden = true;
+    });
+    this.bindTouch(canvas);
 
     MM.bus.on("state", () => this.invalidate());
     MM.bus.on("market", () => this.invalidate());
@@ -3618,8 +3720,8 @@ MM.renderer = {
     ctx.lineWidth = 1;
     ctx.strokeRect(0.5, 0.5, w - 1, d - 1);
 
-    const nameSize = Math.max(8, L.tile * 0.2);
-    const numSize = Math.max(8, L.tile * 0.17);
+    const nameSize = Math.max(9, L.tile * 0.2);
+    const numSize = Math.max(9, L.tile * 0.17);
     const outerY = flip ? d - 5 : 5;
     const outerBase = flip ? "bottom" : "top";
 
@@ -3936,6 +4038,34 @@ MM.renderer = {
     await this.animate(p, p.pos, index, 460, { arc: this.L.tile * 1.6, jailed: true });
     p.pos = index;
     MM.bus.emit("moved", p);
+  },
+
+  /* ── touch: tap a tile to inspect it ─────
+     There's no hover on a phone, so a tap shows the same tooltip and
+     holds it open for a few seconds — long enough to actually read the
+     rent ladder, short enough not to just sit there forever. Only fires
+     on a real tap: if the touch moved (the start of a page scroll that
+     happened to begin on the canvas), it's left alone so scrolling past
+     the sticky board still works. */
+  bindTouch(canvas) {
+    let start = null;
+    canvas.addEventListener("touchstart", (e) => {
+      const t = e.touches[0];
+      start = { x: t.clientX, y: t.clientY };
+    }, { passive: true });
+
+    canvas.addEventListener("touchend", (e) => {
+      if (!start) return;
+      const t = e.changedTouches[0];
+      const moved = Math.hypot(t.clientX - start.x, t.clientY - start.y);
+      start = null;
+      if (moved > 12) return;
+
+      this._lastTouch = Date.now();
+      this.onHover({ clientX: t.clientX, clientY: t.clientY });
+      clearTimeout(this._tipTimer);
+      if (!this.tip.hidden) this._tipTimer = setTimeout(() => { this.tip.hidden = true; this.hover = -1; }, 4000);
+    }, { passive: true });
   },
 
   /* ── hover + tooltip ────────────────────── */

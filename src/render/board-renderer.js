@@ -41,7 +41,14 @@ MM.renderer = {
 
     new ResizeObserver(() => this.resize()).observe(wrap);
     canvas.addEventListener("mousemove", (e) => this.onHover(e));
-    canvas.addEventListener("mouseleave", () => { this.hover = -1; this.tip.hidden = true; });
+    canvas.addEventListener("mouseleave", () => {
+      /* touch taps can fire a compatibility mouseleave right behind them —
+         don't let that immediately cancel a tooltip someone just tapped for */
+      if (Date.now() - (this._lastTouch || 0) < 500) return;
+      this.hover = -1;
+      this.tip.hidden = true;
+    });
+    this.bindTouch(canvas);
 
     MM.bus.on("state", () => this.invalidate());
     MM.bus.on("market", () => this.invalidate());
@@ -132,8 +139,8 @@ MM.renderer = {
     ctx.lineWidth = 1;
     ctx.strokeRect(0.5, 0.5, w - 1, d - 1);
 
-    const nameSize = Math.max(8, L.tile * 0.2);
-    const numSize = Math.max(8, L.tile * 0.17);
+    const nameSize = Math.max(9, L.tile * 0.2);
+    const numSize = Math.max(9, L.tile * 0.17);
     const outerY = flip ? d - 5 : 5;
     const outerBase = flip ? "bottom" : "top";
 
@@ -450,6 +457,34 @@ MM.renderer = {
     await this.animate(p, p.pos, index, 460, { arc: this.L.tile * 1.6, jailed: true });
     p.pos = index;
     MM.bus.emit("moved", p);
+  },
+
+  /* ── touch: tap a tile to inspect it ─────
+     There's no hover on a phone, so a tap shows the same tooltip and
+     holds it open for a few seconds — long enough to actually read the
+     rent ladder, short enough not to just sit there forever. Only fires
+     on a real tap: if the touch moved (the start of a page scroll that
+     happened to begin on the canvas), it's left alone so scrolling past
+     the sticky board still works. */
+  bindTouch(canvas) {
+    let start = null;
+    canvas.addEventListener("touchstart", (e) => {
+      const t = e.touches[0];
+      start = { x: t.clientX, y: t.clientY };
+    }, { passive: true });
+
+    canvas.addEventListener("touchend", (e) => {
+      if (!start) return;
+      const t = e.changedTouches[0];
+      const moved = Math.hypot(t.clientX - start.x, t.clientY - start.y);
+      start = null;
+      if (moved > 12) return;
+
+      this._lastTouch = Date.now();
+      this.onHover({ clientX: t.clientX, clientY: t.clientY });
+      clearTimeout(this._tipTimer);
+      if (!this.tip.hidden) this._tipTimer = setTimeout(() => { this.tip.hidden = true; this.hover = -1; }, 4000);
+    }, { passive: true });
   },
 
   /* ── hover + tooltip ────────────────────── */
