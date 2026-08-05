@@ -1,0 +1,149 @@
+/* ═══ ticker · board · center console · dice ═══ */
+
+/* ── market ticker ───────────────────────── */
+.ticker {
+  position: relative;
+  height: 34px; flex: none;
+  overflow: hidden;
+  background: var(--ink-600);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
+}
+/* the tape is rendered four times over; sliding half the track loops seamlessly */
+.ticker-track {
+  display: flex; align-items: center; gap: 30px;
+  height: 100%; width: max-content;
+  padding-left: 30px;
+  animation: tape 48s linear infinite;
+}
+.ticker:hover .ticker-track { animation-play-state: paused; }
+@keyframes tape { to { transform: translateX(-50%); } }
+
+.tape-item {
+  display: flex; align-items: baseline; gap: 8px;
+  font-family: var(--font-num); font-size: 12px; white-space: nowrap;
+}
+.tape-item .sym { color: var(--text); font-weight: 700; letter-spacing: .06em; }
+.tape-item .px { color: var(--text-dim); }
+.tape-item .chg.up { color: var(--up); }
+.tape-item .chg.down { color: var(--down); }
+
+/* ── board ───────────────────────────────── */
+.board-wrap {
+  position: relative;
+  flex: 1; min-height: 0;
+  display: grid; place-items: center;
+}
+#board {
+  display: block;
+  border-radius: var(--r-lg);
+  touch-action: manipulation;
+}
+
+/* the console sits in the board's hollow centre */
+.board-center {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 16px;
+  pointer-events: none;
+  text-align: center;
+}
+.board-center > * { pointer-events: auto; }
+
+/* hover card for a tile's price and rent ladder */
+.tile-tip {
+  position: absolute; z-index: 5;
+  width: 210px;
+  display: flex; flex-direction: column; gap: 3px;
+  padding: 10px 12px;
+  background: rgba(20, 15, 32, .97);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  box-shadow: 0 12px 30px rgba(0,0,0,.55);
+  font-size: 11.5px; color: var(--text-dim);
+  pointer-events: none;
+}
+.tile-tip[hidden] { display: none; }
+.tile-tip b { font-size: 13px; color: var(--text); }
+.tile-tip i { font-style: normal; font-size: 11px; text-transform: uppercase; letter-spacing: .1em; }
+
+/* ── dice ────────────────────────────────── */
+.dice-tray { display: flex; gap: 18px; height: 84px; align-items: center; }
+
+.die {
+  position: relative;
+  width: 74px; height: 74px;
+  display: grid;
+  grid-template: repeat(3, 1fr) / repeat(3, 1fr);
+  padding: 11px;
+  border-radius: 16px;
+  background: linear-gradient(155deg, #ffffff 0%, #e9e6f2 55%, #cfc9de 100%);
+  box-shadow:
+    0 12px 22px rgba(0,0,0,.45),
+    inset 0 -7px 12px rgba(120,110,150,.3),
+    inset 0 3px 6px rgba(255,255,255,.9);
+  transition: transform .25s cubic-bezier(.2,.9,.3,1.4);
+}
+.die[data-side="0"] { transform: rotate(-8deg); }
+.die[data-side="1"] { transform: rotate(11deg); }
+
+.die .pip {
+  width: 12px; height: 12px;
+  align-self: center; justify-self: center;
+  border-radius: 50%;
+  background: #1b1526;
+  box-shadow: inset 0 -1px 2px rgba(255,255,255,.35);
+}
+
+.dice-tray.is-rolling .die { animation: tumble .48s ease-in-out infinite; }
+.dice-tray.is-rolling .die:nth-child(2) { animation-delay: .07s; }
+@keyframes tumble {
+  0%   { transform: rotate(-10deg) translateY(0)    scale(1); }
+  35%  { transform: rotate(120deg) translateY(-26px) scale(1.06); }
+  70%  { transform: rotate(255deg) translateY(-6px)  scale(.97); }
+  100% { transform: rotate(360deg) translateY(0)    scale(1); }
+}
+
+.dice-tray.is-double .die {
+  box-shadow:
+    0 12px 22px rgba(0,0,0,.45),
+    0 0 0 3px var(--gold),
+    inset 0 -7px 12px rgba(120,110,150,.3);
+}
+
+.btn--action { min-width: 176px; font-size: 16px; padding: 13px 22px; }
+
+/* ── event log ───────────────────────────── */
+.log-feed {
+  display: flex; flex-direction: column-reverse; gap: 5px;
+  width: min(430px, 82%);
+  max-height: 132px;
+  overflow: hidden;
+  font-size: 12.5px; color: var(--text-mut);
+  mask-image: linear-gradient(0deg, #000 55%, transparent);
+}
+.log-line { line-height: 1.4; animation: log-in .28s ease-out; }
+.log-line:first-child { color: var(--text-dim); }
+.log-line b { color: var(--pcolor, var(--text)); }
+.log-line .money { font-family: var(--font-num); color: var(--gold); }
+.log-line--sys { color: var(--text-mut); font-style: italic; }
+@keyframes log-in { from { opacity: 0; transform: translateY(6px); } }
+
+/* floating cash pop over the board */
+.cash-pop {
+  position: absolute;
+  font-family: var(--font-num); font-weight: 700; font-size: 15px;
+  pointer-events: none;
+  animation: cash-rise 1.15s ease-out forwards;
+  text-shadow: 0 2px 6px rgba(0,0,0,.7);
+}
+.cash-pop.up { color: var(--up); }
+.cash-pop.down { color: var(--down); }
+@keyframes cash-rise {
+  0%   { opacity: 0; transform: translate(-50%, 0) scale(.8); }
+  18%  { opacity: 1; transform: translate(-50%, -10px) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -46px) scale(1); }
+}

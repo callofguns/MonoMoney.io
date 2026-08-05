@@ -1,0 +1,2871 @@
+<title>MonoMoney.io — Rule the market</title>
+<meta name="description" content="A browser board game where the board is only half the economy. Buy the streets, trade the shares, collect the dividends." />
+<style>
+/* ── assets/css/theme.css ── */
+/* ═══ MonoMoney.io · design tokens + base ═══
+   The table commits to one visual world: a late-night trading floor.
+   Single theme by choice — a light mode would fight the felt. */
+
+:root {
+  color-scheme: dark;
+
+  /* ground → raised. neutrals carry a violet bias so nothing reads as flat grey */
+  --ink-900: #0c0913;
+  --ink-800: #100c19;
+  --ink-700: #171126;
+  --ink-600: #1b1529;
+  --ink-500: #251d38;
+  --ink-400: #2f2545;
+  --line:    #392d53;
+
+  --text:    #ece8f5;
+  --text-dim:#a79fc4;
+  --text-mut:#7d7499;
+
+  --violet:      #7c4dff;
+  --violet-lift: #9068ff;
+  --violet-sink: #5c33d6;
+  --violet-haze: rgba(124, 77, 255, .18);
+
+  --gold:  #ffc24b;
+  --up:    #3dd68c;
+  --down:  #ff5c6c;
+  --warn:  #ffab3d;
+
+  --p1: #8b5cf6;  /* you */
+  --p2: #ff7a45;  /* tycoon */
+  --p3: #37c98b;  /* banker */
+  --p4: #3fa9ff;  /* shark */
+  --p5: #ff5fa2;  /* wildcard */
+
+  --font-display: "Trebuchet MS", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --font-num: ui-monospace, "SF Mono", "JetBrains Mono", Consolas, "Roboto Mono", monospace;
+
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 16px;
+
+  --shadow-card: 0 1px 0 rgba(255,255,255,.03) inset, 0 8px 24px rgba(0,0,0,.35);
+  --shadow-lift: 0 6px 20px rgba(92, 51, 214, .45);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--ink-800);
+  color: var(--text);
+  font: 14px/1.45 var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+#app { height: 100%; }
+
+h1, h2, h3 { margin: 0; font-weight: 700; text-wrap: balance; }
+p { margin: 0; }
+b { font-weight: 700; }
+
+button, input, select { font: inherit; color: inherit; }
+
+:focus-visible {
+  outline: 2px solid var(--violet-lift);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--ink-400); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--line); }
+
+.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+
+/* ── wordmark ───────────────────────────────── */
+.brand { display: flex; align-items: center; gap: 14px; }
+.brand--xl { flex-direction: column; gap: 10px; }
+
+.wordmark {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -.035em;
+  line-height: 1;
+  white-space: nowrap;
+}
+.brand--xl .wordmark { font-size: clamp(38px, 6vw, 64px); }
+.wordmark em { font-style: normal; color: var(--violet-lift); }
+.wordmark small { font-size: .42em; letter-spacing: -.02em; color: var(--violet-lift); }
+.wordmark--sm { font-size: 21px; }
+
+/* rolling-die logo mark */
+.brand-die {
+  position: relative;
+  width: 78px; height: 78px;
+  border-radius: 18px;
+  background: linear-gradient(150deg, #fff, #d8d3e8);
+  box-shadow: 0 14px 30px rgba(0,0,0,.5), inset 0 -6px 12px rgba(120,110,150,.35);
+  transform: rotate(-12deg);
+  animation: die-idle 6s ease-in-out infinite;
+}
+.brand-die .pip {
+  position: absolute; width: 12px; height: 12px; border-radius: 50%;
+  background: #1a1526;
+}
+.brand-die .pip:nth-child(1) { top: 14px; left: 14px; }
+.brand-die .pip:nth-child(2) { top: 14px; right: 14px; }
+.brand-die .pip:nth-child(3) { top: 33px; left: 33px; }
+.brand-die .pip:nth-child(4) { bottom: 14px; left: 14px; }
+.brand-die .pip:nth-child(5) { bottom: 14px; right: 14px; }
+
+.brand-die--sm { width: 34px; height: 34px; border-radius: 9px; animation: none; }
+.brand-die--sm .pip { width: 5px; height: 5px; }
+.brand-die--sm .pip:nth-child(1) { top: 6px; left: 6px; }
+.brand-die--sm .pip:nth-child(2) { top: 6px; right: 6px; }
+.brand-die--sm .pip:nth-child(3) { top: 14px; left: 14px; }
+.brand-die--sm .pip:nth-child(4) { bottom: 6px; left: 6px; }
+.brand-die--sm .pip:nth-child(5) { bottom: 6px; right: 6px; }
+
+@keyframes die-idle {
+  0%, 100% { transform: rotate(-12deg) translateY(0); }
+  50%      { transform: rotate(-4deg) translateY(-10px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+}
+
+
+/* ── assets/css/layout.css ── */
+/* ═══ screens + the three-column table shell ═══ */
+
+.screen { display: none; height: 100%; }
+.screen.is-active { display: block; }
+.screen--table.is-active { display: grid; }
+
+/* ── home ─────────────────────────────────── */
+.screen--home {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 80% at 50% 0%, #1d1435 0%, transparent 60%),
+    radial-gradient(80% 60% at 50% 100%, #241536 0%, transparent 65%),
+    var(--ink-900);
+}
+
+.home-scatter { position: absolute; inset: 0; pointer-events: none; }
+.home-scatter span {
+  position: absolute;
+  font-size: 40px;
+  opacity: .12;
+  filter: grayscale(.4);
+  animation: float-drift 14s ease-in-out infinite;
+}
+@keyframes float-drift {
+  0%, 100% { transform: translateY(0) rotate(var(--rot, 0deg)); }
+  50%      { transform: translateY(-22px) rotate(calc(var(--rot, 0deg) + 6deg)); }
+}
+
+.home-top {
+  position: relative;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 26px;
+}
+.home-nav { display: flex; gap: 8px; }
+
+.home-core {
+  position: relative;
+  height: calc(100% - 132px);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 22px;
+  padding: 0 20px;
+}
+
+.tagline {
+  margin-top: -6px;
+  color: var(--text-dim);
+  font-size: 17px;
+  letter-spacing: .01em;
+}
+
+.home-form { display: flex; flex-direction: column; gap: 12px; width: min(320px, 90vw); }
+.home-actions { display: flex; gap: 10px; }
+
+.home-facts {
+  display: flex; gap: 26px;
+  margin: 10px 0 0; padding: 0;
+  list-style: none;
+  color: var(--text-mut);
+  font-size: 12px; text-transform: uppercase; letter-spacing: .12em;
+}
+.home-facts b { display: block; font-family: var(--font-num); font-size: 20px; color: var(--gold); letter-spacing: 0; }
+
+.home-foot {
+  position: relative;
+  text-align: center; padding-bottom: 22px;
+  color: var(--text-mut); font-size: 12px; letter-spacing: .06em;
+}
+
+/* ── table shell ──────────────────────────── */
+.screen--table {
+  grid-template-columns: 316px minmax(0, 1fr) 344px;
+  gap: 12px;
+  padding: 12px;
+  background:
+    radial-gradient(90% 70% at 50% 40%, #191130 0%, transparent 70%),
+    var(--ink-800);
+}
+
+.rail {
+  display: flex; flex-direction: column; gap: 12px;
+  min-height: 0;
+}
+.rail--right { overflow-y: auto; overflow-x: hidden; padding-right: 2px; }
+
+.rail-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 4px 6px 0;
+}
+.rail-head-tools { display: flex; gap: 6px; }
+
+.rail-pane { display: none; flex-direction: column; gap: 12px; }
+.screen--table[data-mode="lobby"] .rail-pane[data-pane="lobby"] { display: flex; }
+.screen--table[data-mode="game"]  .rail-pane[data-pane="game"]  { display: flex; }
+
+.rail-actions { display: flex; gap: 8px; justify-content: space-between; }
+
+.table-main {
+  display: flex; flex-direction: column; gap: 10px;
+  min-width: 0; min-height: 0;
+}
+
+/* chat only earns its height in the left rail */
+.card--chat { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+
+@media (max-width: 1180px) {
+  .screen--table { grid-template-columns: 260px minmax(0, 1fr) 300px; }
+}
+@media (max-width: 980px) {
+  body { overflow: auto; }
+  .screen--table { grid-template-columns: 1fr; height: auto; }
+  .rail--left { order: 2; }
+  .rail--right { order: 3; }
+  .card--chat { min-height: 220px; }
+}
+
+
+/* ── assets/css/components.css ── */
+/* ═══ cards, controls, panels ═══ */
+
+.card {
+  background: var(--ink-600);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 14px;
+  box-shadow: var(--shadow-card);
+}
+
+.card-title {
+  font-size: 13px; font-weight: 700; letter-spacing: .02em;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+}
+.card-title--center { text-align: center; color: var(--text); font-size: 15px; }
+.hint { color: var(--text-mut); cursor: help; }
+
+.panel-note {
+  color: var(--text-mut); font-size: 12px; line-height: 1.5;
+  padding: 10px; margin-top: 8px;
+  background: var(--ink-700); border-radius: var(--r-md);
+}
+
+/* ── buttons ─────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 10px 16px;
+  border: 0; border-radius: var(--r-md);
+  background: var(--ink-500); color: var(--text);
+  font-weight: 600; cursor: pointer;
+  transition: background .15s, transform .1s, box-shadow .15s;
+}
+.btn:hover { background: var(--ink-400); }
+.btn:active { transform: translateY(1px); }
+.btn[disabled] { opacity: .45; cursor: not-allowed; }
+.btn[disabled]:hover { background: var(--ink-500); }
+
+.btn--primary { background: var(--violet); box-shadow: var(--shadow-lift); }
+.btn--primary:hover { background: var(--violet-lift); }
+.btn--primary[disabled]:hover { background: var(--violet); }
+
+.btn--danger { background: #a32f3c; }
+.btn--danger:hover { background: #c4394a; }
+
+.btn--muted { background: var(--ink-500); }
+.btn--sm { padding: 7px 12px; font-size: 13px; }
+.btn--xl { padding: 15px 22px; font-size: 20px; letter-spacing: .01em; }
+.btn-chev { color: rgba(255,255,255,.65); font-size: 24px; line-height: 1; }
+
+.ghost-btn {
+  background: none; border: 0; cursor: pointer;
+  color: var(--text-dim); font-weight: 600; padding: 8px 10px; border-radius: var(--r-sm);
+}
+.ghost-btn:hover { color: var(--text); background: rgba(255,255,255,.05); }
+
+.icon-btn {
+  width: 32px; height: 32px;
+  display: grid; place-items: center;
+  border: 0; border-radius: var(--r-sm);
+  background: rgba(255,255,255,.05); color: var(--text-dim);
+  cursor: pointer; font-size: 14px;
+}
+.icon-btn:hover { background: rgba(255,255,255,.1); color: var(--text); }
+.icon-btn--send { background: var(--violet); color: #fff; }
+.icon-btn--send:hover { background: var(--violet-lift); }
+
+/* ── fields ──────────────────────────────── */
+.field {
+  width: 100%;
+  padding: 13px 15px;
+  background: var(--ink-700);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  color: var(--text);
+}
+.field::placeholder { color: var(--text-mut); }
+.field:focus { border-color: var(--violet); outline: none; }
+.field--sm { padding: 9px 11px; font-size: 13px; }
+.field[readonly] { color: var(--text-dim); }
+
+.select {
+  padding: 7px 10px;
+  background: var(--ink-700);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+
+.share-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+
+/* ── settings rows ───────────────────────── */
+.setting {
+  display: grid; grid-template-columns: 26px 1fr auto;
+  align-items: center; gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid rgba(255,255,255,.05);
+}
+.setting:first-of-type { border-top: 0; }
+.setting-ico { font-size: 16px; opacity: .8; text-align: center; }
+.setting-body b { display: block; font-size: 13px; }
+.setting-body i { font-style: normal; font-size: 11.5px; color: var(--text-mut); line-height: 1.35; display: block; }
+
+/* toggle */
+.switch {
+  position: relative; width: 40px; height: 22px; flex: none;
+  background: var(--ink-400); border: 0; border-radius: 99px; cursor: pointer;
+  transition: background .18s;
+}
+.switch::after {
+  content: ""; position: absolute; top: 3px; left: 3px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #fff; transition: transform .18s;
+}
+.switch[aria-checked="true"] { background: var(--violet); }
+.switch[aria-checked="true"]::after { transform: translateX(18px); }
+
+.rules-list { display: flex; flex-direction: column; }
+
+/* ── bots / players ──────────────────────── */
+.bot-list { display: flex; flex-direction: column; gap: 8px; }
+.bot-row {
+  display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: center;
+  padding: 9px 10px;
+  background: var(--ink-700); border-radius: var(--r-md);
+}
+.bot-row b { font-size: 13px; display: block; }
+.bot-row i { font-style: normal; font-size: 11.5px; color: var(--text-mut); }
+
+.avatar {
+  width: 32px; height: 32px; flex: none;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--ink-500);
+  border: 2px solid var(--pcolor, var(--violet));
+  font-size: 16px;
+}
+.avatar--lg { width: 38px; height: 38px; font-size: 19px; }
+
+.card--players, .card--host { padding: 8px; }
+.player-list { display: flex; flex-direction: column; }
+
+.player-row {
+  display: grid; grid-template-columns: auto 1fr auto; gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border-radius: var(--r-md);
+  border-left: 3px solid transparent;
+  transition: background .2s;
+}
+.player-row.is-turn { background: var(--violet-haze); border-left-color: var(--pcolor); }
+.player-row.is-out { opacity: .42; }
+.player-name { font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+.player-tag {
+  font-size: 10px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--text-mut); background: var(--ink-500);
+  padding: 2px 6px; border-radius: 99px;
+}
+.player-sub { font-size: 11.5px; color: var(--text-mut); }
+.player-cash { text-align: right; }
+.player-cash b { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 15px; }
+.player-delta { display: block; font-family: var(--font-num); font-size: 11px; }
+.player-delta.up { color: var(--up); }
+.player-delta.down { color: var(--down); }
+
+.card--host { display: flex; align-items: center; gap: 10px; padding: 12px; }
+.host-badge {
+  margin-left: auto; font-size: 11px; color: var(--gold);
+  background: rgba(255,194,75,.12); padding: 4px 9px; border-radius: 99px; font-weight: 700;
+}
+
+/* ── tabs ────────────────────────────────── */
+.card--tabs { padding: 8px; }
+.tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-bottom: 8px; }
+.tab {
+  padding: 8px 4px; border: 0; border-radius: var(--r-sm);
+  background: transparent; color: var(--text-mut);
+  font-size: 12.5px; font-weight: 600; cursor: pointer;
+}
+.tab:hover { color: var(--text); }
+.tab.is-active { background: var(--ink-500); color: var(--text); }
+.tab-panel { display: none; }
+.tab-panel.is-active { display: block; }
+
+/* ── market rows ─────────────────────────── */
+.market-list { display: flex; flex-direction: column; gap: 6px; }
+.stock-row {
+  display: grid; grid-template-columns: 30px 1fr auto;
+  gap: 10px; align-items: center;
+  padding: 9px 10px;
+  background: var(--ink-700); border-radius: var(--r-md);
+}
+.stock-sym {
+  font-family: var(--font-num); font-size: 10px; font-weight: 700;
+  text-align: center; padding: 4px 0; border-radius: var(--r-sm);
+  background: var(--scolor, var(--violet)); color: #0d0a14;
+}
+.stock-name { font-size: 13px; font-weight: 600; }
+.stock-meta { font-size: 11px; color: var(--text-mut); }
+.stock-price { text-align: right; font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+.stock-price b { font-size: 14px; }
+.stock-chg { display: block; font-size: 11px; }
+.stock-chg.up { color: var(--up); }
+.stock-chg.down { color: var(--down); }
+
+.prop-list { display: flex; flex-direction: column; gap: 6px; }
+.prop-row {
+  display: grid; grid-template-columns: 4px 1fr auto; gap: 10px; align-items: center;
+  padding: 8px 10px; background: var(--ink-700); border-radius: var(--r-md);
+  font-size: 13px;
+}
+.prop-swatch { align-self: stretch; border-radius: 99px; background: var(--gcolor, var(--violet)); }
+.prop-rent { font-family: var(--font-num); font-size: 12px; color: var(--text-mut); }
+.empty-note { color: var(--text-mut); font-size: 12.5px; text-align: center; padding: 18px 8px; }
+
+/* ── chat ────────────────────────────────── */
+.chat-feed {
+  flex: 1; min-height: 0;
+  overflow-y: auto;
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 4px 2px;
+}
+.chat-empty { color: var(--text-mut); font-size: 12.5px; text-align: center; margin: auto 0; }
+.chat-msg { font-size: 13px; line-height: 1.4; }
+.chat-msg b { color: var(--pcolor, var(--violet-lift)); }
+.chat-form { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-top: 10px; }
+
+/* ── modal ───────────────────────────────── */
+.modal {
+  position: fixed; inset: 0; z-index: 50;
+  display: grid; place-items: center;
+  background: rgba(8, 5, 14, .74);
+  backdrop-filter: blur(3px);
+}
+.modal[hidden] { display: none; }
+.modal-card {
+  width: min(520px, 92vw);
+  max-height: 84vh; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 14px;
+  padding: 24px;
+  background: var(--ink-600);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: 0 30px 70px rgba(0,0,0,.6);
+  animation: modal-in .2s ease-out;
+}
+@keyframes modal-in { from { opacity: 0; transform: translateY(10px) scale(.98); } }
+.modal-title { font-family: var(--font-display); font-size: 22px; letter-spacing: -.02em; }
+.modal-body { color: var(--text-dim); font-size: 14px; line-height: 1.6; display: flex; flex-direction: column; gap: 10px; }
+.modal-body h3 { color: var(--text); font-size: 14px; margin-top: 6px; }
+.modal-body ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+.modal-body code {
+  font-family: var(--font-num); font-size: 12.5px;
+  background: var(--ink-700); padding: 1px 5px; border-radius: 4px; color: var(--gold);
+}
+
+
+/* ── assets/css/board.css ── */
+/* ═══ ticker · board · center console · dice ═══ */
+
+/* ── market ticker ───────────────────────── */
+.ticker {
+  position: relative;
+  height: 34px; flex: none;
+  overflow: hidden;
+  background: var(--ink-600);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
+}
+/* the tape is rendered four times over; sliding half the track loops seamlessly */
+.ticker-track {
+  display: flex; align-items: center; gap: 30px;
+  height: 100%; width: max-content;
+  padding-left: 30px;
+  animation: tape 48s linear infinite;
+}
+.ticker:hover .ticker-track { animation-play-state: paused; }
+@keyframes tape { to { transform: translateX(-50%); } }
+
+.tape-item {
+  display: flex; align-items: baseline; gap: 8px;
+  font-family: var(--font-num); font-size: 12px; white-space: nowrap;
+}
+.tape-item .sym { color: var(--text); font-weight: 700; letter-spacing: .06em; }
+.tape-item .px { color: var(--text-dim); }
+.tape-item .chg.up { color: var(--up); }
+.tape-item .chg.down { color: var(--down); }
+
+/* ── board ───────────────────────────────── */
+.board-wrap {
+  position: relative;
+  flex: 1; min-height: 0;
+  display: grid; place-items: center;
+}
+#board {
+  display: block;
+  border-radius: var(--r-lg);
+  touch-action: manipulation;
+}
+
+/* the console sits in the board's hollow centre */
+.board-center {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 16px;
+  pointer-events: none;
+  text-align: center;
+}
+.board-center > * { pointer-events: auto; }
+
+/* hover card for a tile's price and rent ladder */
+.tile-tip {
+  position: absolute; z-index: 5;
+  width: 210px;
+  display: flex; flex-direction: column; gap: 3px;
+  padding: 10px 12px;
+  background: rgba(20, 15, 32, .97);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  box-shadow: 0 12px 30px rgba(0,0,0,.55);
+  font-size: 11.5px; color: var(--text-dim);
+  pointer-events: none;
+}
+.tile-tip[hidden] { display: none; }
+.tile-tip b { font-size: 13px; color: var(--text); }
+.tile-tip i { font-style: normal; font-size: 11px; text-transform: uppercase; letter-spacing: .1em; }
+
+/* ── dice ────────────────────────────────── */
+.dice-tray { display: flex; gap: 18px; height: 84px; align-items: center; }
+
+.die {
+  position: relative;
+  width: 74px; height: 74px;
+  display: grid;
+  grid-template: repeat(3, 1fr) / repeat(3, 1fr);
+  padding: 11px;
+  border-radius: 16px;
+  background: linear-gradient(155deg, #ffffff 0%, #e9e6f2 55%, #cfc9de 100%);
+  box-shadow:
+    0 12px 22px rgba(0,0,0,.45),
+    inset 0 -7px 12px rgba(120,110,150,.3),
+    inset 0 3px 6px rgba(255,255,255,.9);
+  transition: transform .25s cubic-bezier(.2,.9,.3,1.4);
+}
+.die[data-side="0"] { transform: rotate(-8deg); }
+.die[data-side="1"] { transform: rotate(11deg); }
+
+.die .pip {
+  width: 12px; height: 12px;
+  align-self: center; justify-self: center;
+  border-radius: 50%;
+  background: #1b1526;
+  box-shadow: inset 0 -1px 2px rgba(255,255,255,.35);
+}
+
+.dice-tray.is-rolling .die { animation: tumble .48s ease-in-out infinite; }
+.dice-tray.is-rolling .die:nth-child(2) { animation-delay: .07s; }
+@keyframes tumble {
+  0%   { transform: rotate(-10deg) translateY(0)    scale(1); }
+  35%  { transform: rotate(120deg) translateY(-26px) scale(1.06); }
+  70%  { transform: rotate(255deg) translateY(-6px)  scale(.97); }
+  100% { transform: rotate(360deg) translateY(0)    scale(1); }
+}
+
+.dice-tray.is-double .die {
+  box-shadow:
+    0 12px 22px rgba(0,0,0,.45),
+    0 0 0 3px var(--gold),
+    inset 0 -7px 12px rgba(120,110,150,.3);
+}
+
+.btn--action { min-width: 176px; font-size: 16px; padding: 13px 22px; }
+
+/* ── event log ───────────────────────────── */
+.log-feed {
+  display: flex; flex-direction: column-reverse; gap: 5px;
+  width: min(430px, 82%);
+  max-height: 132px;
+  overflow: hidden;
+  font-size: 12.5px; color: var(--text-mut);
+  mask-image: linear-gradient(0deg, #000 55%, transparent);
+}
+.log-line { line-height: 1.4; animation: log-in .28s ease-out; }
+.log-line:first-child { color: var(--text-dim); }
+.log-line b { color: var(--pcolor, var(--text)); }
+.log-line .money { font-family: var(--font-num); color: var(--gold); }
+.log-line--sys { color: var(--text-mut); font-style: italic; }
+@keyframes log-in { from { opacity: 0; transform: translateY(6px); } }
+
+/* floating cash pop over the board */
+.cash-pop {
+  position: absolute;
+  font-family: var(--font-num); font-weight: 700; font-size: 15px;
+  pointer-events: none;
+  animation: cash-rise 1.15s ease-out forwards;
+  text-shadow: 0 2px 6px rgba(0,0,0,.7);
+}
+.cash-pop.up { color: var(--up); }
+.cash-pop.down { color: var(--down); }
+@keyframes cash-rise {
+  0%   { opacity: 0; transform: translate(-50%, 0) scale(.8); }
+  18%  { opacity: 1; transform: translate(-50%, -10px) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -46px) scale(1); }
+}
+
+</style>
+
+<div id="app">
+
+  <!-- ══════════════ HOME ══════════════ -->
+  <section class="screen screen--home is-active" data-screen="home">
+    <div class="home-scatter" aria-hidden="true"></div>
+
+    <header class="home-top">
+      <button class="icon-btn" data-action="toggle-sound" title="Sound">
+        <span data-sound-on>🔊</span>
+      </button>
+      <nav class="home-nav">
+        <button class="ghost-btn" data-action="show-rules">Rules</button>
+        <button class="ghost-btn" data-action="show-market-intro">Market</button>
+      </nav>
+    </header>
+
+    <div class="home-core">
+      <div class="brand brand--xl">
+        <div class="brand-die" aria-hidden="true">
+          <span class="pip"></span><span class="pip"></span><span class="pip"></span>
+          <span class="pip"></span><span class="pip"></span>
+        </div>
+        <h1 class="wordmark">MONO<em>MONEY</em><small>.io</small></h1>
+      </div>
+      <p class="tagline">Own the board. Corner the market.</p>
+
+      <form class="home-form" id="join-form" autocomplete="off">
+        <input id="nickname" class="field" type="text" maxlength="14" placeholder="Your nickname…" aria-label="Your nickname" />
+        <button class="btn btn--primary btn--xl" type="submit">
+          <span class="btn-chev">»</span> Play
+        </button>
+      </form>
+
+      <div class="home-actions">
+        <button class="btn btn--muted" data-action="quick-3">3 bots</button>
+        <button class="btn btn--muted" data-action="quick-1">1 bot · fast game</button>
+      </div>
+
+      <ul class="home-facts">
+        <li><b>40</b> tiles</li>
+        <li><b>5</b> listed companies</li>
+        <li><b>4</b> bot personalities</li>
+      </ul>
+    </div>
+
+    <footer class="home-foot">Phase 1 prototype · board, state engine &amp; dice</footer>
+  </section>
+
+  <!-- ══════════════ TABLE (lobby + game) ══════════════ -->
+  <section class="screen screen--table" data-screen="table" data-mode="lobby">
+
+    <!-- ── left rail ── -->
+    <aside class="rail rail--left">
+      <div class="rail-head">
+        <div class="brand brand--sm">
+          <div class="brand-die brand-die--sm" aria-hidden="true">
+            <span class="pip"></span><span class="pip"></span><span class="pip"></span>
+            <span class="pip"></span><span class="pip"></span>
+          </div>
+          <span class="wordmark wordmark--sm">MONO<em>MONEY</em><small>.io</small></span>
+        </div>
+        <div class="rail-head-tools">
+          <button class="icon-btn" data-action="show-rules" title="How to play">?</button>
+          <button class="icon-btn" data-action="toggle-sound" title="Sound">🔊</button>
+        </div>
+      </div>
+
+      <div class="card card--share">
+        <h2 class="card-title">Share this game <span class="hint" title="Single-player prototype — the link is cosmetic for now">ⓘ</span></h2>
+        <div class="share-row">
+          <input class="field field--sm" id="room-link" readonly value="https://monomoney.io/room/—" aria-label="Room link" />
+          <button class="btn btn--muted btn--sm" data-action="copy-link">Copy</button>
+        </div>
+      </div>
+
+      <div class="card card--chat">
+        <h2 class="card-title">Chat</h2>
+        <div class="chat-feed" id="chat-feed" role="log" aria-live="polite">
+          <p class="chat-empty">No messages yet</p>
+        </div>
+        <form class="chat-form" id="chat-form">
+          <input class="field field--sm" id="chat-input" maxlength="120" placeholder="Say something…" aria-label="Chat message" />
+          <button class="icon-btn icon-btn--send" type="submit" title="Send">➤</button>
+        </form>
+      </div>
+    </aside>
+
+    <!-- ── center ── -->
+    <main class="table-main">
+      <div class="ticker" id="ticker" aria-label="Market ticker">
+        <div class="ticker-track" id="ticker-track"></div>
+      </div>
+
+      <div class="board-wrap" id="board-wrap">
+        <canvas id="board" aria-label="Game board"></canvas>
+
+        <div class="board-center" id="board-center">
+          <div class="dice-tray" id="dice-tray">
+            <div class="die" data-die="0"></div>
+            <div class="die" data-die="1"></div>
+          </div>
+
+          <button class="btn btn--primary btn--action" id="primary-action">Start Game</button>
+
+          <div class="log-feed" id="log-feed" role="log" aria-live="polite"></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- ── right rail ── -->
+    <aside class="rail rail--right">
+
+      <!-- lobby mode -->
+      <div class="rail-pane" data-pane="lobby">
+        <div class="card card--host" id="host-card"></div>
+
+        <div class="card">
+          <h2 class="card-title card-title--center">Game settings</h2>
+          <div class="setting">
+            <span class="setting-ico">👥</span>
+            <div class="setting-body">
+              <b>Players</b><i>You plus the bots that fill the table</i>
+            </div>
+            <select class="select" id="set-players">
+              <option value="2">2</option><option value="3">3</option>
+              <option value="4" selected>4</option>
+            </select>
+          </div>
+          <div class="setting">
+            <span class="setting-ico">💵</span>
+            <div class="setting-body">
+              <b>Starting cash</b><i>Bank balance every player opens with</i>
+            </div>
+            <select class="select" id="set-cash">
+              <option value="1000">$1000</option>
+              <option value="1500" selected>$1500</option>
+              <option value="2500">$2500</option>
+            </select>
+          </div>
+          <div class="setting">
+            <span class="setting-ico">🤖</span>
+            <div class="setting-body">
+              <b>Bot skill</b><i>How sharply the personalities play</i>
+            </div>
+            <select class="select" id="set-skill">
+              <option value="casual">Casual</option>
+              <option value="normal" selected>Normal</option>
+              <option value="ruthless">Ruthless</option>
+            </select>
+          </div>
+          <div class="setting">
+            <span class="setting-ico">📈</span>
+            <div class="setting-body">
+              <b>Market volatility</b><i>How hard share prices swing each round</i>
+            </div>
+            <select class="select" id="set-vol">
+              <option value="calm">Calm</option>
+              <option value="normal" selected>Normal</option>
+              <option value="wild">Wild</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2 class="card-title card-title--center">Gameplay rules</h2>
+          <div class="rules-list" id="rules-list"></div>
+        </div>
+
+        <div class="card">
+          <h2 class="card-title card-title--center">Table</h2>
+          <div class="bot-list" id="bot-list"></div>
+        </div>
+      </div>
+
+      <!-- game mode -->
+      <div class="rail-pane" data-pane="game">
+        <div class="card card--players">
+          <div class="player-list" id="player-list"></div>
+        </div>
+
+        <div class="rail-actions">
+          <button class="btn btn--muted btn--sm" data-action="show-rules">Rules</button>
+          <button class="btn btn--danger btn--sm" data-action="bankrupt">Bankrupt</button>
+        </div>
+
+        <div class="card card--tabs">
+          <div class="tabs" role="tablist">
+            <button class="tab is-active" data-tab="market" role="tab">Market</button>
+            <button class="tab" data-tab="props" role="tab">My properties</button>
+            <button class="tab" data-tab="trades" role="tab">Trades</button>
+          </div>
+          <div class="tab-panel is-active" data-panel="market">
+            <div class="market-list" id="market-list"></div>
+            <p class="panel-note">Trading, dividends and price shocks arrive in Phase 3. Prices already drift so you can watch the tape.</p>
+          </div>
+          <div class="tab-panel" data-panel="props">
+            <div class="prop-list" id="prop-list"></div>
+          </div>
+          <div class="tab-panel" data-panel="trades">
+            <p class="panel-note">Swap property, cash and shares with other players. Unlocks with the trade engine in Phase 5.</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </section>
+
+  <!-- ══════════════ MODAL ══════════════ -->
+  <div class="modal" id="modal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <h2 class="modal-title" id="modal-title"></h2>
+      <div class="modal-body" id="modal-body"></div>
+      <button class="btn btn--primary" data-action="close-modal">Got it</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── src/data/board.js ── */
+/* ═══════════════════════════════════════════════════════════
+   MonoMoney.io · board dataset
+   40 tiles laid out clockwise from the top-left corner:
+     0  START            (top-left)
+     1–9  top row        left → right
+     10 In Prison        (top-right)
+     11–19 right column  top → bottom
+     20 Vacation         (bottom-right)
+     21–29 bottom row    right → left
+     30 Go to Prison     (bottom-left)
+     31–39 left column   bottom → top
+   ═══════════════════════════════════════════════════════════ */
+window.MM = window.MM || {};
+
+/* Colour groups. `corp` ties a group to a listed company so that
+   development on the board can move the share price (Phase 3). */
+MM.GROUPS = {
+  NG: { name: "Nigeria",   color: "#a2653f", house: 50,  corp: "BRK" },
+  IN: { name: "India",     color: "#58c6ee", house: 50,  corp: "BRK" },
+  GR: { name: "Greece",    color: "#e4457e", house: 100, corp: "BRK" },
+  PL: { name: "Poland",    color: "#f0913a", house: 100, corp: "BRK" },
+  CA: { name: "Canada",    color: "#e8453c", house: 150, corp: "BRK" },
+  JP: { name: "Japan",     color: "#f3d33c", house: 150, corp: "BRK" },
+  AU: { name: "Australia", color: "#3fb96b", house: 200, corp: "BRK" },
+  US: { name: "USA",       color: "#3c60e8", house: 200, corp: "BRK" }
+};
+
+/* rent[0] = bare · rent[1..4] = 1–4 houses · rent[5] = hotel */
+const P = (i, name, group, price, rent) =>
+  ({ i, type: "property", name, group, price, rent, mortgage: price / 2 });
+
+MM.BOARD = [
+  { i: 0,  type: "go",       name: "START",         pay: 200 },
+  P(1,  "Lagos",      "NG", 60,  [2, 10, 30, 90, 160, 250]),
+  { i: 2,  type: "treasure", name: "Treasure" },
+  P(3,  "Abuja",      "NG", 60,  [4, 20, 60, 180, 320, 450]),
+  { i: 4,  type: "tax",      name: "Earnings Tax",  amount: 200, pct: 10 },
+  { i: 5,  type: "airport",  name: "LHR Airport",   price: 200, code: "LHR" },
+  P(6,  "Mumbai",     "IN", 100, [6, 30, 90, 270, 400, 550]),
+  P(7,  "Delhi",      "IN", 100, [6, 30, 90, 270, 400, 550]),
+  { i: 8,  type: "surprise", name: "Surprise" },
+  P(9,  "Jaipur",     "IN", 120, [8, 40, 100, 300, 450, 600]),
+  { i: 10, type: "jail",     name: "In Prison" },
+  P(11, "Athens",     "GR", 140, [10, 50, 150, 450, 625, 750]),
+  { i: 12, type: "utility",  name: "Power Company", price: 150, util: "power" },
+  P(13, "Patras",     "GR", 140, [10, 50, 150, 450, 625, 750]),
+  P(14, "Rhodes",     "GR", 160, [12, 60, 180, 500, 700, 900]),
+  { i: 15, type: "airport",  name: "DXB Airport",   price: 200, code: "DXB" },
+  P(16, "Warsaw",     "PL", 180, [14, 70, 200, 550, 750, 950]),
+  { i: 17, type: "treasure", name: "Treasure" },
+  P(18, "Krakow",     "PL", 180, [14, 70, 200, 550, 750, 950]),
+  P(19, "Gdansk",     "PL", 200, [16, 80, 220, 600, 800, 1000]),
+  { i: 20, type: "vacation", name: "Vacation" },
+  P(21, "Toronto",    "CA", 220, [18, 90, 250, 700, 875, 1050]),
+  { i: 22, type: "surprise", name: "Surprise" },
+  P(23, "Montreal",   "CA", 220, [18, 90, 250, 700, 875, 1050]),
+  P(24, "Vancouver",  "CA", 240, [20, 100, 300, 750, 925, 1100]),
+  { i: 25, type: "airport",  name: "HND Airport",   price: 200, code: "HND" },
+  P(26, "Osaka",      "JP", 260, [22, 110, 330, 800, 975, 1150]),
+  P(27, "Kyoto",      "JP", 260, [22, 110, 330, 800, 975, 1150]),
+  { i: 28, type: "utility",  name: "Water Company", price: 150, util: "water" },
+  P(29, "Tokyo",      "JP", 280, [24, 120, 360, 850, 1025, 1200]),
+  { i: 30, type: "gotojail", name: "Go to Prison" },
+  P(31, "Perth",      "AU", 300, [26, 130, 390, 900, 1100, 1275]),
+  P(32, "Melbourne",  "AU", 300, [26, 130, 390, 900, 1100, 1275]),
+  { i: 33, type: "treasure", name: "Treasure" },
+  P(34, "Sydney",     "AU", 320, [28, 150, 450, 1000, 1200, 1400]),
+  { i: 35, type: "airport",  name: "JFK Airport",   price: 200, code: "JFK" },
+  { i: 36, type: "surprise", name: "Surprise" },
+  P(37, "Chicago",    "US", 350, [35, 175, 500, 1100, 1300, 1500]),
+  { i: 38, type: "tax",      name: "Premium Tax",   amount: 75 },
+  P(39, "New York",   "US", 400, [50, 200, 600, 1400, 1700, 2000])
+];
+
+MM.TILE_COUNT = MM.BOARD.length;
+MM.JAIL_INDEX = 10;
+MM.GO_SALARY = 200;
+MM.BAIL = 50;
+
+/* Airport rent doubles with each one owned; utility rent is a dice multiplier. */
+MM.AIRPORT_RENT = [0, 25, 50, 100, 200];
+MM.UTILITY_MULT = [0, 4, 10];
+
+MM.tile = (i) => MM.BOARD[((i % 40) + 40) % 40];
+
+MM.groupTiles = (groupId) =>
+  MM.BOARD.filter((t) => t.type === "property" && t.group === groupId);
+
+
+/* ── src/data/rules.js ── */
+/* ═══ settings, personalities and the listed companies ═══ */
+window.MM = window.MM || {};
+
+/* Toggleable house rules. `phase` marks which build phase switches them on;
+   anything past Phase 1 is shown but locked so the lobby reads honestly. */
+MM.RULE_DEFS = [
+  { id: "doubleRent", ico: "🪙", name: "x2 rent on full sets",
+    desc: "Owning every tile in a colour group doubles the base rent", on: true, phase: 2 },
+  { id: "vacationCash", ico: "🏝", name: "Vacation cash",
+    desc: "Taxes and fees pile up on Vacation for whoever lands there", on: true, phase: 2 },
+  { id: "auction", ico: "🔨", name: "Auction",
+    desc: "A declined property goes to the highest bidder instead", on: false, phase: 2 },
+  { id: "noRentInPrison", ico: "🚔", name: "No rent while in prison",
+    desc: "Jailed owners collect nothing on their properties", on: false, phase: 2 },
+  { id: "mortgage", ico: "🏦", name: "Mortgage",
+    desc: "Raise 50% of a tile's cost, but stop earning rent on it", on: true, phase: 2 },
+  { id: "evenBuild", ico: "🏘", name: "Even build",
+    desc: "Houses go up and come down evenly across a set", on: true, phase: 2 },
+  { id: "dividends", ico: "📊", name: "Dividends on GO",
+    desc: "Passing START pays out on every share you hold", on: true, phase: 3 },
+  { id: "insiderCards", ico: "🃏", name: "Insider Surprise cards",
+    desc: "Some Surprise cards move a company's share price", on: true, phase: 3 }
+];
+
+/* Bot personalities — Phase 4 reads `weights`, Phase 1 only shows them off. */
+MM.PERSONALITIES = [
+  {
+    id: "tycoon", tag: "Buys everything", name: "The Tycoon", avatar: "🎩", color: "var(--p2)",
+    blurb: "Buys everything, builds fast, sells shares only to fund concrete.",
+    weights: { buyProperty: 0.95, build: 0.9, buyStock: 0.1, cashFloor: 100, riskAppetite: 0.8 }
+  },
+  {
+    id: "banker", tag: "Dividend hunter", name: "The Banker", avatar: "🏦", color: "var(--p3)",
+    blurb: "Loads up on high-dividend stock early and sits on a fat cash buffer.",
+    weights: { buyProperty: 0.5, build: 0.4, buyStock: 0.85, cashFloor: 500, riskAppetite: 0.25 }
+  },
+  {
+    id: "shark", tag: "Monopoly blocker", name: "The Shark", avatar: "🦈", color: "var(--p4)",
+    blurb: "Blocks monopolies, trades hard, cashes out volatility to raise hotels.",
+    weights: { buyProperty: 0.75, build: 0.7, buyStock: 0.6, cashFloor: 300, riskAppetite: 0.65 }
+  },
+  {
+    id: "wildcard", tag: "Coin-flip investor", name: "The Wildcard", avatar: "🃏", color: "var(--p5)",
+    blurb: "Splits the bankroll between whatever it just landed on and a hot ticker.",
+    weights: { buyProperty: 0.6, build: 0.5, buyStock: 0.7, cashFloor: 50, riskAppetite: 1 }
+  }
+];
+
+/* The five listed companies. Phase 3 turns these into a live order book. */
+MM.STOCKS = [
+  { sym: "SKY", name: "Skyline Air Group", sector: "Airports",  color: "#3fa9ff",
+    price: 120, yield: 0.05, vol: 0.05 },
+  { sym: "VLT", name: "Voltaic Power",     sector: "Utilities", color: "#ffc24b",
+    price: 95,  yield: 0.06, vol: 0.04 },
+  { sym: "BRK", name: "Brickstone Realty", sector: "Property",  color: "#ff8a5c",
+    price: 150, yield: 0.03, vol: 0.06 },
+  { sym: "TCH", name: "Helix Tech",        sector: "Technology",color: "#a06bff",
+    price: 210, yield: 0.01, vol: 0.11 },
+  { sym: "AUR", name: "Aurum Bank",        sector: "Finance",   color: "#3dd68c",
+    price: 80,  yield: 0.08, vol: 0.03 }
+];
+
+MM.VOLATILITY = { calm: 0.5, normal: 1, wild: 2.1 };
+
+MM.DEFAULT_SETTINGS = {
+  players: 4,
+  startingCash: 1500,
+  botSkill: "normal",
+  volatility: "normal",
+  botDelay: 900
+};
+
+/* Canned bot chatter — flavour only, keyed to what just happened. */
+MM.BOT_LINES = {
+  greet:    ["good luck all", "let's trade", "may the dice be kind", "easy money"],
+  double:   ["doubles again 😎", "the dice like me", "one more"],
+  jail:     ["ugh, prison", "someone post my bail", "this is a setup"],
+  passGo:   ["dividend day", "salary secured", "another lap, another payout"],
+  bigMoney: ["cash is king", "I'll take it", "noted."]
+};
+
+
+/* ── src/core/rng.js ── */
+/* ═══ seedable RNG — same seed, same game (handy for bug reports) ═══ */
+window.MM = window.MM || {};
+
+MM.createRng = function (seed) {
+  let s = seed >>> 0 || (Math.random() * 4294967296) >>> 0;
+  const next = () => {
+    s = (s + 0x6d2b79f5) >>> 0;
+    let t = s;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  return {
+    seed: s,
+    float: next,
+    int: (min, max) => min + Math.floor(next() * (max - min + 1)),
+    pick: (arr) => arr[Math.floor(next() * arr.length)],
+    chance: (p) => next() < p,
+    /* roughly normal, for price walks */
+    gauss: () => (next() + next() + next() + next() - 2) / 1.5
+  };
+};
+
+
+/* ── src/core/emitter.js ── */
+/* ═══ the one-line event bus every module talks over ═══ */
+window.MM = window.MM || {};
+
+MM.createBus = function () {
+  const map = new Map();
+  return {
+    on(type, fn) {
+      if (!map.has(type)) map.set(type, new Set());
+      map.get(type).add(fn);
+      return () => map.get(type).delete(fn);
+    },
+    emit(type, payload) {
+      const set = map.get(type);
+      if (set) set.forEach((fn) => fn(payload));
+      const all = map.get("*");
+      if (all) all.forEach((fn) => fn({ type, payload }));
+    }
+  };
+};
+
+MM.bus = MM.createBus();
+
+
+/* ── src/core/state.js ── */
+/* ═══════════════════════════════════════════
+   Game state · single source of truth
+   Everything that changes the world goes through
+   a function here and announces itself on MM.bus.
+   ═══════════════════════════════════════════ */
+window.MM = window.MM || {};
+
+MM.PHASES = {
+  LOBBY: "lobby",
+  AWAIT_ROLL: "awaiting-roll",
+  ROLLING: "rolling",
+  MOVING: "moving",
+  RESOLVING: "resolving",
+  TURN_END: "turn-end",
+  GAME_OVER: "game-over"
+};
+
+MM.money = (n) => (n < 0 ? "-$" : "$") + Math.abs(Math.round(n)).toLocaleString("en-US");
+
+MM.createGame = function (opts) {
+  const settings = Object.assign({}, MM.DEFAULT_SETTINGS, opts && opts.settings);
+  const rules = {};
+  MM.RULE_DEFS.forEach((r) => (rules[r.id] = r.on));
+  Object.assign(rules, opts && opts.rules);
+
+  const rng = MM.createRng(opts && opts.seed);
+  const players = [];
+
+  players.push({
+    id: 0, name: (opts && opts.nickname) || "You", avatar: "😀",
+    color: "var(--p1)", hex: "#8b5cf6", bot: false, personality: null,
+    cash: settings.startingCash, pos: 0, jailed: false, jailTurns: 0,
+    doubles: 0, alive: true, portfolio: {}, getOut: 0, lastDelta: 0
+  });
+
+  const roster = MM.PERSONALITIES.slice(0, Math.max(0, settings.players - 1));
+  const hexes = { tycoon: "#ff7a45", banker: "#37c98b", shark: "#3fa9ff", wildcard: "#ff5fa2" };
+  roster.forEach((p, n) => {
+    players.push({
+      id: n + 1, name: p.name, avatar: p.avatar,
+      color: p.color, hex: hexes[p.id], bot: true, personality: p.id,
+      cash: settings.startingCash, pos: 0, jailed: false, jailTurns: 0,
+      doubles: 0, alive: true, portfolio: {}, getOut: 0, lastDelta: 0
+    });
+  });
+
+  const state = {
+    settings, rules, rng,
+    players,
+    current: 0,
+    round: 1,
+    phase: MM.PHASES.LOBBY,
+    dice: { a: 1, b: 1, sum: 2, isDouble: false, rolled: false },
+    ownership: {},          /* tileIndex → playerId          */
+    houses: {},             /* tileIndex → 0–5 (5 = hotel)   */
+    mortgaged: {},          /* tileIndex → true              */
+    stocks: MM.STOCKS.map((s) => Object.assign({}, s, { open: s.price, prev: s.price })),
+    vacationPot: 0,
+    log: [],
+    chat: [],
+    room: "room-" + Math.random().toString(36).slice(2, 7)
+  };
+
+  MM.state = state;
+  return state;
+};
+
+/* ── lookups ─────────────────────────────── */
+MM.currentPlayer = (s) => s.players[s.current];
+MM.playerById = (s, id) => s.players.find((p) => p.id === id);
+MM.livePlayers = (s) => s.players.filter((p) => p.alive);
+MM.ownerOf = (s, tileIndex) =>
+  s.ownership[tileIndex] === undefined ? null : MM.playerById(s, s.ownership[tileIndex]);
+MM.tilesOf = (s, playerId) =>
+  Object.keys(s.ownership)
+    .filter((k) => s.ownership[k] === playerId)
+    .map((k) => MM.BOARD[+k]);
+
+MM.portfolioValue = function (s, player) {
+  return s.stocks.reduce((t, st) => t + (player.portfolio[st.sym] || 0) * st.price, 0);
+};
+
+MM.netWorth = function (s, player) {
+  let w = player.cash + MM.portfolioValue(s, player);
+  MM.tilesOf(s, player.id).forEach((t) => {
+    w += s.mortgaged[t.i] ? (t.price || 0) / 2 : t.price || 0;
+    const h = s.houses[t.i] || 0;
+    if (h && t.group) w += h * MM.GROUPS[t.group].house;
+  });
+  return w;
+};
+
+/* ── mutations ───────────────────────────── */
+MM.setPhase = function (s, phase) {
+  s.phase = phase;
+  MM.bus.emit("phase", phase);
+};
+
+MM.credit = function (s, player, amount, reason) {
+  player.cash += amount;
+  player.lastDelta = amount;
+  MM.bus.emit("cash", { player, amount, reason });
+  if (player.cash < 0) MM.bankrupt(s, player, reason);
+  MM.bus.emit("state", s);
+  return amount;
+};
+
+MM.debit = (s, player, amount, reason) => MM.credit(s, player, -amount, reason);
+
+/* Phase 2 will force asset liquidation before this can push a player under. */
+MM.transfer = function (s, from, to, amount, reason) {
+  MM.debit(s, from, amount, reason);
+  if (to) MM.credit(s, to, amount, reason);
+  return amount;
+};
+
+MM.bankrupt = function (s, player, reason) {
+  if (!player.alive) return;
+  player.alive = false;
+  player.cash = 0;
+  Object.keys(s.ownership).forEach((k) => {
+    if (s.ownership[k] === player.id) delete s.ownership[k];
+  });
+  MM.log(s, `<b>${player.name}</b> went bankrupt${reason ? " — " + reason : ""}`, player);
+  MM.bus.emit("bankrupt", player);
+};
+
+MM.log = function (s, html, player) {
+  const entry = { html, hex: player ? player.hex : null, t: Date.now() };
+  s.log.push(entry);
+  if (s.log.length > 60) s.log.shift();
+  MM.bus.emit("log", entry);
+};
+
+MM.chat = function (s, name, text, hex) {
+  const entry = { name, text, hex: hex || "#9068ff" };
+  s.chat.push(entry);
+  MM.bus.emit("chat", entry);
+};
+
+/* ── stock tape ──────────────────────────────
+   Phase 1 only drifts prices so the ticker is alive.
+   Phase 3 replaces this with event-driven repricing. */
+MM.driftMarket = function (s) {
+  const k = MM.VOLATILITY[s.settings.volatility] || 1;
+  s.stocks.forEach((st) => {
+    st.prev = st.price;
+    const move = st.price * st.vol * k * s.rng.gauss() * 0.5;
+    st.price = Math.max(5, Math.round((st.price + move) * 100) / 100);
+  });
+  MM.bus.emit("market", s.stocks);
+};
+
+
+/* ── src/core/dice.js ── */
+/* ═══ two six-sided dice ═══ */
+window.MM = window.MM || {};
+
+MM.rollDice = function (rng) {
+  const a = rng.int(1, 6);
+  const b = rng.int(1, 6);
+  return { a, b, sum: a + b, isDouble: a === b, rolled: true };
+};
+
+/* Rig a roll — used by tests and by the "3 doubles" demo in the rules modal. */
+MM.fixedRoll = (a, b) => ({ a, b, sum: a + b, isDouble: a === b, rolled: true });
+
+
+/* ── src/core/turn.js ── */
+/* ═══════════════════════════════════════════
+   Turn state machine
+   lobby → awaiting-roll → rolling → moving
+         → resolving → turn-end → (next player)
+   ═══════════════════════════════════════════ */
+window.MM = window.MM || {};
+
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+MM.turn = {
+  busy: false,
+
+  /* ── kick off ─────────────────────────── */
+  begin(s) {
+    s.current = 0;
+    s.round = 1;
+    MM.log(s, "Game started with a randomised player order. Good luck!");
+    MM.setPhase(s, MM.PHASES.AWAIT_ROLL);
+    this.startTurn(s);
+  },
+
+  startTurn(s) {
+    const p = MM.currentPlayer(s);
+    if (!p.alive) return this.nextPlayer(s);
+
+    p.doubles = 0;
+    MM.setPhase(s, MM.PHASES.AWAIT_ROLL);
+    MM.bus.emit("turn", p);
+    MM.bus.emit("state", s);
+
+    if (p.bot) {
+      setTimeout(() => {
+        if (s.phase === MM.PHASES.AWAIT_ROLL && MM.currentPlayer(s) === p) this.roll(s);
+      }, s.settings.botDelay);
+    }
+  },
+
+  /* ── roll ─────────────────────────────── */
+  async roll(s) {
+    if (this.busy || s.phase !== MM.PHASES.AWAIT_ROLL) return;
+    this.busy = true;
+
+    const p = MM.currentPlayer(s);
+    const d = MM.rollDice(s.rng);
+    s.dice = d;
+
+    MM.setPhase(s, MM.PHASES.ROLLING);
+    MM.bus.emit("dice", d);
+    await MM.diceUI.roll(d);
+
+    if (p.jailed) return this.resolveJailRoll(s, p, d);
+
+    if (d.isDouble) {
+      p.doubles += 1;
+      if (p.doubles === 3) {
+        MM.log(s, `<b>${p.name}</b> rolled a third double — straight to prison`, p);
+        await this.sendToPrison(s, p);
+        return this.finishTurn(s, false);
+      }
+      MM.log(s, `<b>${p.name}</b> rolled <b>${d.a}+${d.b}</b> — doubles, roll again`, p);
+    } else {
+      MM.log(s, `<b>${p.name}</b> rolled <b>${d.a}+${d.b}</b> = ${d.sum}`, p);
+    }
+
+    await this.advance(s, p, d.sum);
+    return this.finishTurn(s, d.isDouble);
+  },
+
+  async resolveJailRoll(s, p, d) {
+    if (d.isDouble) {
+      p.jailed = false;
+      p.jailTurns = 0;
+      MM.log(s, `<b>${p.name}</b> rolled doubles and walks free`, p);
+      await this.advance(s, p, d.sum);
+      return this.finishTurn(s, false);
+    }
+
+    p.jailTurns += 1;
+    if (p.jailTurns >= 3) {
+      MM.debit(s, p, MM.BAIL, "bail");
+      p.jailed = false;
+      p.jailTurns = 0;
+      MM.log(s, `<b>${p.name}</b> paid <span class="money">${MM.money(MM.BAIL)}</span> bail`, p);
+      await this.advance(s, p, d.sum);
+    } else {
+      MM.log(s, `<b>${p.name}</b> stays in prison (${p.jailTurns}/3)`, p);
+      await wait(320);
+    }
+    return this.finishTurn(s, false);
+  },
+
+  /* ── movement ─────────────────────────── */
+  async advance(s, p, steps) {
+    MM.setPhase(s, MM.PHASES.MOVING);
+    await MM.renderer.travel(p, steps, (index) => {
+      if (index === 0) this.passGo(s, p);
+    });
+    MM.setPhase(s, MM.PHASES.RESOLVING);
+    await this.resolveLanding(s, p, MM.tile(p.pos));
+  },
+
+  passGo(s, p) {
+    MM.credit(s, p, MM.GO_SALARY, "salary");
+    MM.log(s, `<b>${p.name}</b> passed START and collected <span class="money">${MM.money(MM.GO_SALARY)}</span>`, p);
+    MM.bus.emit("pass-go", p); /* Phase 3 hangs dividends off this */
+  },
+
+  async sendToPrison(s, p) {
+    p.jailed = true;
+    p.jailTurns = 0;
+    p.doubles = 0;
+    MM.bus.emit("jailed", p);
+    await MM.renderer.teleport(p, MM.JAIL_INDEX);
+    MM.bus.emit("state", s);
+  },
+
+  /* ── landing ──────────────────────────── */
+  async resolveLanding(s, p, tile) {
+    await wait(200);
+
+    switch (tile.type) {
+      case "property":
+      case "airport":
+      case "utility": {
+        const owner = MM.ownerOf(s, tile.i);
+        if (!owner) {
+          MM.log(s, `<b>${p.name}</b> landed on ${tile.name} — unclaimed at <span class="money">${MM.money(tile.price)}</span>`, p);
+        } else if (owner.id === p.id) {
+          MM.log(s, `<b>${p.name}</b> is home at ${tile.name}`, p);
+        } else {
+          MM.log(s, `<b>${p.name}</b> owes rent at ${tile.name}`, p);
+        }
+        break;
+      }
+
+      case "tax": {
+        const due = tile.pct
+          ? Math.min(tile.amount, Math.round((MM.netWorth(s, p) * tile.pct) / 100))
+          : tile.amount;
+        MM.debit(s, p, due, "tax");
+        if (s.rules.vacationCash) s.vacationPot += due;
+        MM.log(s, `<b>${p.name}</b> paid <span class="money">${MM.money(due)}</span> ${tile.name.toLowerCase()}`, p);
+        break;
+      }
+
+      case "vacation": {
+        if (s.rules.vacationCash && s.vacationPot > 0) {
+          MM.credit(s, p, s.vacationPot, "vacation");
+          MM.log(s, `<b>${p.name}</b> swept the vacation pot — <span class="money">${MM.money(s.vacationPot)}</span>`, p);
+          s.vacationPot = 0;
+        } else {
+          MM.log(s, `<b>${p.name}</b> is on vacation`, p);
+        }
+        break;
+      }
+
+      case "gotojail":
+        MM.log(s, `<b>${p.name}</b> was sent to prison`, p);
+        await this.sendToPrison(s, p);
+        break;
+
+      case "jail":
+        MM.log(s, `<b>${p.name}</b> is just passing by the prison`, p);
+        break;
+
+      case "surprise":
+      case "treasure":
+        MM.log(s, `<b>${p.name}</b> drew a ${tile.name} card`, p);
+        break;
+
+      case "go":
+        MM.log(s, `<b>${p.name}</b> landed square on START`, p);
+        break;
+    }
+
+    MM.bus.emit("state", s);
+    await wait(260);
+  },
+
+  /* ── end of turn ──────────────────────── */
+  finishTurn(s, rollAgain) {
+    this.busy = false;
+
+    const alive = MM.livePlayers(s);
+    if (alive.length <= 1) {
+      MM.setPhase(s, MM.PHASES.GAME_OVER);
+      MM.log(s, `<b>${alive[0] ? alive[0].name : "Nobody"}</b> owns the table. Game over.`);
+      MM.bus.emit("game-over", alive[0]);
+      return;
+    }
+
+    const p = MM.currentPlayer(s);
+    if (rollAgain && p.alive && !p.jailed) {
+      MM.setPhase(s, MM.PHASES.AWAIT_ROLL);
+      MM.bus.emit("turn", p);
+      if (p.bot) setTimeout(() => this.roll(s), s.settings.botDelay);
+      return;
+    }
+
+    MM.setPhase(s, MM.PHASES.TURN_END);
+    setTimeout(() => this.nextPlayer(s), 260);
+  },
+
+  nextPlayer(s) {
+    const start = s.current;
+    do {
+      s.current = (s.current + 1) % s.players.length;
+      if (s.current <= start) {
+        s.round += 1;
+        MM.driftMarket(s);
+      }
+    } while (!MM.currentPlayer(s).alive && s.current !== start);
+
+    this.startTurn(s);
+  }
+};
+
+
+/* ── src/render/geometry.js ── */
+/* ═══ board geometry — index → rectangle, index → token anchor ═══ */
+window.MM = window.MM || {};
+
+MM.geom = {
+  /* corner depth is 11.3% of the board; nine side tiles share the rest */
+  build(size) {
+    const corner = Math.round(size * 0.113);
+    const tile = (size - corner * 2) / 9;
+    const rects = [];
+
+    for (let i = 0; i < 40; i++) {
+      if (i === 0)       rects.push({ i, x: 0, y: 0, w: corner, h: corner, side: 0, corner: true });
+      else if (i < 10)   rects.push({ i, x: corner + (i - 1) * tile, y: 0, w: tile, h: corner, side: 0 });
+      else if (i === 10) rects.push({ i, x: corner + 9 * tile, y: 0, w: corner, h: corner, side: 1, corner: true });
+      else if (i < 20)   rects.push({ i, x: corner + 9 * tile, y: corner + (i - 11) * tile, w: corner, h: tile, side: 1 });
+      else if (i === 20) rects.push({ i, x: corner + 9 * tile, y: corner + 9 * tile, w: corner, h: corner, side: 2, corner: true });
+      else if (i < 30)   rects.push({ i, x: corner + (29 - i) * tile, y: corner + 9 * tile, w: tile, h: corner, side: 2 });
+      else if (i === 30) rects.push({ i, x: 0, y: corner + 9 * tile, w: corner, h: corner, side: 3, corner: true });
+      else               rects.push({ i, x: 0, y: corner + (39 - i) * tile, w: corner, h: tile, side: 3 });
+    }
+
+    return {
+      size, corner, tile, rects,
+      inner: { x: corner, y: corner, w: size - corner * 2, h: size - corner * 2 }
+    };
+  },
+
+  /* Local drawing frame: x runs along the outer edge, y runs into the board.
+     Sides 0/1/3 are rotated so the inner edge is at y = depth; the bottom row
+     stays upright and is flagged `flip` so content mirrors instead. */
+  frame(ctx, r) {
+    ctx.translate(r.x, r.y);
+    if (r.side === 1) { ctx.translate(r.w, 0); ctx.rotate(Math.PI / 2); return { w: r.h, d: r.w, flip: false }; }
+    if (r.side === 3) { ctx.translate(0, r.h); ctx.rotate(-Math.PI / 2); return { w: r.h, d: r.w, flip: false }; }
+    if (r.side === 2) return { w: r.w, d: r.h, flip: true };
+    return { w: r.w, d: r.h, flip: false };
+  },
+
+  /* Where a token sits on tile `i`, nudged toward the middle of the board. */
+  anchor(i, L, jailed) {
+    const r = L.rects[i];
+    let x = r.x + r.w / 2;
+    let y = r.y + r.h / 2;
+    const pull = L.tile * 0.22;
+
+    if (i === MM.JAIL_INDEX) {
+      /* prison corner is split: cell inside, pavement outside */
+      return jailed
+        ? { x: r.x + r.w * 0.58, y: r.y + r.h * 0.44 }
+        : { x: r.x + r.w * 0.24, y: r.y + r.h * 0.8 };
+    }
+    /* corners: nudge off the artwork, toward the middle of the board */
+    if (r.corner) {
+      const n = r.w * 0.12;
+      return {
+        x: x + (i === 0 || i === 30 ? n : -n),
+        y: y + (i === 0 || i === 10 ? n : -n)
+      };
+    }
+
+    if (r.side === 0) y += pull;
+    else if (r.side === 1) x -= pull;
+    else if (r.side === 2) y -= pull;
+    else x += pull;
+    return { x, y };
+  },
+
+  /* up to four tokens share a tile without stacking */
+  slot(n, size) {
+    const d = size * 0.62;
+    return [
+      { dx: -d / 2, dy: -d / 2 }, { dx: d / 2, dy: -d / 2 },
+      { dx: -d / 2, dy: d / 2 },  { dx: d / 2, dy: d / 2 },
+      { dx: 0, dy: 0 }
+    ][Math.min(n, 4)];
+  },
+
+  hit(L, px, py) {
+    for (const r of L.rects) {
+      if (px >= r.x && px <= r.x + r.w && py >= r.y && py <= r.y + r.h) return r.i;
+    }
+    return -1;
+  }
+};
+
+
+/* ── src/render/icons.js ── */
+/* ═══ vector tile icons — drawn, never fonts, so they look the same everywhere ═══
+   Each icon draws inside a box of side `s` centred on the current origin. */
+window.MM = window.MM || {};
+
+MM.icons = {
+  rrect(ctx, x, y, w, h, r) {
+    const k = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + k, y);
+    ctx.arcTo(x + w, y, x + w, y + h, k);
+    ctx.arcTo(x + w, y + h, x, y + h, k);
+    ctx.arcTo(x, y + h, x, y, k);
+    ctx.arcTo(x, y, x + w, y, k);
+    ctx.closePath();
+  },
+
+  plane(ctx, s, color) {
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(0, -s * 0.5);
+    ctx.lineTo(s * 0.1, -s * 0.2);
+    ctx.lineTo(s * 0.5, s * 0.1);
+    ctx.lineTo(s * 0.5, s * 0.24);
+    ctx.lineTo(s * 0.09, s * 0.12);
+    ctx.lineTo(s * 0.06, s * 0.38);
+    ctx.lineTo(s * 0.22, s * 0.5);
+    ctx.lineTo(0, s * 0.46);
+    ctx.lineTo(-s * 0.22, s * 0.5);
+    ctx.lineTo(-s * 0.06, s * 0.38);
+    ctx.lineTo(-s * 0.09, s * 0.12);
+    ctx.lineTo(-s * 0.5, s * 0.24);
+    ctx.lineTo(-s * 0.5, s * 0.1);
+    ctx.lineTo(-s * 0.1, -s * 0.2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  },
+
+  bolt(ctx, s, color) {
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(s * 0.12, -s * 0.5);
+    ctx.lineTo(-s * 0.34, s * 0.08);
+    ctx.lineTo(-s * 0.04, s * 0.08);
+    ctx.lineTo(-s * 0.14, s * 0.5);
+    ctx.lineTo(s * 0.34, -s * 0.1);
+    ctx.lineTo(s * 0.02, -s * 0.1);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  },
+
+  droplet(ctx, s, color) {
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(0, -s * 0.5);
+    ctx.bezierCurveTo(s * 0.42, -s * 0.05, s * 0.34, s * 0.48, 0, s * 0.48);
+    ctx.bezierCurveTo(-s * 0.34, s * 0.48, -s * 0.42, -s * 0.05, 0, -s * 0.5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  },
+
+  chest(ctx, s, color) {
+    ctx.save();
+    ctx.fillStyle = color;
+    this.rrect(ctx, -s * 0.44, -s * 0.34, s * 0.88, s * 0.68, s * 0.1);
+    ctx.fill();
+    ctx.fillStyle = "rgba(0,0,0,.34)";
+    ctx.fillRect(-s * 0.44, -s * 0.06, s * 0.88, s * 0.1);
+    this.rrect(ctx, -s * 0.1, -s * 0.14, s * 0.2, s * 0.26, s * 0.05);
+    ctx.fill();
+    ctx.restore();
+  },
+
+  question(ctx, s, color) {
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.font = `700 ${s}px ${MM.FONT_DISPLAY}`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("?", 0, s * 0.04);
+    ctx.restore();
+  },
+
+  note(ctx, s, color) {
+    ctx.save();
+    ctx.fillStyle = color;
+    this.rrect(ctx, -s * 0.5, -s * 0.3, s, s * 0.6, s * 0.08);
+    ctx.fill();
+    ctx.fillStyle = "rgba(0,0,0,.4)";
+    ctx.beginPath();
+    ctx.arc(0, 0, s * 0.17, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  },
+
+  chevrons(ctx, s, color) {
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = s * 0.16;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    for (let n = -1; n <= 1; n++) {
+      ctx.beginPath();
+      ctx.moveTo(n * s * 0.3 - s * 0.12, -s * 0.26);
+      ctx.lineTo(n * s * 0.3 + s * 0.12, 0);
+      ctx.lineTo(n * s * 0.3 - s * 0.12, s * 0.26);
+      ctx.stroke();
+    }
+    ctx.restore();
+  },
+
+  bars(ctx, w, h, color) {
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = Math.max(1.5, w * 0.055);
+    for (let n = 1; n <= 4; n++) {
+      const x = -w / 2 + (w * n) / 5;
+      ctx.beginPath();
+      ctx.moveTo(x, -h / 2);
+      ctx.lineTo(x, h / 2);
+      ctx.stroke();
+    }
+    ctx.restore();
+  },
+
+  umbrella(ctx, s, color) {
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(0, s * 0.02, s * 0.46, Math.PI, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = s * 0.09;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(0, s * 0.02);
+    ctx.lineTo(0, s * 0.44);
+    ctx.stroke();
+    ctx.restore();
+  },
+
+  cuffs(ctx, s, color) {
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = s * 0.11;
+    ctx.beginPath();
+    ctx.arc(-s * 0.24, s * 0.06, s * 0.2, 0, Math.PI * 2);
+    ctx.arc(s * 0.24, s * 0.06, s * 0.2, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(-s * 0.06, -s * 0.12);
+    ctx.lineTo(s * 0.06, -s * 0.12);
+    ctx.stroke();
+    ctx.restore();
+  },
+
+  house(ctx, s, color) {
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(0, -s * 0.5);
+    ctx.lineTo(s * 0.5, -s * 0.05);
+    ctx.lineTo(s * 0.32, -s * 0.05);
+    ctx.lineTo(s * 0.32, s * 0.5);
+    ctx.lineTo(-s * 0.32, s * 0.5);
+    ctx.lineTo(-s * 0.32, -s * 0.05);
+    ctx.lineTo(-s * 0.5, -s * 0.05);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+};
+
+
+/* ── src/render/board-renderer.js ── */
+/* ═══════════════════════════════════════════
+   Canvas board renderer
+   Static furniture is painted once to an offscreen
+   canvas; only tokens, hover and the turn ring are
+   redrawn per frame.
+   ═══════════════════════════════════════════ */
+window.MM = window.MM || {};
+
+MM.FONT_DISPLAY = '"Trebuchet MS", "Segoe UI", system-ui, sans-serif';
+MM.FONT_BODY = 'system-ui, "Segoe UI", Roboto, sans-serif';
+MM.FONT_NUM = 'ui-monospace, "SF Mono", Consolas, monospace';
+
+const CANVAS_COLORS = {
+  plate: "#171126",
+  tile: "#241c36",
+  tileAlt: "#2a2140",
+  edge: "#3a2e56",
+  text: "#ece8f5",
+  dim: "#a79fc4",
+  mut: "#7d7499",
+  gold: "#ffc24b",
+  green: "#3dd68c"
+};
+
+MM.renderer = {
+  init(canvas, wrap, centerEl) {
+    this.canvas = canvas;
+    this.wrap = wrap;
+    this.centerEl = centerEl;
+    this.ctx = canvas.getContext("2d");
+    this.static = document.createElement("canvas");
+    this.sctx = this.static.getContext("2d");
+    this.anims = {};
+    this.hover = -1;
+    this.dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    this.tip = document.createElement("div");
+    this.tip.className = "tile-tip";
+    this.tip.hidden = true;
+    wrap.appendChild(this.tip);
+
+    new ResizeObserver(() => this.resize()).observe(wrap);
+    canvas.addEventListener("mousemove", (e) => this.onHover(e));
+    canvas.addEventListener("mouseleave", () => { this.hover = -1; this.tip.hidden = true; });
+
+    MM.bus.on("state", () => this.invalidate());
+    MM.bus.on("market", () => this.invalidate());
+
+    this.resize();
+    const loop = () => { this.draw(); requestAnimationFrame(loop); };
+    requestAnimationFrame(loop);
+  },
+
+  /* ── sizing ─────────────────────────────── */
+  resize() {
+    const box = this.wrap.getBoundingClientRect();
+    const size = Math.max(320, Math.floor(Math.min(box.width, box.height) - 4));
+    if (size === this.size) return;
+
+    this.size = size;
+    this.L = MM.geom.build(size);
+
+    [this.canvas, this.static].forEach((c) => {
+      c.width = size * this.dpr;
+      c.height = size * this.dpr;
+      c.style.width = size + "px";
+      c.style.height = size + "px";
+    });
+    this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    this.sctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+
+    const pad = Math.round(this.L.corner * 0.35);
+    this.centerEl.style.width = this.L.inner.w - pad + "px";
+    this.centerEl.style.height = this.L.inner.h - pad + "px";
+
+    this.invalidate();
+  },
+
+  invalidate() { this.staticStale = true; },
+
+  /* ── static layer ───────────────────────── */
+  paintStatic() {
+    const ctx = this.sctx;
+    const L = this.L;
+    const s = MM.state;
+    ctx.clearRect(0, 0, L.size, L.size);
+
+    /* plate */
+    ctx.fillStyle = CANVAS_COLORS.plate;
+    MM.icons.rrect(ctx, 0, 0, L.size, L.size, 14);
+    ctx.fill();
+
+    /* hollow centre */
+    const g = ctx.createRadialGradient(L.size / 2, L.size / 2, L.size * 0.05, L.size / 2, L.size / 2, L.size * 0.5);
+    g.addColorStop(0, "rgba(124,77,255,.10)");
+    g.addColorStop(1, "rgba(10,7,18,0)");
+    ctx.fillStyle = g;
+    ctx.fillRect(L.inner.x, L.inner.y, L.inner.w, L.inner.h);
+
+    ctx.strokeStyle = "rgba(255,255,255,.04)";
+    ctx.lineWidth = 1;
+    MM.icons.rrect(ctx, L.inner.x + 8, L.inner.y + 8, L.inner.w - 16, L.inner.h - 16, 10);
+    ctx.stroke();
+
+    L.rects.forEach((r) => {
+      ctx.save();
+      if (r.corner) this.drawCorner(ctx, r, s);
+      else this.drawTile(ctx, r, s);
+      ctx.restore();
+    });
+
+    this.staticStale = false;
+  },
+
+  /* ── one side tile ──────────────────────── */
+  drawTile(ctx, r, s) {
+    const t = MM.BOARD[r.i];
+    const f = MM.geom.frame(ctx, r);
+    const { w, d, flip } = f;
+    const owner = s ? MM.ownerOf(s, r.i) : null;
+    const L = this.L;
+
+    ctx.fillStyle = r.i % 2 ? CANVAS_COLORS.tile : CANVAS_COLORS.tileAlt;
+    ctx.fillRect(0, 0, w, d);
+
+    if (owner) {
+      ctx.fillStyle = owner.hex + "2e";
+      ctx.fillRect(0, 0, w, d);
+    }
+
+    ctx.strokeStyle = "rgba(0,0,0,.55)";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(0.5, 0.5, w - 1, d - 1);
+
+    const nameSize = Math.max(8, L.tile * 0.2);
+    const numSize = Math.max(8, L.tile * 0.17);
+    const outerY = flip ? d - 5 : 5;
+    const outerBase = flip ? "bottom" : "top";
+
+    if (t.type === "property") {
+      const grp = MM.GROUPS[t.group];
+      const bandH = d * 0.24;
+      const bandY = flip ? 0 : d - bandH;
+
+      ctx.fillStyle = grp.color;
+      ctx.fillRect(0, bandY, w, bandH);
+      ctx.fillStyle = "rgba(0,0,0,.18)";
+      ctx.fillRect(0, flip ? bandH - 2 : bandY, w, 2);
+
+      const houses = s ? s.houses[r.i] || 0 : 0;
+      if (houses) this.drawHouses(ctx, houses, w, bandY, bandH);
+      else {
+        ctx.fillStyle = "rgba(0,0,0,.55)";
+        ctx.font = `700 ${Math.max(7, bandH * 0.5)}px ${MM.FONT_NUM}`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(t.group, w / 2, bandY + bandH / 2 + 0.5);
+      }
+
+      this.text(ctx, MM.money(t.price), w / 2, outerY, numSize, CANVAS_COLORS.dim, outerBase, MM.FONT_NUM);
+
+      const zoneTop = flip ? bandH + numSize : numSize + 6;
+      const zoneBot = flip ? d - numSize - 6 : d - bandH;
+      this.name(ctx, t.name, w, (zoneTop + zoneBot) / 2, nameSize);
+
+      if (s && s.mortgaged[r.i]) this.stamp(ctx, w, d, "MORTGAGED");
+    } else if (t.type === "airport" || t.type === "utility") {
+      this.text(ctx, MM.money(t.price), w / 2, outerY, numSize, CANVAS_COLORS.dim, outerBase, MM.FONT_NUM);
+      this.name(ctx, t.name, w, flip ? d * 0.68 : d * 0.34, nameSize);
+
+      ctx.save();
+      ctx.translate(w / 2, flip ? d * 0.28 : d * 0.72);
+      const size = Math.min(w, d) * 0.36;
+      if (t.type === "airport") MM.icons.plane(ctx, size, "#cfe6ff");
+      else if (t.util === "power") MM.icons.bolt(ctx, size, CANVAS_COLORS.gold);
+      else MM.icons.droplet(ctx, size, "#5ec8f0");
+      ctx.restore();
+    } else {
+      /* tax · surprise · treasure */
+      const accent = t.type === "surprise" ? "#ff7ab8" : t.type === "treasure" ? CANVAS_COLORS.gold : "#9db2ff";
+      const isTax = t.type === "tax";
+      this.name(ctx, t.name, w, flip ? d * 0.8 : d * 0.2, nameSize);
+
+      if (isTax) {
+        this.text(ctx, t.pct ? t.pct + "%" : MM.money(t.amount), w / 2, flip ? d * 0.6 : d * 0.4,
+          numSize * 0.95, CANVAS_COLORS.mut, "middle", MM.FONT_NUM, 700, w - 8);
+      }
+
+      ctx.save();
+      ctx.translate(w / 2, flip ? d * (isTax ? 0.28 : 0.4) : d * (isTax ? 0.72 : 0.6));
+      const size = Math.min(w, d) * 0.4;
+      if (t.type === "surprise") MM.icons.question(ctx, size * 1.4, accent);
+      else if (t.type === "treasure") MM.icons.chest(ctx, size, accent);
+      else MM.icons.note(ctx, size * 0.8, accent);
+      ctx.restore();
+    }
+
+    if (owner) {
+      ctx.fillStyle = owner.hex;
+      const barY = flip ? d - 3 : 0;
+      ctx.fillRect(0, barY, w, 3);
+    }
+  },
+
+  drawHouses(ctx, n, w, bandY, bandH) {
+    const size = bandH * 0.62;
+    const hotel = n >= 5;
+    const count = hotel ? 1 : n;
+    const gap = size * 0.35;
+    const total = count * size + (count - 1) * gap;
+    let x = w / 2 - total / 2 + size / 2;
+    for (let k = 0; k < count; k++) {
+      ctx.save();
+      ctx.translate(x, bandY + bandH / 2);
+      MM.icons.house(ctx, size * (hotel ? 1.25 : 1), hotel ? "#ff5c6c" : "#ffffff");
+      ctx.restore();
+      x += size + gap;
+    }
+  },
+
+  /* ── corners ────────────────────────────── */
+  drawCorner(ctx, r, s) {
+    const c = r.w;
+    ctx.translate(r.x, r.y);
+    ctx.fillStyle = CANVAS_COLORS.tileAlt;
+    ctx.fillRect(0, 0, c, c);
+    ctx.strokeStyle = "rgba(0,0,0,.55)";
+    ctx.strokeRect(0.5, 0.5, c - 1, c - 1);
+
+    const label = Math.max(9, c * 0.145);
+
+    if (r.i === 0) {
+      const g = ctx.createLinearGradient(0, 0, c, c);
+      g.addColorStop(0, "rgba(61,214,140,.22)");
+      g.addColorStop(1, "rgba(61,214,140,0)");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, c, c);
+      this.text(ctx, "START", c / 2, c * 0.3, label * 1.25, CANVAS_COLORS.green, "middle", MM.FONT_DISPLAY, 700);
+      ctx.save();
+      ctx.translate(c / 2, c * 0.56);
+      MM.icons.chevrons(ctx, c * 0.3, "rgba(61,214,140,.75)");
+      ctx.restore();
+      this.text(ctx, "+" + MM.money(MM.GO_SALARY), c / 2, c * 0.82, label * 0.85, CANVAS_COLORS.dim, "middle", MM.FONT_NUM);
+    }
+
+    if (r.i === MM.JAIL_INDEX) {
+      this.text(ctx, "Passing by", c / 2, c * 0.11, label * 0.72, CANVAS_COLORS.mut, "middle");
+      const bx = c * 0.2, by = c * 0.2, bw = c * 0.68, bh = c * 0.56;
+      ctx.fillStyle = "rgba(255,92,108,.14)";
+      MM.icons.rrect(ctx, bx, by, bw, bh, 6);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255,92,108,.5)";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.save();
+      ctx.translate(bx + bw / 2, by + bh / 2);
+      MM.icons.bars(ctx, bw * 0.8, bh * 0.72, "rgba(255,140,150,.55)");
+      ctx.restore();
+      this.text(ctx, "In Prison", c / 2, c * 0.88, label * 0.85, "#ff8f9a", "middle", MM.FONT_BODY, 700);
+    }
+
+    if (r.i === 20) {
+      ctx.save();
+      ctx.translate(c / 2, c * 0.42);
+      MM.icons.umbrella(ctx, c * 0.4, "#4ec8c1");
+      ctx.restore();
+      this.text(ctx, "Vacation", c / 2, c * 0.74, label, CANVAS_COLORS.text, "middle", MM.FONT_BODY, 700);
+      const pot = s ? s.vacationPot : 0;
+      this.text(ctx, pot > 0 ? MM.money(pot) : "empty", c / 2, c * 0.88, label * 0.8,
+        pot > 0 ? CANVAS_COLORS.gold : CANVAS_COLORS.mut, "middle", MM.FONT_NUM);
+    }
+
+    if (r.i === 30) {
+      ctx.save();
+      ctx.translate(c / 2, c * 0.4);
+      MM.icons.cuffs(ctx, c * 0.42, "#ff8f9a");
+      ctx.restore();
+      this.text(ctx, "Go to", c / 2, c * 0.7, label, CANVAS_COLORS.text, "middle", MM.FONT_BODY, 700);
+      this.text(ctx, "Prison", c / 2, c * 0.85, label, CANVAS_COLORS.text, "middle", MM.FONT_BODY, 700);
+    }
+  },
+
+  /* ── text helpers ───────────────────────── */
+  text(ctx, str, x, y, size, color, baseline, font, weight, maxWidth) {
+    ctx.save();
+    ctx.fillStyle = color;
+    let fs = size;
+    const face = font || MM.FONT_BODY;
+    ctx.font = `${weight || 600} ${fs}px ${face}`;
+    while (maxWidth && fs > 6 && ctx.measureText(str).width > maxWidth) {
+      fs -= 0.5;
+      ctx.font = `${weight || 600} ${fs}px ${face}`;
+    }
+    ctx.textAlign = "center";
+    ctx.textBaseline = baseline || "middle";
+    ctx.fillText(str, x, y);
+    ctx.restore();
+  },
+
+  /* tile name — shrinks, then wraps onto two lines */
+  name(ctx, str, w, cy, size) {
+    ctx.save();
+    ctx.fillStyle = CANVAS_COLORS.text;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    const max = w - 8;
+    let fs = size;
+    ctx.font = `700 ${fs}px ${MM.FONT_BODY}`;
+
+    if (ctx.measureText(str).width > max) {
+      const words = str.split(" ");
+      if (words.length > 1) {
+        const lines = [words[0], words.slice(1).join(" ")];
+        fs = size * 0.92;
+        ctx.font = `700 ${fs}px ${MM.FONT_BODY}`;
+        while (fs > 6 && Math.max(...lines.map((l) => ctx.measureText(l).width)) > max) {
+          fs -= 0.5;
+          ctx.font = `700 ${fs}px ${MM.FONT_BODY}`;
+        }
+        ctx.fillText(lines[0], w / 2, cy - fs * 0.55);
+        ctx.fillText(lines[1], w / 2, cy + fs * 0.55);
+        ctx.restore();
+        return;
+      }
+      while (fs > 6 && ctx.measureText(str).width > max) {
+        fs -= 0.5;
+        ctx.font = `700 ${fs}px ${MM.FONT_BODY}`;
+      }
+    }
+    ctx.fillText(str, w / 2, cy);
+    ctx.restore();
+  },
+
+  stamp(ctx, w, d, str) {
+    ctx.save();
+    ctx.translate(w / 2, d / 2);
+    ctx.rotate(-0.35);
+    ctx.fillStyle = "rgba(255,92,108,.75)";
+    ctx.font = `700 ${Math.max(7, w * 0.15)}px ${MM.FONT_BODY}`;
+    ctx.textAlign = "center";
+    ctx.fillText(str, 0, 0);
+    ctx.restore();
+  },
+
+  /* ── frame ──────────────────────────────── */
+  draw() {
+    if (!this.L) return;
+    if (this.staticStale) this.paintStatic();
+
+    const ctx = this.ctx;
+    const L = this.L;
+    const s = MM.state;
+    ctx.clearRect(0, 0, L.size, L.size);
+    ctx.drawImage(this.static, 0, 0, L.size, L.size);
+
+    if (this.hover >= 0) {
+      const r = L.rects[this.hover];
+      ctx.save();
+      ctx.fillStyle = "rgba(255,255,255,.07)";
+      ctx.fillRect(r.x, r.y, r.w, r.h);
+      ctx.strokeStyle = "rgba(255,255,255,.28)";
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(r.x + 1, r.y + 1, r.w - 2, r.h - 2);
+      ctx.restore();
+    }
+
+    if (!s) return;
+
+    /* stationary tokens grouped per tile, movers drawn last on top */
+    const groups = {};
+    const movers = [];
+    s.players.forEach((p) => {
+      if (!p.alive) return;
+      if (this.anims[p.id]) movers.push(p);
+      else (groups[p.pos] = groups[p.pos] || []).push(p);
+    });
+
+    const size = L.tile * 0.46;
+    Object.keys(groups).forEach((pos) => {
+      const list = groups[pos];
+      list.forEach((p, n) => {
+        const a = MM.geom.anchor(+pos, L, p.jailed);
+        const off = list.length > 1 ? MM.geom.slot(n, size) : { dx: 0, dy: 0 };
+        this.token(ctx, p, a.x + off.dx, a.y + off.dy, size / 2, s);
+      });
+    });
+
+    movers.forEach((p) => {
+      const an = this.anims[p.id];
+      const k = Math.min(1, (performance.now() - an.t0) / an.dur);
+      const e = k * k * (3 - 2 * k);
+      const from = MM.geom.anchor(an.from, L, false);
+      const to = MM.geom.anchor(an.to, L, an.jailed);
+      const lift = Math.sin(Math.PI * e) * (an.arc || L.tile * 0.3);
+      this.token(ctx, p, from.x + (to.x - from.x) * e, from.y + (to.y - from.y) * e - lift, size / 2, s, true);
+    });
+  },
+
+  token(ctx, p, x, y, r, s, lifted) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(x, y + r * 0.85, r * (lifted ? 0.5 : 0.72), r * 0.28, 0, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(0,0,0,.45)";
+    ctx.fill();
+
+    if (s && MM.currentPlayer(s) === p && s.phase !== MM.PHASES.LOBBY) {
+      const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 380);
+      ctx.beginPath();
+      ctx.arc(x, y, r + 3 + pulse * 3, 0, Math.PI * 2);
+      ctx.strokeStyle = p.hex + "88";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = p.hex;
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "rgba(12,9,19,.85)";
+    ctx.stroke();
+
+    ctx.font = `${r * 1.15}px ${MM.FONT_BODY}`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(p.avatar, x, y + r * 0.06);
+    ctx.restore();
+  },
+
+  /* ── movement API ───────────────────────── */
+  animate(p, from, to, dur, opts) {
+    return new Promise((resolve) => {
+      this.anims[p.id] = Object.assign({ from, to, t0: performance.now(), dur }, opts);
+      setTimeout(() => { delete this.anims[p.id]; resolve(); }, dur);
+    });
+  },
+
+  async travel(p, steps, onEnter) {
+    const dur = Math.max(115, 250 - steps * 9);
+    for (let n = 0; n < steps; n++) {
+      const to = (p.pos + 1) % 40;
+      await this.animate(p, p.pos, to, dur);
+      p.pos = to;
+      if (onEnter) onEnter(to);
+      MM.bus.emit("moved", p);
+    }
+  },
+
+  async teleport(p, index) {
+    await this.animate(p, p.pos, index, 460, { arc: this.L.tile * 1.6, jailed: true });
+    p.pos = index;
+    MM.bus.emit("moved", p);
+  },
+
+  /* ── hover + tooltip ────────────────────── */
+  onHover(e) {
+    const box = this.canvas.getBoundingClientRect();
+    const i = MM.geom.hit(this.L, e.clientX - box.left, e.clientY - box.top);
+    this.hover = i;
+    if (i < 0) { this.tip.hidden = true; return; }
+
+    const t = MM.BOARD[i];
+    const s = MM.state;
+    const owner = s ? MM.ownerOf(s, i) : null;
+    let html = `<b>${t.name}</b>`;
+
+    if (t.type === "property") {
+      const g = MM.GROUPS[t.group];
+      html += `<i style="color:${g.color}">${g.name}</i>
+        <span>Price ${MM.money(t.price)} · House ${MM.money(g.house)}</span>
+        <span>Rent ${MM.money(t.rent[0])} → ${MM.money(t.rent[5])} with a hotel</span>`;
+    } else if (t.type === "airport") {
+      html += `<span>Price ${MM.money(t.price)}</span><span>Rent ${MM.AIRPORT_RENT.slice(1).map(MM.money).join(" · ")}</span>`;
+    } else if (t.type === "utility") {
+      html += `<span>Price ${MM.money(t.price)}</span><span>Rent 4× or 10× the dice</span>`;
+    } else if (t.type === "tax") {
+      html += `<span>${t.pct ? t.pct + "% of net worth, capped at " + MM.money(t.amount) : MM.money(t.amount)}</span>`;
+    } else if (t.type === "go") {
+      html += `<span>Collect ${MM.money(MM.GO_SALARY)} every lap</span>`;
+    }
+    if (owner) html += `<span style="color:${owner.hex}">Owned by ${owner.name}</span>`;
+
+    this.tip.innerHTML = html;
+    this.tip.hidden = false;
+
+    const wrapBox = this.wrap.getBoundingClientRect();
+    const w = 210, h = this.tip.offsetHeight;
+    let x = e.clientX - wrapBox.left + 14;
+    let y = e.clientY - wrapBox.top + 14;
+    if (x + w > wrapBox.width) x = e.clientX - wrapBox.left - w - 14;
+    if (y + h > wrapBox.height) y = Math.max(0, e.clientY - wrapBox.top - h - 14);
+    this.tip.style.left = x + "px";
+    this.tip.style.top = y + "px";
+  }
+};
+
+
+/* ── src/ui/dice-ui.js ── */
+/* ═══ the pair of dice in the middle of the board ═══ */
+window.MM = window.MM || {};
+
+const PIPS = {
+  1: [[2, 2]],
+  2: [[1, 1], [3, 3]],
+  3: [[1, 1], [2, 2], [3, 3]],
+  4: [[1, 1], [1, 3], [3, 1], [3, 3]],
+  5: [[1, 1], [1, 3], [2, 2], [3, 1], [3, 3]],
+  6: [[1, 1], [1, 3], [2, 1], [2, 3], [3, 1], [3, 3]]
+};
+
+MM.diceUI = {
+  init(tray) {
+    this.tray = tray;
+    this.dice = [...tray.querySelectorAll(".die")];
+    this.dice.forEach((el, n) => { el.dataset.side = n; });
+    this.show(1, 1);
+  },
+
+  face(el, n) {
+    el.textContent = "";
+    PIPS[n].forEach(([row, col]) => {
+      const pip = document.createElement("span");
+      pip.className = "pip";
+      pip.style.gridRow = row;
+      pip.style.gridColumn = col;
+      el.appendChild(pip);
+    });
+  },
+
+  show(a, b) {
+    this.face(this.dice[0], a);
+    this.face(this.dice[1], b);
+  },
+
+  roll(d) {
+    const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const span = reduced ? 180 : 720;
+
+    this.tray.classList.remove("is-double");
+    this.tray.classList.add("is-rolling");
+
+    return new Promise((resolve) => {
+      const spin = reduced ? null : setInterval(() => {
+        this.show(1 + Math.floor(Math.random() * 6), 1 + Math.floor(Math.random() * 6));
+      }, 85);
+
+      setTimeout(() => {
+        if (spin) clearInterval(spin);
+        this.tray.classList.remove("is-rolling");
+        this.show(d.a, d.b);
+        if (d.isDouble) this.tray.classList.add("is-double");
+        setTimeout(resolve, reduced ? 40 : 220);
+      }, span);
+    });
+  }
+};
+
+
+/* ── src/ui/panels.js ── */
+/* ═══ side rails, log, chat and the market tape ═══ */
+window.MM = window.MM || {};
+
+const el = (sel) => document.querySelector(sel);
+
+MM.panels = {
+  init() {
+    this.refs = {
+      players: el("#player-list"),
+      host: el("#host-card"),
+      bots: el("#bot-list"),
+      rules: el("#rules-list"),
+      market: el("#market-list"),
+      props: el("#prop-list"),
+      ticker: el("#ticker-track"),
+      log: el("#log-feed"),
+      chat: el("#chat-feed"),
+      room: el("#room-link")
+    };
+
+    MM.bus.on("state", () => this.renderAll());
+    MM.bus.on("turn", () => this.renderPlayers());
+    MM.bus.on("market", () => { this.renderMarket(); this.renderTicker(); });
+    MM.bus.on("log", (e) => this.pushLog(e));
+    MM.bus.on("chat", (e) => this.pushChat(e));
+    MM.bus.on("cash", (e) => this.cashPop(e));
+  },
+
+  renderAll() {
+    this.renderPlayers();
+    this.renderHost();
+    this.renderMarket();
+    this.renderProps();
+  },
+
+  /* ── players ────────────────────────────── */
+  renderPlayers() {
+    const s = MM.state;
+    if (!s || !this.refs.players) return;
+    this.refs.players.innerHTML = s.players.map((p) => {
+      const turn = MM.currentPlayer(s) === p && s.phase !== MM.PHASES.LOBBY;
+      const delta = p.lastDelta
+        ? `<span class="player-delta ${p.lastDelta > 0 ? "up" : "down"}">${p.lastDelta > 0 ? "+" : "−"}${MM.money(Math.abs(p.lastDelta))}</span>`
+        : "";
+      const sub = p.jailed ? "In prison"
+        : !p.alive ? "Bankrupt"
+        : p.bot ? MM.PERSONALITIES.find((x) => x.id === p.personality).tag
+        : "That's you";
+      return `<div class="player-row ${turn ? "is-turn" : ""} ${p.alive ? "" : "is-out"}" style="--pcolor:${p.hex}">
+        <div class="avatar" style="--pcolor:${p.hex}">${p.avatar}</div>
+        <div>
+          <div class="player-name">${p.name}${p.jailed ? ' <span class="player-tag">jail</span>' : ""}</div>
+          <div class="player-sub">${sub}</div>
+        </div>
+        <div class="player-cash"><b>${MM.money(p.cash)}</b>${delta}</div>
+      </div>`;
+    }).join("");
+  },
+
+  renderHost() {
+    const s = MM.state;
+    if (!s || !this.refs.host) return;
+    const p = s.players[0];
+    this.refs.host.innerHTML = `
+      <div class="avatar avatar--lg" style="--pcolor:${p.hex}">${p.avatar}</div>
+      <div><div class="player-name">${p.name}</div><div class="player-sub">Ready to play</div></div>
+      <span class="host-badge">HOST</span>`;
+  },
+
+  renderBots() {
+    const s = MM.state;
+    if (!this.refs.bots) return;
+    this.refs.bots.innerHTML = MM.PERSONALITIES.map((b, n) => {
+      const seated = n < s.settings.players - 1;
+      return `<div class="bot-row" style="${seated ? "" : "opacity:.4"}">
+        <div class="avatar" style="--pcolor:${b.color}">${b.avatar}</div>
+        <div><b>${b.name}</b><i>${seated ? b.blurb : "Not seated this game"}</i></div>
+      </div>`;
+    }).join("");
+  },
+
+  renderRules() {
+    const s = MM.state;
+    if (!this.refs.rules) return;
+    this.refs.rules.innerHTML = MM.RULE_DEFS.map((r) => `
+      <div class="setting">
+        <span class="setting-ico">${r.ico}</span>
+        <div class="setting-body"><b>${r.name}</b><i>${r.desc}${r.phase > 1 ? " · phase " + r.phase : ""}</i></div>
+        <button class="switch" role="switch" data-rule="${r.id}" aria-checked="${s.rules[r.id]}" aria-label="${r.name}"></button>
+      </div>`).join("");
+
+    this.refs.rules.querySelectorAll(".switch").forEach((sw) => {
+      sw.addEventListener("click", () => {
+        const on = sw.getAttribute("aria-checked") !== "true";
+        sw.setAttribute("aria-checked", on);
+        MM.state.rules[sw.dataset.rule] = on;
+      });
+    });
+  },
+
+  /* ── market ─────────────────────────────── */
+  renderMarket() {
+    const s = MM.state;
+    if (!s || !this.refs.market) return;
+    this.refs.market.innerHTML = s.stocks.map((st) => {
+      const chg = ((st.price - st.open) / st.open) * 100;
+      const dir = chg >= 0 ? "up" : "down";
+      return `<div class="stock-row">
+        <div class="stock-sym" style="--scolor:${st.color}">${st.sym}</div>
+        <div>
+          <div class="stock-name">${st.name}</div>
+          <div class="stock-meta">${st.sector} · ${(st.yield * 100).toFixed(0)}% yield</div>
+        </div>
+        <div class="stock-price">
+          <b>$${st.price.toFixed(2)}</b>
+          <span class="stock-chg ${dir}">${chg >= 0 ? "▲" : "▼"} ${Math.abs(chg).toFixed(1)}%</span>
+        </div>
+      </div>`;
+    }).join("");
+  },
+
+  renderTicker() {
+    const s = MM.state;
+    if (!s || !this.refs.ticker) return;
+    const loop = s.stocks.concat(s.stocks, s.stocks, s.stocks);
+    const items = loop.map((st) => {
+      const chg = ((st.price - st.open) / st.open) * 100;
+      return `<span class="tape-item">
+        <span class="sym">${st.sym}</span>
+        <span class="px">$${st.price.toFixed(2)}</span>
+        <span class="chg ${chg >= 0 ? "up" : "down"}">${chg >= 0 ? "+" : ""}${chg.toFixed(2)}%</span>
+      </span>`;
+    }).join("");
+    this.refs.ticker.innerHTML = items;
+  },
+
+  renderProps() {
+    const s = MM.state;
+    if (!s || !this.refs.props) return;
+    const mine = MM.tilesOf(s, 0);
+    if (!mine.length) {
+      this.refs.props.innerHTML = `<p class="empty-note">You don't own anything yet. Land on an unclaimed tile to buy it — purchases open in Phase 2.</p>`;
+      return;
+    }
+    this.refs.props.innerHTML = mine.map((t) => {
+      const color = t.group ? MM.GROUPS[t.group].color : "#7c4dff";
+      return `<div class="prop-row" style="--gcolor:${color}">
+        <div class="prop-swatch"></div>
+        <div>${t.name}</div>
+        <div class="prop-rent">${MM.money(t.price)}</div>
+      </div>`;
+    }).join("");
+  },
+
+  /* ── feeds ──────────────────────────────── */
+  pushLog(entry) {
+    const box = this.refs.log;
+    if (!box) return;
+    const line = document.createElement("div");
+    line.className = "log-line";
+    if (entry.hex) line.style.setProperty("--pcolor", entry.hex);
+    else line.classList.add("log-line--sys");
+    line.innerHTML = entry.html;
+    box.prepend(line);
+    while (box.children.length > 14) box.lastChild.remove();
+  },
+
+  pushChat(entry) {
+    const box = this.refs.chat;
+    if (!box) return;
+    const empty = box.querySelector(".chat-empty");
+    if (empty) empty.remove();
+    const msg = document.createElement("p");
+    msg.className = "chat-msg";
+    msg.style.setProperty("--pcolor", entry.hex);
+    msg.innerHTML = `<b>${entry.name}</b> ${entry.text.replace(/[<>]/g, "")}`;
+    box.append(msg);
+    box.scrollTop = box.scrollHeight;
+  },
+
+  /* floating +$/-$ over the player's token */
+  cashPop({ player, amount }) {
+    if (!amount || !MM.renderer.L) return;
+    const wrap = document.getElementById("board-wrap");
+    const canvas = document.getElementById("board");
+    const cb = canvas.getBoundingClientRect();
+    const wb = wrap.getBoundingClientRect();
+    const a = MM.geom.anchor(player.pos, MM.renderer.L, player.jailed);
+
+    const pop = document.createElement("div");
+    pop.className = "cash-pop " + (amount > 0 ? "up" : "down");
+    pop.textContent = (amount > 0 ? "+" : "−") + MM.money(Math.abs(amount));
+    pop.style.left = cb.left - wb.left + a.x + "px";
+    pop.style.top = cb.top - wb.top + a.y - 18 + "px";
+    wrap.appendChild(pop);
+    setTimeout(() => pop.remove(), 1200);
+
+    clearTimeout(this._deltaTimer);
+    this._deltaTimer = setTimeout(() => {
+      MM.state.players.forEach((p) => (p.lastDelta = 0));
+      this.renderPlayers();
+    }, 2600);
+  }
+};
+
+
+/* ── src/ui/screens.js ── */
+/* ═══ screen switching, modal, home-screen atmosphere ═══ */
+window.MM = window.MM || {};
+
+MM.screens = {
+  init() {
+    this.table = document.querySelector('[data-screen="table"]');
+    this.modalEl = document.getElementById("modal");
+    this.modalTitle = document.getElementById("modal-title");
+    this.modalBody = document.getElementById("modal-body");
+
+    this.scatter();
+
+    this.modalEl.addEventListener("click", (e) => {
+      if (e.target === this.modalEl || e.target.dataset.action === "close-modal") this.closeModal();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") this.closeModal();
+    });
+  },
+
+  show(name) {
+    document.querySelectorAll(".screen").forEach((s) => {
+      s.classList.toggle("is-active", s.dataset.screen === name);
+    });
+    if (name === "table") requestAnimationFrame(() => MM.renderer.resize());
+  },
+
+  mode(m) { this.table.dataset.mode = m; },
+
+  /* drifting props behind the home screen */
+  scatter() {
+    const box = document.querySelector(".home-scatter");
+    if (!box) return;
+    const glyphs = ["💵", "🎲", "🏦", "📈", "💎", "🏠", "🚉", "⚡", "💼", "🪙", "📉", "🔑", "🎩", "🦈"];
+    glyphs.forEach((g, n) => {
+      const s = document.createElement("span");
+      s.textContent = g;
+      s.style.left = (5 + ((n * 37) % 90)) + "%";
+      s.style.top = (12 + ((n * 53) % 76)) + "%";
+      s.style.fontSize = 26 + ((n * 13) % 34) + "px";
+      s.style.setProperty("--rot", (n % 2 ? 1 : -1) * (5 + (n % 4) * 7) + "deg");
+      s.style.animationDelay = (n * 0.7) + "s";
+      box.appendChild(s);
+    });
+  },
+
+  modal(title, html) {
+    this.modalTitle.textContent = title;
+    this.modalBody.innerHTML = html;
+    this.modalEl.hidden = false;
+  },
+
+  closeModal() { this.modalEl.hidden = true; },
+
+  rulesModal() {
+    this.modal("How MonoMoney works", `
+      <p>Two dice, forty tiles, and a stock exchange running alongside the board.
+      Own tiles for rent, own shares for dividends — the winner is usually whoever
+      balanced both.</p>
+      <h3>This turn</h3>
+      <ul>
+        <li>Roll two dice and move clockwise from <code>START</code>.</li>
+        <li>Doubles hand you another roll. Three in a row and you're in prison.</li>
+        <li>Prison costs you three turns or <code>${MM.money(MM.BAIL)}</code> — doubles get you out early.</li>
+        <li>Every lap past START pays <code>${MM.money(MM.GO_SALARY)}</code>, plus dividends on the shares you hold.</li>
+      </ul>
+      <h3>Built so far</h3>
+      <ul>
+        <li><b>Phase 1</b> — board, tiles, turn engine, dice, prison, taxes, the vacation pot. <i>You're here.</i></li>
+        <li><b>Phase 2</b> — buying, rent, colour sets, houses, hotels, mortgages.</li>
+        <li><b>Phase 3</b> — the exchange: orders, price shocks, dividends on every lap.</li>
+        <li><b>Phase 4</b> — the four bot personalities make their own calls.</li>
+        <li><b>Phase 5</b> — trades, auctions and the financial dashboard.</li>
+      </ul>`);
+  },
+
+  marketModal() {
+    const rows = MM.STOCKS.map((s) =>
+      `<li><b style="color:${s.color}">${s.sym}</b> — ${s.name}. ${s.sector}, ${(s.yield * 100).toFixed(0)}% dividend, ${s.vol > 0.08 ? "high" : s.vol > 0.045 ? "medium" : "low"} volatility.</li>`
+    ).join("");
+    this.modal("The exchange", `
+      <p>Five companies trade alongside the board. Prices move on random market
+      events, on Surprise cards, and on what gets built where — a hotel row lifts
+      the realty stock, a bought-up airport lifts the airline.</p>
+      <ul>${rows}</ul>
+      <p>Dividends land every time you pass START. The tape above the board is
+      already live; trading opens in Phase 3.</p>`);
+  }
+};
+
+
+/* ── src/main.js ── */
+/* ═══════════════════════════════════════════
+   Bootstrap · wires the DOM to the engine
+   ═══════════════════════════════════════════ */
+window.MM = window.MM || {};
+
+/* ── tiny synth so the table isn't silent (no asset files) ── */
+MM.sfx = {
+  on: true,
+  ctx: null,
+  ensure() {
+    if (!this.ctx && window.AudioContext) this.ctx = new AudioContext();
+    if (this.ctx && this.ctx.state === "suspended") this.ctx.resume();
+    return this.ctx;
+  },
+  blip(freq, dur, type, vol) {
+    if (!this.on) return;
+    const ctx = this.ensure();
+    if (!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type || "triangle";
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    gain.gain.setValueAtTime(vol || 0.05, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + dur);
+  },
+  dice() { for (let n = 0; n < 4; n++) setTimeout(() => this.blip(180 + Math.random() * 220, 0.07, "square", 0.03), n * 90); },
+  step() { this.blip(520, 0.05, "sine", 0.025); },
+  cash(up) { this.blip(up ? 780 : 220, 0.16, "triangle", 0.05); },
+  jail() { this.blip(140, 0.4, "sawtooth", 0.05); }
+};
+
+MM.app = {
+  boot() {
+    MM.screens.init();
+    MM.panels.init();
+    MM.diceUI.init(document.getElementById("dice-tray"));
+    MM.renderer.init(
+      document.getElementById("board"),
+      document.getElementById("board-wrap"),
+      document.getElementById("board-center")
+    );
+
+    this.action = document.getElementById("primary-action");
+    this.bindHome();
+    this.bindTable();
+    this.bindBus();
+
+    /* a game object exists from the lobby on, so the board has something to show */
+    this.newGame("You");
+    MM.screens.show("home");
+  },
+
+  newGame(nickname) {
+    const s = MM.createGame({
+      nickname: nickname || "You",
+      settings: {
+        players: +document.getElementById("set-players").value,
+        startingCash: +document.getElementById("set-cash").value,
+        volatility: document.getElementById("set-vol").value,
+        botDelay: { casual: 1400, normal: 900, ruthless: 550 }[document.getElementById("set-skill").value]
+      }
+    });
+    document.getElementById("room-link").value = "https://monomoney.io/" + s.room;
+    MM.panels.renderRules();
+    MM.panels.renderBots();
+    MM.panels.renderAll();
+    MM.panels.renderTicker();
+    MM.renderer.invalidate();
+    this.syncAction();
+    return s;
+  },
+
+  /* ── home ───────────────────────────────── */
+  bindHome() {
+    document.getElementById("join-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      this.enterLobby();
+    });
+
+    document.querySelector('[data-action="quick-3"]').addEventListener("click", () => {
+      document.getElementById("set-players").value = "4";
+      this.enterLobby();
+    });
+    document.querySelector('[data-action="quick-1"]').addEventListener("click", () => {
+      document.getElementById("set-players").value = "2";
+      this.enterLobby();
+    });
+
+    document.querySelectorAll('[data-action="show-rules"]').forEach((b) =>
+      b.addEventListener("click", () => MM.screens.rulesModal()));
+    document.querySelectorAll('[data-action="show-market-intro"]').forEach((b) =>
+      b.addEventListener("click", () => MM.screens.marketModal()));
+    document.querySelectorAll('[data-action="toggle-sound"]').forEach((b) =>
+      b.addEventListener("click", () => {
+        MM.sfx.on = !MM.sfx.on;
+        document.querySelectorAll('[data-action="toggle-sound"]').forEach((x) => {
+          x.textContent = MM.sfx.on ? "🔊" : "🔇";
+        });
+        if (MM.sfx.on) MM.sfx.blip(660, 0.1);
+      }));
+  },
+
+  enterLobby() {
+    const nick = (document.getElementById("nickname").value || "").trim().slice(0, 14);
+    this.newGame(nick || "You");
+    MM.screens.mode("lobby");
+    MM.screens.show("table");
+    MM.sfx.ensure();
+
+    clearInterval(this.lobbyTape);
+    this.lobbyTape = setInterval(() => {
+      if (MM.state.phase === MM.PHASES.LOBBY) MM.driftMarket(MM.state);
+      else clearInterval(this.lobbyTape);
+    }, 4500);
+  },
+
+  /* ── table ──────────────────────────────── */
+  bindTable() {
+    ["set-players", "set-cash", "set-skill", "set-vol"].forEach((id) => {
+      document.getElementById(id).addEventListener("change", () => {
+        if (MM.state.phase !== MM.PHASES.LOBBY) return;
+        this.newGame(MM.state.players[0].name);
+      });
+    });
+
+    this.action.addEventListener("click", () => this.primary());
+
+    document.addEventListener("keydown", (e) => {
+      if (e.target.matches("input, select, textarea")) return;
+      if (e.code === "Space" || e.code === "Enter") {
+        if (!this.action.disabled && MM.state && MM.state.phase !== MM.PHASES.LOBBY) {
+          e.preventDefault();
+          this.primary();
+        }
+      }
+    });
+
+    document.querySelector('[data-action="copy-link"]').addEventListener("click", (e) => {
+      const field = document.getElementById("room-link");
+      navigator.clipboard && navigator.clipboard.writeText(field.value);
+      e.target.textContent = "Copied";
+      setTimeout(() => (e.target.textContent = "Copy"), 1400);
+    });
+
+    document.querySelector('[data-action="bankrupt"]').addEventListener("click", () => {
+      const s = MM.state;
+      if (s.phase === MM.PHASES.LOBBY) return;
+      MM.bankrupt(s, s.players[0], "resigned");
+      MM.bus.emit("state", s);
+    });
+
+    document.querySelectorAll(".tab").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("is-active", t === tab));
+        document.querySelectorAll(".tab-panel").forEach((p) =>
+          p.classList.toggle("is-active", p.dataset.panel === tab.dataset.tab));
+      });
+    });
+
+    document.getElementById("chat-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const input = document.getElementById("chat-input");
+      const text = input.value.trim();
+      if (!text) return;
+      MM.chat(MM.state, MM.state.players[0].name, text, MM.state.players[0].hex);
+      input.value = "";
+      const bot = MM.state.players.filter((p) => p.bot && p.alive)[0];
+      if (bot && MM.state.rng.chance(0.5)) {
+        setTimeout(() => MM.chat(MM.state, bot.name, MM.state.rng.pick(MM.BOT_LINES.bigMoney), bot.hex), 900);
+      }
+    });
+  },
+
+  primary() {
+    const s = MM.state;
+    if (s.phase === MM.PHASES.LOBBY) return this.startGame();
+    if (s.phase === MM.PHASES.GAME_OVER) {
+      this.newGame(s.players[0].name);
+      MM.screens.mode("lobby");
+      return this.syncAction();
+    }
+    if (s.phase === MM.PHASES.AWAIT_ROLL && !MM.currentPlayer(s).bot) MM.turn.roll(s);
+  },
+
+  startGame() {
+    const s = MM.state;
+    MM.screens.mode("game");
+    MM.renderer.resize();
+    s.players.filter((p) => p.bot).forEach((p, n) => {
+      setTimeout(() => MM.chat(s, p.name, s.rng.pick(MM.BOT_LINES.greet), p.hex), 500 + n * 700);
+    });
+    MM.turn.begin(s);
+  },
+
+  /* ── button label follows the machine ───── */
+  syncAction() {
+    const s = MM.state;
+    const btn = this.action;
+    if (!s || s.phase === MM.PHASES.LOBBY) {
+      btn.textContent = "Start Game";
+      btn.disabled = false;
+      return;
+    }
+    if (s.phase === MM.PHASES.GAME_OVER) {
+      btn.textContent = "Play again";
+      btn.disabled = false;
+      return;
+    }
+    const p = MM.currentPlayer(s);
+    if (s.phase === MM.PHASES.AWAIT_ROLL) {
+      btn.textContent = p.bot ? `${p.name} is thinking…` : p.jailed ? "Roll for doubles" : "Roll the dice";
+      btn.disabled = !!p.bot;
+    } else {
+      btn.textContent = s.phase === MM.PHASES.ROLLING ? "Rolling…" : s.phase === MM.PHASES.MOVING ? "Moving…" : "…";
+      btn.disabled = true;
+    }
+  },
+
+  bindBus() {
+    MM.bus.on("phase", () => this.syncAction());
+    MM.bus.on("turn", () => this.syncAction());
+    MM.bus.on("dice", () => MM.sfx.dice());
+    MM.bus.on("jailed", () => MM.sfx.jail());
+    MM.bus.on("moved", () => MM.sfx.step());
+    MM.bus.on("cash", (e) => MM.sfx.cash(e.amount > 0));
+
+    MM.bus.on("pass-go", (p) => {
+      if (p.bot && MM.state.rng.chance(0.35)) {
+        MM.chat(MM.state, p.name, MM.state.rng.pick(MM.BOT_LINES.passGo), p.hex);
+      }
+    });
+
+    MM.bus.on("turn", (p) => {
+      if (p.bot && p.jailed && MM.state.rng.chance(0.4)) {
+        MM.chat(MM.state, p.name, MM.state.rng.pick(MM.BOT_LINES.jail), p.hex);
+      }
+    });
+  }
+};
+
+document.addEventListener("DOMContentLoaded", () => MM.app.boot());
+
+</script>

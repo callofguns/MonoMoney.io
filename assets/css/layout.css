@@ -1,0 +1,115 @@
+/* ═══ screens + the three-column table shell ═══ */
+
+.screen { display: none; height: 100%; }
+.screen.is-active { display: block; }
+.screen--table.is-active { display: grid; }
+
+/* ── home ─────────────────────────────────── */
+.screen--home {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 80% at 50% 0%, #1d1435 0%, transparent 60%),
+    radial-gradient(80% 60% at 50% 100%, #241536 0%, transparent 65%),
+    var(--ink-900);
+}
+
+.home-scatter { position: absolute; inset: 0; pointer-events: none; }
+.home-scatter span {
+  position: absolute;
+  font-size: 40px;
+  opacity: .12;
+  filter: grayscale(.4);
+  animation: float-drift 14s ease-in-out infinite;
+}
+@keyframes float-drift {
+  0%, 100% { transform: translateY(0) rotate(var(--rot, 0deg)); }
+  50%      { transform: translateY(-22px) rotate(calc(var(--rot, 0deg) + 6deg)); }
+}
+
+.home-top {
+  position: relative;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 26px;
+}
+.home-nav { display: flex; gap: 8px; }
+
+.home-core {
+  position: relative;
+  height: calc(100% - 132px);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 22px;
+  padding: 0 20px;
+}
+
+.tagline {
+  margin-top: -6px;
+  color: var(--text-dim);
+  font-size: 17px;
+  letter-spacing: .01em;
+}
+
+.home-form { display: flex; flex-direction: column; gap: 12px; width: min(320px, 90vw); }
+.home-actions { display: flex; gap: 10px; }
+
+.home-facts {
+  display: flex; gap: 26px;
+  margin: 10px 0 0; padding: 0;
+  list-style: none;
+  color: var(--text-mut);
+  font-size: 12px; text-transform: uppercase; letter-spacing: .12em;
+}
+.home-facts b { display: block; font-family: var(--font-num); font-size: 20px; color: var(--gold); letter-spacing: 0; }
+
+.home-foot {
+  position: relative;
+  text-align: center; padding-bottom: 22px;
+  color: var(--text-mut); font-size: 12px; letter-spacing: .06em;
+}
+
+/* ── table shell ──────────────────────────── */
+.screen--table {
+  grid-template-columns: 316px minmax(0, 1fr) 344px;
+  gap: 12px;
+  padding: 12px;
+  background:
+    radial-gradient(90% 70% at 50% 40%, #191130 0%, transparent 70%),
+    var(--ink-800);
+}
+
+.rail {
+  display: flex; flex-direction: column; gap: 12px;
+  min-height: 0;
+}
+.rail--right { overflow-y: auto; overflow-x: hidden; padding-right: 2px; }
+
+.rail-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 4px 6px 0;
+}
+.rail-head-tools { display: flex; gap: 6px; }
+
+.rail-pane { display: none; flex-direction: column; gap: 12px; }
+.screen--table[data-mode="lobby"] .rail-pane[data-pane="lobby"] { display: flex; }
+.screen--table[data-mode="game"]  .rail-pane[data-pane="game"]  { display: flex; }
+
+.rail-actions { display: flex; gap: 8px; justify-content: space-between; }
+
+.table-main {
+  display: flex; flex-direction: column; gap: 10px;
+  min-width: 0; min-height: 0;
+}
+
+/* chat only earns its height in the left rail */
+.card--chat { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+
+@media (max-width: 1180px) {
+  .screen--table { grid-template-columns: 260px minmax(0, 1fr) 300px; }
+}
+@media (max-width: 980px) {
+  body { overflow: auto; }
+  .screen--table { grid-template-columns: 1fr; height: auto; }
+  .rail--left { order: 2; }
+  .rail--right { order: 3; }
+  .card--chat { min-height: 220px; }
+}

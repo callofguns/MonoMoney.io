@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MonoMoney.io — Rule the market</title>
+<meta name="description" content="A browser board game where the board is only half the economy. Buy the streets, trade the shares, collect the dividends." />
+<link rel="stylesheet" href="assets/css/theme.css" />
+<link rel="stylesheet" href="assets/css/layout.css" />
+<link rel="stylesheet" href="assets/css/components.css" />
+<link rel="stylesheet" href="assets/css/board.css" />
+</head>
+<body>
+<div id="app">
+
+  <!-- ══════════════ HOME ══════════════ -->
+  <section class="screen screen--home is-active" data-screen="home">
+    <div class="home-scatter" aria-hidden="true"></div>
+
+    <header class="home-top">
+      <button class="icon-btn" data-action="toggle-sound" title="Sound">
+        <span data-sound-on>🔊</span>
+      </button>
+      <nav class="home-nav">
+        <button class="ghost-btn" data-action="show-rules">Rules</button>
+        <button class="ghost-btn" data-action="show-market-intro">Market</button>
+      </nav>
+    </header>
+
+    <div class="home-core">
+      <div class="brand brand--xl">
+        <div class="brand-die" aria-hidden="true">
+          <span class="pip"></span><span class="pip"></span><span class="pip"></span>
+          <span class="pip"></span><span class="pip"></span>
+        </div>
+        <h1 class="wordmark">MONO<em>MONEY</em><small>.io</small></h1>
+      </div>
+      <p class="tagline">Own the board. Corner the market.</p>
+
+      <form class="home-form" id="join-form" autocomplete="off">
+        <input id="nickname" class="field" type="text" maxlength="14" placeholder="Your nickname…" aria-label="Your nickname" />
+        <button class="btn btn--primary btn--xl" type="submit">
+          <span class="btn-chev">»</span> Play
+        </button>
+      </form>
+
+      <div class="home-actions">
+        <button class="btn btn--muted" data-action="quick-3">3 bots</button>
+        <button class="btn btn--muted" data-action="quick-1">1 bot · fast game</button>
+      </div>
+
+      <ul class="home-facts">
+        <li><b>40</b> tiles</li>
+        <li><b>5</b> listed companies</li>
+        <li><b>4</b> bot personalities</li>
+      </ul>
+    </div>
+
+    <footer class="home-foot">Phase 1 prototype · board, state engine &amp; dice</footer>
+  </section>
+
+  <!-- ══════════════ TABLE (lobby + game) ══════════════ -->
+  <section class="screen screen--table" data-screen="table" data-mode="lobby">
+
+    <!-- ── left rail ── -->
+    <aside class="rail rail--left">
+      <div class="rail-head">
+        <div class="brand brand--sm">
+          <div class="brand-die brand-die--sm" aria-hidden="true">
+            <span class="pip"></span><span class="pip"></span><span class="pip"></span>
+            <span class="pip"></span><span class="pip"></span>
+          </div>
+          <span class="wordmark wordmark--sm">MONO<em>MONEY</em><small>.io</small></span>
+        </div>
+        <div class="rail-head-tools">
+          <button class="icon-btn" data-action="show-rules" title="How to play">?</button>
+          <button class="icon-btn" data-action="toggle-sound" title="Sound">🔊</button>
+        </div>
+      </div>
+
+      <div class="card card--share">
+        <h2 class="card-title">Share this game <span class="hint" title="Single-player prototype — the link is cosmetic for now">ⓘ</span></h2>
+        <div class="share-row">
+          <input class="field field--sm" id="room-link" readonly value="https://monomoney.io/room/—" aria-label="Room link" />
+          <button class="btn btn--muted btn--sm" data-action="copy-link">Copy</button>
+        </div>
+      </div>
+
+      <div class="card card--chat">
+        <h2 class="card-title">Chat</h2>
+        <div class="chat-feed" id="chat-feed" role="log" aria-live="polite">
+          <p class="chat-empty">No messages yet</p>
+        </div>
+        <form class="chat-form" id="chat-form">
+          <input class="field field--sm" id="chat-input" maxlength="120" placeholder="Say something…" aria-label="Chat message" />
+          <button class="icon-btn icon-btn--send" type="submit" title="Send">➤</button>
+        </form>
+      </div>
+    </aside>
+
+    <!-- ── center ── -->
+    <main class="table-main">
+      <div class="ticker" id="ticker" aria-label="Market ticker">
+        <div class="ticker-track" id="ticker-track"></div>
+      </div>
+
+      <div class="board-wrap" id="board-wrap">
+        <canvas id="board" aria-label="Game board"></canvas>
+
+        <div class="board-center" id="board-center">
+          <div class="dice-tray" id="dice-tray">
+            <div class="die" data-die="0"></div>
+            <div class="die" data-die="1"></div>
+          </div>
+
+          <button class="btn btn--primary btn--action" id="primary-action">Start Game</button>
+
+          <div class="log-feed" id="log-feed" role="log" aria-live="polite"></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- ── right rail ── -->
+    <aside class="rail rail--right">
+
+      <!-- lobby mode -->
+      <div class="rail-pane" data-pane="lobby">
+        <div class="card card--host" id="host-card"></div>
+
+        <div class="card">
+          <h2 class="card-title card-title--center">Game settings</h2>
+          <div class="setting">
+            <span class="setting-ico">👥</span>
+            <div class="setting-body">
+              <b>Players</b><i>You plus the bots that fill the table</i>
+            </div>
+            <select class="select" id="set-players">
+              <option value="2">2</option><option value="3">3</option>
+              <option value="4" selected>4</option>
+            </select>
+          </div>
+          <div class="setting">
+            <span class="setting-ico">💵</span>
+            <div class="setting-body">
+              <b>Starting cash</b><i>Bank balance every player opens with</i>
+            </div>
+            <select class="select" id="set-cash">
+              <option value="1000">$1000</option>
+              <option value="1500" selected>$1500</option>
+              <option value="2500">$2500</option>
+            </select>
+          </div>
+          <div class="setting">
+            <span class="setting-ico">🤖</span>
+            <div class="setting-body">
+              <b>Bot skill</b><i>How sharply the personalities play</i>
+            </div>
+            <select class="select" id="set-skill">
+              <option value="casual">Casual</option>
+              <option value="normal" selected>Normal</option>
+              <option value="ruthless">Ruthless</option>
+            </select>
+          </div>
+          <div class="setting">
+            <span class="setting-ico">📈</span>
+            <div class="setting-body">
+              <b>Market volatility</b><i>How hard share prices swing each round</i>
+            </div>
+            <select class="select" id="set-vol">
+              <option value="calm">Calm</option>
+              <option value="normal" selected>Normal</option>
+              <option value="wild">Wild</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2 class="card-title card-title--center">Gameplay rules</h2>
+          <div class="rules-list" id="rules-list"></div>
+        </div>
+
+        <div class="card">
+          <h2 class="card-title card-title--center">Table</h2>
+          <div class="bot-list" id="bot-list"></div>
+        </div>
+      </div>
+
+      <!-- game mode -->
+      <div class="rail-pane" data-pane="game">
+        <div class="card card--players">
+          <div class="player-list" id="player-list"></div>
+        </div>
+
+        <div class="rail-actions">
+          <button class="btn btn--muted btn--sm" data-action="show-rules">Rules</button>
+          <button class="btn btn--danger btn--sm" data-action="bankrupt">Bankrupt</button>
+        </div>
+
+        <div class="card card--tabs">
+          <div class="tabs" role="tablist">
+            <button class="tab is-active" data-tab="market" role="tab">Market</button>
+            <button class="tab" data-tab="props" role="tab">My properties</button>
+            <button class="tab" data-tab="trades" role="tab">Trades</button>
+          </div>
+          <div class="tab-panel is-active" data-panel="market">
+            <div class="market-list" id="market-list"></div>
+            <p class="panel-note">Trading, dividends and price shocks arrive in Phase 3. Prices already drift so you can watch the tape.</p>
+          </div>
+          <div class="tab-panel" data-panel="props">
+            <div class="prop-list" id="prop-list"></div>
+          </div>
+          <div class="tab-panel" data-panel="trades">
+            <p class="panel-note">Swap property, cash and shares with other players. Unlocks with the trade engine in Phase 5.</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </section>
+
+  <!-- ══════════════ MODAL ══════════════ -->
+  <div class="modal" id="modal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <h2 class="modal-title" id="modal-title"></h2>
+      <div class="modal-body" id="modal-body"></div>
+      <button class="btn btn--primary" data-action="close-modal">Got it</button>
+    </div>
+  </div>
+</div>
+
+<script src="src/data/board.js"></script>
+<script src="src/data/rules.js"></script>
+<script src="src/core/rng.js"></script>
+<script src="src/core/emitter.js"></script>
+<script src="src/core/state.js"></script>
+<script src="src/core/dice.js"></script>
+<script src="src/core/turn.js"></script>
+<script src="src/render/geometry.js"></script>
+<script src="src/render/icons.js"></script>
+<script src="src/render/board-renderer.js"></script>
+<script src="src/ui/dice-ui.js"></script>
+<script src="src/ui/panels.js"></script>
+<script src="src/ui/screens.js"></script>
+<script src="src/main.js"></script>
+</body>
+</html>
