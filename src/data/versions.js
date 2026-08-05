@@ -9,7 +9,7 @@
    ═══════════════════════════════════════════ */
 window.MM = window.MM || {};
 
-MM.VERSION = "V2.5";
+MM.VERSION = "V3";
 
 MM.RELEASES = [
   {
@@ -84,12 +84,14 @@ MM.RELEASES = [
     ]
   },
   {
-    v: "V3", name: "Trades & dashboard", status: "next",
+    v: "V3", name: "Trades & dashboard", status: "shipped",
     items: [
-      "Player-to-player trades of cash, property and shares",
-      "Live auctions when a property is declined",
-      "Financial dashboard: net worth, holdings and rent income over time",
-      "Win conditions, end-of-game summary and a rematch button"
+      "Trades tab: build a bundle of cash, deeds and shares and put it to any bot",
+      "Bots value every offer through their own personality — the Banker overpays for yield, the Shark won't hand over a set-completing tile for less than triple",
+      "Bots occasionally offer to buy a property from you too, priced by who's asking",
+      "Dashboard: a net-worth line for every player, round by round, plus a cash/property/shares/rent breakdown",
+      "Game over now ends on a proper screen — final standings, a net-worth chart and a Play again button",
+      "Rent collected per player tracked all game, shown on the dashboard"
     ]
   }
 ];

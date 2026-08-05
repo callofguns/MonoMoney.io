@@ -201,9 +201,12 @@
         </div>
 
         <div class="rail-actions">
-          <button class="btn btn--muted btn--sm" data-action="show-rules">Rules</button>
-          <button class="btn btn--muted btn--sm" data-action="show-status"><span class="ver-chip">V1.1</span> What works</button>
-          <button class="btn btn--danger btn--sm" data-action="bankrupt">Bankrupt</button>
+          <div class="rail-actions-row">
+            <button class="btn btn--muted btn--sm" data-action="show-rules">Rules</button>
+            <button class="btn btn--muted btn--sm" data-action="show-status"><span class="ver-chip">V1.1</span> What works</button>
+            <button class="btn btn--muted btn--sm" data-action="show-dashboard">Dashboard</button>
+          </div>
+          <button class="btn btn--danger btn--sm btn--block" data-action="bankrupt">Bankrupt</button>
         </div>
 
         <div class="card card--tabs">
@@ -219,7 +222,7 @@
             <div class="prop-list" id="prop-list"></div>
           </div>
           <div class="tab-panel" data-panel="trades">
-            <p class="panel-note">Swap property, cash and shares with other players. Unlocks with the trade engine in V3.</p>
+            <div id="trades-panel"></div>
           </div>
         </div>
       </div>
@@ -250,6 +253,7 @@
 <script src="src/core/cards.js"></script>
 <script src="src/core/bots.js"></script>
 <script src="src/core/auction.js"></script>
+<script src="src/core/trades.js"></script>
 <script src="src/core/turn.js"></script>
 <script src="src/render/geometry.js"></script>
 <script src="src/render/icons.js"></script>
@@ -257,6 +261,8 @@
 <script src="src/ui/dice-ui.js"></script>
 <script src="src/ui/deal.js"></script>
 <script src="src/ui/market-ui.js"></script>
+<script src="src/ui/trade-ui.js"></script>
+<script src="src/ui/dashboard-ui.js"></script>
 <script src="src/ui/panels.js"></script>
 <script src="src/ui/screens.js"></script>
 <script src="src/main.js"></script>

@@ -47,6 +47,7 @@ MM.screens = {
   modal(title, html) {
     this.modalTitle.textContent = title;
     this.modalBody.innerHTML = html;
+    this.modalEl.classList.remove("modal--single-action");
     this.modalEl.hidden = false;
   },
 
@@ -69,11 +70,12 @@ MM.screens = {
     const log = MM.changelog();
     this.modal(`What works today · ${MM.VERSION}`, `
       <p>Newest update first. Everything with a green tick is playable right
-      now; below the line is what's still being built.</p>
+      now${log.upcoming.length ? "; below the line is what's still being built." : "."}</p>
       <h3 class="vsection">Shipped</h3>
       ${log.shipped.map(group).join("")}
-      <h3 class="vsection vsection--soon">On the way</h3>
-      ${log.upcoming.map(group).join("")}`);
+      ${log.upcoming.length ? `
+        <h3 class="vsection vsection--soon">On the way</h3>
+        ${log.upcoming.map(group).join("")}` : ""}`);
   },
 
   rulesModal() {
@@ -105,7 +107,24 @@ MM.screens = {
       events, on Surprise cards, and on what gets built where — a hotel row lifts
       the realty stock, a bought-up airport lifts the airline.</p>
       <ul>${rows}</ul>
-      <p>Dividends land every time you pass START. The tape above the board is
-      already live; trading opens in V2.</p>`);
+      <p>Dividends land every time you pass START. Trade from the Market tab any
+      time, or trade a deed, cash and shares with another player from the Trades
+      tab on your own turn.</p>`);
+  },
+
+  /* the terminal screen: who won, and how everyone stacked up */
+  gameOverModal(winner) {
+    const s = MM.state;
+    const rows = MM.dashboardUI.leaderboard(s);
+    const headline = winner
+      ? `<p class="gameover-head">🏆 <b style="color:${winner.hex}">${winner.name}</b> owns the table with <b>${MM.money(MM.netWorth(s, winner))}</b></p>`
+      : `<p class="gameover-head">Everyone's out. Call it a draw.</p>`;
+
+    this.modal("Game over", `
+      ${headline}
+      ${MM.dashboardUI.legend(s, rows)}
+      ${MM.dashboardUI.chart(s)}
+      <button class="btn btn--primary" data-action="rematch">Play again</button>`);
+    this.modalEl.classList.add("modal--single-action");
   }
 };

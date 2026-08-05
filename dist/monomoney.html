@@ -239,7 +239,9 @@ button, input, select { font: inherit; color: inherit; }
 .screen--table[data-mode="lobby"] .rail-pane[data-pane="lobby"] { display: flex; }
 .screen--table[data-mode="game"]  .rail-pane[data-pane="game"]  { display: flex; }
 
-.rail-actions { display: flex; gap: 8px; justify-content: space-between; }
+.rail-actions { display: flex; flex-direction: column; gap: 8px; }
+.rail-actions-row { display: flex; gap: 8px; }
+.rail-actions-row .btn { flex: 1; min-width: 0; padding-left: 8px; padding-right: 8px; }
 
 .table-main {
   display: flex; flex-direction: column; gap: 10px;
@@ -309,6 +311,7 @@ button, input, select { font: inherit; color: inherit; }
 
 .btn--muted { background: var(--ink-500); }
 .btn--sm { padding: 7px 12px; font-size: 13px; }
+.btn--block { width: 100%; }
 .btn--xl { padding: 15px 22px; font-size: 20px; letter-spacing: .01em; }
 .btn-chev { color: rgba(255,255,255,.65); font-size: 24px; line-height: 1; }
 
@@ -668,6 +671,108 @@ button, input, select { font: inherit; color: inherit; }
   background: var(--ink-700); padding: 1px 5px; border-radius: 4px; color: var(--gold);
 }
 
+/* ── trades tab ──────────────────────────── */
+.partner-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.partner-chip {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 10px 5px 5px; border: 1px solid var(--line); border-radius: 99px;
+  background: var(--ink-700); color: var(--text-dim);
+  font-size: 12.5px; font-weight: 600; cursor: pointer;
+}
+.partner-chip .avatar { width: 22px; height: 22px; font-size: 12px; }
+.partner-chip:hover { border-color: var(--pcolor, var(--accent)); color: var(--text); }
+.partner-chip.is-active { background: var(--pcolor, var(--accent)); border-color: transparent; color: #fff; }
+.partner-chip.is-active .avatar { border-color: rgba(255,255,255,.6); }
+
+.trade-section { margin-bottom: 10px; }
+.trade-section-title {
+  font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-mut);
+  margin: 0 0 6px;
+}
+.trade-cash-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 8px; margin-bottom: 6px;
+  background: var(--ink-700); border-radius: var(--r-md);
+  font-size: 12.5px; color: var(--text-dim);
+}
+.trade-cash-row span:first-child { flex: 1; }
+.trade-cash-input {
+  width: 66px; text-align: center;
+  background: var(--ink-600); border: 1px solid var(--line); border-radius: var(--r-sm);
+  color: var(--text); font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 13px;
+  padding: 3px 4px;
+}
+
+.trade-list {
+  display: flex; flex-direction: column; gap: 4px;
+  max-height: 140px; overflow-y: auto;
+  margin-bottom: 6px;
+}
+.trade-item {
+  display: grid; grid-template-columns: auto 4px 1fr auto; gap: 8px; align-items: center;
+  padding: 6px 8px; border-radius: var(--r-sm);
+  background: var(--ink-700); font-size: 12.5px; cursor: pointer;
+}
+.trade-item:has(input:checked) { background: var(--accent-haze); }
+.trade-item input { accent-color: var(--accent); }
+.trade-item .prop-swatch { align-self: stretch; width: 4px; border-radius: 99px; }
+.trade-item-name { color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.trade-item-price { font-family: var(--font-num); color: var(--text-mut); font-size: 11.5px; }
+
+.trade-share-row {
+  display: grid; grid-template-columns: auto 1fr auto auto auto; gap: 8px; align-items: center;
+  padding: 5px 8px; margin-bottom: 4px;
+  background: var(--ink-700); border-radius: var(--r-sm); font-size: 12px;
+}
+.trade-share-held { color: var(--text-mut); }
+.qty-value--sm { min-width: 20px; font-size: 12.5px; }
+
+.trade-summary {
+  display: flex; justify-content: space-between; gap: 8px;
+  padding: 8px 10px; margin-bottom: 8px;
+  background: var(--ink-700); border-radius: var(--r-md);
+  font-size: 11.5px; color: var(--text-mut);
+}
+.trade-result { margin-top: 8px; font-size: 12.5px; text-align: center; }
+.trade-result.up { color: var(--up); }
+.trade-result.down { color: var(--down); }
+.empty-note--tight { padding: 8px; }
+
+/* ── net worth: dashboard + game-over share this ── */
+.net-legend { display: flex; flex-direction: column; gap: 2px; margin-bottom: 10px; }
+.net-row {
+  display: grid; grid-template-columns: 16px auto 1fr auto; gap: 8px; align-items: center;
+  padding: 6px 8px; border-radius: var(--r-sm);
+}
+.net-row.is-out { opacity: .5; }
+.net-rank { font-family: var(--font-num); font-size: 11px; color: var(--text-mut); text-align: center; }
+.net-dot { width: 9px; height: 9px; border-radius: 50%; }
+.net-name { font-size: 13px; }
+.net-worth { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 13.5px; }
+
+.chart--net { margin-top: 4px; }
+
+.net-table-scroll { overflow-x: auto; margin-top: 10px; }
+.net-table { min-width: 460px; }
+.net-table-head, .net-table-row {
+  display: grid; grid-template-columns: 14px 84px repeat(4, 1fr);
+  gap: 8px; align-items: center; padding: 5px 6px;
+  font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 11.5px;
+}
+.net-table-head {
+  color: var(--text-mut); font-family: var(--font-body); text-transform: uppercase;
+  letter-spacing: .05em; font-size: 10px; border-bottom: 1px solid var(--line);
+}
+.net-table-row { color: var(--text-dim); }
+.net-table-row:nth-child(even) { background: rgba(255,255,255,.02); }
+.net-table-name { font-family: var(--font-body); color: var(--text); font-size: 12px; }
+
+.gameover-head { text-align: center; font-size: 16px; margin-bottom: 4px; }
+.gameover-head b { font-family: var(--font-num); }
+
+/* the game-over screen has one real action — no separate "Got it" to confuse it with */
+.modal.modal--single-action .modal-card > [data-action="close-modal"] { display: none; }
+
 
 /* ── assets/css/board.css ── */
 /* ═══ ticker · board · center console · dice ═══ */
@@ -843,6 +948,9 @@ button, input, select { font: inherit; color: inherit; }
 .deal-actions { display: flex; gap: 10px; }
 .deal-note { font-size: 12px; color: var(--text-mut); }
 .auction-state { font-size: 13px; color: var(--text-dim); }
+
+.trade-ask { display: flex; align-items: center; gap: 10px; }
+.trade-ask p { font-size: 13.5px; color: var(--text-dim); text-align: left; }
 
 .card-face {
   position: relative; overflow: hidden;
@@ -1086,9 +1194,12 @@ button, input, select { font: inherit; color: inherit; }
         </div>
 
         <div class="rail-actions">
-          <button class="btn btn--muted btn--sm" data-action="show-rules">Rules</button>
-          <button class="btn btn--muted btn--sm" data-action="show-status"><span class="ver-chip">V1.1</span> What works</button>
-          <button class="btn btn--danger btn--sm" data-action="bankrupt">Bankrupt</button>
+          <div class="rail-actions-row">
+            <button class="btn btn--muted btn--sm" data-action="show-rules">Rules</button>
+            <button class="btn btn--muted btn--sm" data-action="show-status"><span class="ver-chip">V1.1</span> What works</button>
+            <button class="btn btn--muted btn--sm" data-action="show-dashboard">Dashboard</button>
+          </div>
+          <button class="btn btn--danger btn--sm btn--block" data-action="bankrupt">Bankrupt</button>
         </div>
 
         <div class="card card--tabs">
@@ -1104,7 +1215,7 @@ button, input, select { font: inherit; color: inherit; }
             <div class="prop-list" id="prop-list"></div>
           </div>
           <div class="tab-panel" data-panel="trades">
-            <p class="panel-note">Swap property, cash and shares with other players. Unlocks with the trade engine in V3.</p>
+            <div id="trades-panel"></div>
           </div>
         </div>
       </div>
@@ -1134,7 +1245,7 @@ button, input, select { font: inherit; color: inherit; }
    ═══════════════════════════════════════════ */
 window.MM = window.MM || {};
 
-MM.VERSION = "V2.5";
+MM.VERSION = "V3";
 
 MM.RELEASES = [
   {
@@ -1209,12 +1320,14 @@ MM.RELEASES = [
     ]
   },
   {
-    v: "V3", name: "Trades & dashboard", status: "next",
+    v: "V3", name: "Trades & dashboard", status: "shipped",
     items: [
-      "Player-to-player trades of cash, property and shares",
-      "Live auctions when a property is declined",
-      "Financial dashboard: net worth, holdings and rent income over time",
-      "Win conditions, end-of-game summary and a rematch button"
+      "Trades tab: build a bundle of cash, deeds and shares and put it to any bot",
+      "Bots value every offer through their own personality — the Banker overpays for yield, the Shark won't hand over a set-completing tile for less than triple",
+      "Bots occasionally offer to buy a property from you too, priced by who's asking",
+      "Dashboard: a net-worth line for every player, round by round, plus a cash/property/shares/rent breakdown",
+      "Game over now ends on a proper screen — final standings, a net-worth chart and a Play again button",
+      "Rent collected per player tracked all game, shown on the dashboard"
     ]
   }
 ];
@@ -1346,7 +1459,9 @@ MM.RULE_DEFS = [
   { id: "dividends", ico: "📊", name: "Dividends on GO",
     desc: "Passing START pays out on every share you hold", on: true, since: "V2" },
   { id: "insiderCards", ico: "🃏", name: "Insider Surprise cards",
-    desc: "Some Surprise cards move a company's share price", on: true, since: "V2" }
+    desc: "Some Surprise cards move a company's share price", on: true, since: "V2" },
+  { id: "botTrades", ico: "🤝", name: "Bot-initiated trades",
+    desc: "Bots occasionally offer to buy a property from you", on: true, since: "V3" }
 ];
 
 /* Bot personalities. `weights` is the whole brain — src/core/bots.js reads
@@ -1593,7 +1708,7 @@ MM.createGame = function (opts) {
     id: 0, name: (opts && opts.nickname) || "You", avatar: "😀",
     color: "var(--p1)", hex: "#4e97ff", bot: false, personality: null,
     cash: settings.startingCash, pos: 0, jailed: false, jailTurns: 0,
-    doubles: 0, alive: true, portfolio: {}, basis: {}, getOut: 0, lastDelta: 0, divTotal: 0
+    doubles: 0, alive: true, portfolio: {}, basis: {}, getOut: 0, lastDelta: 0, divTotal: 0, rentTotal: 0
   });
 
   const roster = MM.PERSONALITIES.slice(0, Math.max(0, settings.players - 1));
@@ -1603,7 +1718,8 @@ MM.createGame = function (opts) {
       id: n + 1, name: p.name, avatar: p.avatar,
       color: p.color, hex: hexes[p.id], bot: true, personality: p.id,
       cash: settings.startingCash, pos: 0, jailed: false, jailTurns: 0,
-      doubles: 0, alive: true, portfolio: {}, basis: {}, getOut: 0, lastDelta: 0, divTotal: 0
+      doubles: 0, alive: true, portfolio: {}, basis: {}, getOut: 0, lastDelta: 0, divTotal: 0, rentTotal: 0,
+      tradeCooldown: 0
     });
   });
 
@@ -1621,6 +1737,7 @@ MM.createGame = function (opts) {
     stocks: MM.STOCKS.map((s) => Object.assign({}, s, { open: s.price, prev: s.price, base: s.price })),
     vacationPot: 0,
     headline: null,
+    worthHistory: [],       /* [{ round, worths: {playerId: netWorth} }] — feeds the dashboard */
     log: [],
     chat: [],
     room: "room-" + Math.random().toString(36).slice(2, 7)
@@ -1654,6 +1771,14 @@ MM.netWorth = function (s, player) {
     if (h && t.group) w += h * MM.GROUPS[t.group].house;
   });
   return w;
+};
+
+/* one point per round for the net-worth dashboard */
+MM.snapshotWorth = function (s) {
+  const worths = {};
+  s.players.forEach((p) => (worths[p.id] = Math.round(MM.netWorth(s, p))));
+  s.worthHistory.push({ round: s.round, worths });
+  if (s.worthHistory.length > 200) s.worthHistory.shift();
 };
 
 /* ── mutations ───────────────────────────── */
@@ -1711,14 +1836,7 @@ MM.bankrupt = function (s, debtor, creditor, reason) {
   /* shares transfer with the estate; to the bank they simply vanish */
   Object.keys(debtor.portfolio).forEach((sym) => {
     const qty = debtor.portfolio[sym];
-    if (qty > 0 && creditor && creditor.alive) {
-      const had = creditor.portfolio[sym] || 0;
-      const cost = MM.market.basis(debtor, sym);
-      creditor.basis = creditor.basis || {};
-      creditor.basis[sym] = (MM.market.basis(creditor, sym) * had + cost * qty) / (had + qty);
-      creditor.portfolio[sym] = had + qty;
-    }
-    debtor.portfolio[sym] = 0;
+    if (qty > 0) MM.market.transferShares(s, debtor, creditor && creditor.alive ? creditor : null, sym, qty);
   });
 
   if (creditor && creditor.alive) {
@@ -1924,6 +2042,25 @@ MM.market = {
   after(s) {
     MM.bus.emit("market", s.stocks);
     MM.bus.emit("state", s);
+  },
+
+  /* Move shares between two players (or to the void if `to` is null),
+     blending cost basis on the receiving side. A pure mutation — callers
+     emit "state" themselves once their whole operation is done. */
+  transferShares(s, from, to, sym, qty) {
+    if (qty <= 0) return;
+    const fromHad = this.held(from, sym);
+    const cost = this.basis(from, sym);
+
+    from.portfolio[sym] = fromHad - qty;
+    if (from.portfolio[sym] <= 0 && from.basis) delete from.basis[sym];
+
+    if (to) {
+      const toHad = this.held(to, sym);
+      to.basis = to.basis || {};
+      to.basis[sym] = (this.basis(to, sym) * toHad + cost * qty) / (toHad + qty);
+      to.portfolio[sym] = toHad + qty;
+    }
   },
 
   /* ── dividends, paid on every lap ───────── */
@@ -2562,6 +2699,205 @@ MM.auction = {
 };
 
 
+/* ── src/core/trades.js ── */
+/* ═══════════════════════════════════════════
+   Player-to-player trades
+   A bundle is { cash, tiles: [tileIndex...], shares: {SYM: qty} }.
+   Bots value a bundle through their own personality — the same
+   `weights` that drive buying and building in core/bots.js — so a
+   trade that flatters the Tycoon can still insult the Banker.
+   ═══════════════════════════════════════════ */
+window.MM = window.MM || {};
+
+MM.trades = {
+  MIN_MARGIN: 0.06,        /* the base premium any bot wants over fair value */
+  PROPOSE_COOLDOWN: 3,     /* rounds before a bot will offer the human another trade */
+
+  emptyBundle() { return { cash: 0, tiles: [], shares: {} }; },
+
+  bundleIsEmpty(b) {
+    return !b.cash && (!b.tiles || !b.tiles.length) &&
+      (!b.shares || !Object.values(b.shares).some((q) => q > 0));
+  },
+
+  /* can `player` actually put this bundle on the table right now? */
+  canOffer(s, player, bundle) {
+    if ((bundle.cash || 0) > player.cash) return false;
+    for (const i of bundle.tiles || []) {
+      if (s.ownership[i] !== player.id) return false;
+      if (s.houses[i] > 0) return false;
+    }
+    for (const sym in bundle.shares || {}) {
+      if ((bundle.shares[sym] || 0) > MM.market.held(player, sym)) return false;
+    }
+    return true;
+  },
+
+  /* raw fair-market value — what a bundle would fetch from the bank */
+  marketValue(s, bundle) {
+    let v = bundle.cash || 0;
+    (bundle.tiles || []).forEach((i) => {
+      const t = MM.BOARD[i];
+      v += s.mortgaged[i] ? t.price / 2 : t.price;
+    });
+    Object.entries(bundle.shares || {}).forEach(([sym, qty]) => {
+      v += MM.market.stock(s, sym).price * qty;
+    });
+    return v;
+  },
+
+  /* how much the bundle is worth to a SPECIFIC bot, personality-tinted.
+     The set-completion bonus checks ownership before the trade, so a
+     bundle handing over two of a group's three missing tiles at once
+     under-credits itself slightly — a deliberate simplification, since
+     the more consequential check (does giving a tile away complete
+     someone ELSE's set) is exact, in completesRecipient() below. */
+  personalValue(s, bot, bundle) {
+    const w = MM.bots.brain(bot).weights;
+    let v = bundle.cash || 0;
+
+    (bundle.tiles || []).forEach((i) => {
+      const t = MM.BOARD[i];
+      let base = s.mortgaged[i] ? t.price / 2 : t.price;
+      if (t.group) {
+        const group = MM.groupTiles(t.group);
+        const owned = group.filter((x) => s.ownership[x.i] === bot.id).length;
+        if (owned === group.length - 1) base *= 1.5 + w.block * 0.7;   /* this completes a set */
+      }
+      v += base;
+    });
+
+    Object.entries(bundle.shares || {}).forEach(([sym, qty]) => {
+      const st = MM.market.stock(s, sym);
+      let base = st.price * qty;
+      if (w.style === "income") base *= 1 + st.yield * 4;             /* the Banker prizes yield */
+      v += base;
+    });
+
+    return v;
+  },
+
+  /* would handing `bundle`'s tiles to `recipientId` complete a colour
+     group? — checked against every tile in the bundle at once, so a
+     trade that hands over two of a rival's three missing tiles in one
+     go is caught even though neither tile alone would be */
+  completesRecipient(s, recipientId, bundle) {
+    const groups = new Set();
+    (bundle.tiles || []).forEach((i) => { const t = MM.BOARD[i]; if (t.group) groups.add(t.group); });
+    for (const g of groups) {
+      const already = MM.groupTiles(g).every((x) =>
+        s.ownership[x.i] === recipientId || (bundle.tiles || []).includes(x.i));
+      if (already) return true;
+    }
+    return false;
+  },
+
+  /* ── a bot deciding on an offer ──────────
+     give = what the bot would receive · take = what the bot would give
+     up, headed to `counterpartId` */
+  evaluate(s, bot, give, take, counterpartId) {
+    const w = MM.bots.brain(bot).weights;
+    const receive = this.personalValue(s, bot, give);
+    let cost = this.personalValue(s, bot, take);
+
+    /* handing over the last piece of a set gives every bot pause — the
+       Shark, whose whole game is blocking, pauses hardest of all */
+    const blocksOne = counterpartId !== undefined && this.completesRecipient(s, counterpartId, take);
+    if (blocksOne) cost *= w.block >= 0.6 ? 3 : 1.7;
+
+    const skill = MM.bots.skill(s);
+    const threshold = (this.MIN_MARGIN + (1 - w.riskAppetite) * 0.12) * skill.edge;
+    const margin = (receive - cost) / Math.max(1, cost);
+    const accept = margin >= threshold;
+
+    let reason = null;
+    if (!accept) {
+      reason = blocksOne ? "I'm not handing over the last piece of that set"
+        : cost > receive * 1.6 ? "that's a lot to ask"
+        : "not quite enough for me";
+    }
+    return { accept, reason, receive, cost };
+  },
+
+  /* ── the human proposing to a bot ───────── */
+  proposeToBot(s, proposer, bot, give, take) {
+    if (!this.canOffer(s, proposer, give) || !this.canOffer(s, bot, take)) {
+      return { accept: false, reason: "that trade isn't valid anymore" };
+    }
+    if (this.bundleIsEmpty(give) && this.bundleIsEmpty(take)) {
+      return { accept: false, reason: "there's nothing on the table" };
+    }
+
+    const result = this.evaluate(s, bot, give, take, proposer.id);
+    if (result.accept) {
+      this.execute(s, proposer, bot, give, take);
+      MM.log(s, `<b>${proposer.name}</b> and <b>${bot.name}</b> shook on a trade`, bot);
+      MM.bots.say(s, bot, 0.6);
+    } else {
+      MM.log(s, `<b>${bot.name}</b> turned down the trade — ${result.reason}`, bot);
+    }
+    return result;
+  },
+
+  /* ── moving the goods: aGives runs a → b, aWants runs b → a ── */
+  execute(s, a, b, aGives, aWants) {
+    if (aGives.cash) { MM.debit(s, a, aGives.cash, "trade"); MM.credit(s, b, aGives.cash, "trade"); }
+    if (aWants.cash) { MM.debit(s, b, aWants.cash, "trade"); MM.credit(s, a, aWants.cash, "trade"); }
+
+    (aGives.tiles || []).forEach((i) => { s.ownership[i] = b.id; });
+    (aWants.tiles || []).forEach((i) => { s.ownership[i] = a.id; });
+
+    Object.entries(aGives.shares || {}).forEach(([sym, qty]) => { if (qty > 0) MM.market.transferShares(s, a, b, sym, qty); });
+    Object.entries(aWants.shares || {}).forEach(([sym, qty]) => { if (qty > 0) MM.market.transferShares(s, b, a, sym, qty); });
+
+    MM.bus.emit("state", s);
+  },
+
+  /* ── the one offer bots initiate on their own: cash for the missing
+     piece of a set, aimed only at the human, on a personality-scaled
+     chance with a cooldown so it doesn't ask every turn ─────────── */
+  async maybeProposeToHuman(s, bot) {
+    if (!s.rules.botTrades) return;
+
+    bot.tradeCooldown = Math.max(0, (bot.tradeCooldown || 0) - 1);
+    if (bot.tradeCooldown > 0) return;
+
+    const human = s.players[0];
+    if (!human.alive || human.bot) return;
+
+    const w = MM.bots.brain(bot).weights;
+    const chance = { none: 0.35, income: 0.08, momentum: 0.5, random: 0.25 }[w.style] || 0.2;
+    if (!s.rng.chance(chance)) return;
+
+    const target = MM.tilesOf(s, human.id).find((t) =>
+      t.group && !(s.houses[t.i] > 0) && MM.bots.completes(s, bot, t));
+    if (!target) return;
+
+    const premium = w.style === "none" ? 1.3 + s.rng.float() * 0.3
+      : w.style === "momentum" ? 1.5 + s.rng.float() * 0.5
+      : w.style === "income" ? 1.15 + s.rng.float() * 0.15
+      : 0.7 + s.rng.float() * 1.3;                    /* the Wildcard might even lowball */
+
+    const offer = Math.max(1, Math.round(target.price * premium));
+    if (bot.cash - offer < MM.bots.floor(s, bot) * 0.3) return;
+
+    bot.tradeCooldown = this.PROPOSE_COOLDOWN;
+    MM.log(s, `<b>${bot.name}</b> offers <b>${human.name}</b> <span class="money">${MM.money(offer)}</span> for ${target.name}`, bot);
+
+    const accepted = await MM.deal.tradeOffer(s, bot, target, offer);
+    if (accepted) {
+      this.execute(s, human, bot,
+        { cash: 0, tiles: [target.i], shares: {} },
+        { cash: offer, tiles: [], shares: {} });
+      MM.log(s, `<b>${human.name}</b> sold ${target.name} to <b>${bot.name}</b> for <span class="money">${MM.money(offer)}</span>`, human);
+      MM.bots.say(s, bot, 0.6);
+    } else {
+      MM.log(s, `<b>${human.name}</b> turned it down`, human);
+    }
+  }
+};
+
+
 /* ── src/core/turn.js ── */
 /* ═══════════════════════════════════════════
    Turn state machine
@@ -2580,6 +2916,7 @@ MM.turn = {
     s.current = 0;
     s.round = 1;
     MM.log(s, "Game started with a randomised player order. Good luck!");
+    MM.snapshotWorth(s);
     MM.setPhase(s, MM.PHASES.AWAIT_ROLL);
     this.startTurn(s);
   },
@@ -2593,11 +2930,19 @@ MM.turn = {
     MM.bus.emit("turn", p);
     MM.bus.emit("state", s);
 
-    if (p.bot) {
-      setTimeout(() => {
-        if (s.phase === MM.PHASES.AWAIT_ROLL && MM.currentPlayer(s) === p) this.roll(s);
-      }, s.settings.botDelay);
-    }
+    if (p.bot) this.runBotTurn(s, p);
+  },
+
+  /* the delay before a bot's roll, with room for it to shop a trade
+     offer to the human first — same timing as before when it doesn't */
+  async runBotTurn(s, p) {
+    await wait(s.settings.botDelay);
+    if (s.phase !== MM.PHASES.AWAIT_ROLL || MM.currentPlayer(s) !== p) return;
+
+    if (!p.jailed) await MM.trades.maybeProposeToHuman(s, p);
+    if (s.phase !== MM.PHASES.AWAIT_ROLL || MM.currentPlayer(s) !== p) return;
+
+    this.roll(s);
   },
 
   /* ── roll ─────────────────────────────── */
@@ -2723,7 +3068,8 @@ MM.turn = {
           MM.log(s, `<b>${p.name}</b> landed on ${tile.name} — nothing to pay`, p);
           break;
         }
-        MM.pay(s, p, owner, due, "rent");
+        const paid = MM.pay(s, p, owner, due, "rent");
+        owner.rentTotal = (owner.rentTotal || 0) + paid;
         MM.log(s, `<b>${p.name}</b> paid <b>${owner.name}</b> <span class="money">${MM.money(due)}</span> in rent at ${tile.name}`, p);
         break;
       }
@@ -2839,6 +3185,7 @@ MM.turn = {
       if (s.current <= start) {
         s.round += 1;
         MM.driftMarket(s);
+        MM.snapshotWorth(s);
       }
     } while (!MM.currentPlayer(s).alive && s.current !== start);
 
@@ -3800,6 +4147,26 @@ MM.deal = {
                  : "Waiting for the first bid"}
       </div>
       <p class="deal-note">Auction in progress</p>`);
+  },
+
+  /* ── a bot wants to buy one of your tiles ── */
+  tradeOffer(s, bot, tile, cash) {
+    return new Promise((resolve) => {
+      this.open(`
+        <div class="trade-ask">
+          <div class="avatar" style="--pcolor:${bot.hex}">${bot.avatar}</div>
+          <p><b style="color:${bot.hex}">${bot.name}</b> wants to buy this from you</p>
+        </div>
+        ${this.deed(s, tile)}
+        <div class="deal-actions">
+          <button class="btn btn--primary" data-deal="accept">Accept · ${MM.money(cash)}</button>
+          <button class="btn btn--muted" data-deal="decline">Decline</button>
+        </div>`);
+
+      const done = (answer) => { this.hide(); resolve(answer); };
+      this.el.querySelector('[data-deal="accept"]').addEventListener("click", () => done(true));
+      this.el.querySelector('[data-deal="decline"]').addEventListener("click", () => done(false));
+    });
   }
 };
 
@@ -4028,6 +4395,300 @@ MM.marketUI = {
 };
 
 
+/* ── src/ui/trade-ui.js ── */
+/* ═══════════════════════════════════════════
+   The Trades tab: pick a bot, build both sides
+   of the table, propose. The bot decides for
+   itself — see core/trades.js — this file only
+   composes the bundles and shows the result.
+   ═══════════════════════════════════════════ */
+window.MM = window.MM || {};
+
+MM.tradeUI = {
+  partnerId: null,
+  give: null,
+  take: null,
+  flash: null,
+
+  mount(el) {
+    this.el = el;
+  },
+
+  reset(keepPartner) {
+    this.give = MM.trades.emptyBundle();
+    this.take = MM.trades.emptyBundle();
+    if (!keepPartner) this.partnerId = null;
+  },
+
+  render() {
+    const s = MM.state;
+    if (!s || !this.el) return;
+    if (!this.give) this.reset();
+
+    const you = s.players[0];
+    const bots = MM.livePlayers(s).filter((p) => p.bot);
+
+    if (!you.alive) {
+      this.el.innerHTML = `<p class="empty-note">You're out of the game.</p>`;
+      return;
+    }
+    if (!bots.length) {
+      this.el.innerHTML = `<p class="empty-note">No one left to trade with.</p>`;
+      return;
+    }
+
+    if (this.partnerId != null && !bots.some((p) => p.id === this.partnerId)) this.reset();
+    const partner = this.partnerId != null ? MM.playerById(s, this.partnerId) : null;
+
+    const chips = bots.map((p) => `
+      <button class="partner-chip ${p.id === this.partnerId ? "is-active" : ""}" data-partner="${p.id}" style="--pcolor:${p.hex}">
+        <span class="avatar" style="--pcolor:${p.hex}">${p.avatar}</span>${p.name}
+      </button>`).join("");
+
+    const yourTurn = MM.currentPlayer(s) === you && !MM.turn.busy && s.phase === MM.PHASES.AWAIT_ROLL;
+
+    let body;
+    if (partner) {
+      body = `
+        ${this.section(s, you, this.give, "give", "You offer")}
+        ${this.section(s, partner, this.take, "take", `You want from ${partner.name}`)}
+        <div class="trade-summary">
+          <span>You give ≈ ${MM.money(MM.trades.marketValue(s, this.give))}</span>
+          <span>You get ≈ ${MM.money(MM.trades.marketValue(s, this.take))}</span>
+        </div>
+        <div class="trade-actions">
+          <button class="btn btn--primary btn--sm" data-trade-action="propose" ${yourTurn && this.canPropose(s, you, partner) ? "" : "disabled"}>Propose trade</button>
+          <button class="btn btn--muted btn--sm" data-trade-action="clear">Clear</button>
+        </div>
+        ${!yourTurn ? `<p class="panel-note">Propose trades on your own turn, before you roll.</p>` : ""}
+        ${this.flash ? `<p class="trade-result ${this.flash.ok ? "up" : "down"}">${this.flash.text}</p>` : ""}`;
+    } else {
+      body = `<p class="panel-note">Pick a bot to trade with. Only bare tiles — nothing with houses on it — can go on the table.</p>`;
+    }
+
+    this.el.innerHTML = `<div class="partner-row">${chips}</div>${body}`;
+    this.bind(s, you, partner);
+  },
+
+  canPropose(s, you, partner) {
+    if (!partner) return false;
+    if (MM.trades.bundleIsEmpty(this.give) && MM.trades.bundleIsEmpty(this.take)) return false;
+    return MM.trades.canOffer(s, you, this.give) && MM.trades.canOffer(s, partner, this.take);
+  },
+
+  /* one side of the table — cash, deeds, shares belonging to `owner` */
+  section(s, owner, bundle, key, title) {
+    const tiles = MM.tilesOf(s, owner.id).filter((t) => !(s.houses[t.i] > 0));
+    const held = s.stocks.filter((st) => MM.market.held(owner, st.sym) > 0);
+
+    const tileRows = tiles.length ? tiles.map((t) => {
+      const checked = bundle.tiles.includes(t.i);
+      const color = t.group ? MM.GROUPS[t.group].color : "#2f7df6";
+      return `
+        <label class="trade-item">
+          <input type="checkbox" data-tile="${t.i}" data-key="${key}" ${checked ? "checked" : ""} />
+          <span class="prop-swatch" style="background:${color}"></span>
+          <span class="trade-item-name">${t.name}${s.mortgaged[t.i] ? " · mortgaged" : ""}</span>
+          <span class="trade-item-price">${MM.money(t.price)}</span>
+        </label>`;
+    }).join("") : `<p class="empty-note empty-note--tight">No tradeable deeds</p>`;
+
+    const shareRows = held.map((st) => {
+      const have = MM.market.held(owner, st.sym);
+      const qty = bundle.shares[st.sym] || 0;
+      return `
+        <div class="trade-share-row">
+          <span class="stock-sym" style="--scolor:${st.color}">${st.sym}</span>
+          <span class="trade-share-held">of ${have}</span>
+          <button class="mini-btn" data-share="-1" data-sym="${st.sym}" data-key="${key}" ${qty <= 0 ? "disabled" : ""}>−</button>
+          <span class="qty-value qty-value--sm">${qty}</span>
+          <button class="mini-btn" data-share="1" data-sym="${st.sym}" data-key="${key}" ${qty >= have ? "disabled" : ""}>＋</button>
+        </div>`;
+    }).join("");
+
+    return `
+      <div class="trade-section">
+        <h3 class="trade-section-title">${title}</h3>
+        <div class="trade-cash-row">
+          <span>Cash</span>
+          <button class="mini-btn" data-cash="-25" data-key="${key}">−</button>
+          <input type="number" class="trade-cash-input" data-cash-input="${key}" min="0" max="${owner.cash}" step="25" value="${bundle.cash}" />
+          <button class="mini-btn" data-cash="25" data-key="${key}">＋</button>
+        </div>
+        <div class="trade-list">${tileRows}</div>
+        ${shareRows}
+      </div>`;
+  },
+
+  bind(s, you, partner) {
+    this.el.querySelectorAll("[data-partner]").forEach((b) =>
+      b.addEventListener("click", () => {
+        this.partnerId = +b.dataset.partner;
+        this.reset(true);
+        this.flash = null;
+        this.render();
+      }));
+
+    if (!partner) return;
+
+    this.el.querySelectorAll("[data-tile]").forEach((cb) =>
+      cb.addEventListener("change", () => {
+        const bundle = cb.dataset.key === "give" ? this.give : this.take;
+        const i = +cb.dataset.tile;
+        const at = bundle.tiles.indexOf(i);
+        if (cb.checked && at < 0) bundle.tiles.push(i);
+        if (!cb.checked && at >= 0) bundle.tiles.splice(at, 1);
+        this.render();
+      }));
+
+    this.el.querySelectorAll("[data-share]").forEach((b) =>
+      b.addEventListener("click", () => {
+        const bundle = b.dataset.key === "give" ? this.give : this.take;
+        const owner = b.dataset.key === "give" ? you : partner;
+        const sym = b.dataset.sym;
+        const have = MM.market.held(owner, sym);
+        const next = Math.max(0, Math.min(have, (bundle.shares[sym] || 0) + (+b.dataset.share)));
+        bundle.shares[sym] = next;
+        this.render();
+      }));
+
+    this.el.querySelectorAll("[data-cash]").forEach((b) =>
+      b.addEventListener("click", () => {
+        const bundle = b.dataset.key === "give" ? this.give : this.take;
+        const owner = b.dataset.key === "give" ? you : partner;
+        bundle.cash = Math.max(0, Math.min(owner.cash, bundle.cash + (+b.dataset.cash)));
+        this.render();
+      }));
+
+    this.el.querySelectorAll("[data-cash-input]").forEach((inp) =>
+      inp.addEventListener("change", () => {
+        const bundle = inp.dataset.cashInput === "give" ? this.give : this.take;
+        const owner = inp.dataset.cashInput === "give" ? you : partner;
+        bundle.cash = Math.max(0, Math.min(owner.cash, Math.round(+inp.value || 0)));
+        this.render();
+      }));
+
+    const propose = this.el.querySelector('[data-trade-action="propose"]');
+    if (propose) propose.addEventListener("click", () => {
+      const result = MM.trades.proposeToBot(s, you, partner, this.give, this.take);
+      this.flash = { ok: result.accept, text: result.accept ? "Deal! The trade went through." : `Declined — ${result.reason}` };
+      this.reset(true);
+      this.render();
+    });
+
+    const clear = this.el.querySelector('[data-trade-action="clear"]');
+    if (clear) clear.addEventListener("click", () => { this.reset(true); this.flash = null; this.render(); });
+  }
+};
+
+
+/* ── src/ui/dashboard-ui.js ── */
+/* ═══════════════════════════════════════════
+   Net worth dashboard — a leaderboard, a line
+   chart and a breakdown table. Shared by the
+   Dashboard modal and the end-of-game screen,
+   so "who's ahead" always looks the same.
+   Player identity colours are reused as-is —
+   they already mean "this player" everywhere
+   else on the table (token, avatar, chat, log).
+   ═══════════════════════════════════════════ */
+window.MM = window.MM || {};
+
+MM.dashboardUI = {
+  breakdown(s, p) {
+    let property = 0;
+    MM.tilesOf(s, p.id).forEach((t) => {
+      property += s.mortgaged[t.i] ? t.price / 2 : t.price;
+      const h = s.houses[t.i] || 0;
+      if (h && t.group) property += h * MM.GROUPS[t.group].house;
+    });
+    return { cash: p.cash, property, shares: MM.portfolioValue(s, p), rent: p.rentTotal || 0 };
+  },
+
+  leaderboard(s) {
+    return s.players.slice().sort((a, b) => MM.netWorth(s, b) - MM.netWorth(s, a));
+  },
+
+  legend(s, rows) {
+    return `
+      <div class="net-legend">
+        ${rows.map((p, i) => `
+          <div class="net-row ${p.alive ? "" : "is-out"}">
+            <span class="net-rank">${i + 1}</span>
+            <span class="net-dot" style="background:${p.hex}"></span>
+            <span class="net-name">${p.name}${p.alive ? "" : " · out"}</span>
+            <b class="net-worth">${MM.money(MM.netWorth(s, p))}</b>
+          </div>`).join("")}
+      </div>`;
+  },
+
+  /* one line per player, shared linear $ axis — all four lines are the
+     same unit, so a single scale is correct, not a small-multiples job */
+  chart(s) {
+    const hist = s.worthHistory || [];
+    if (hist.length < 2) return `<p class="panel-note">Play a few rounds to see the trend.</p>`;
+
+    const w = 460, h = 160, pad = 10;
+    const vals = [];
+    hist.forEach((pt) => s.players.forEach((p) => vals.push(pt.worths[p.id] ?? 0)));
+    const lo = Math.min(0, ...vals);
+    const hi = Math.max(1, ...vals);
+    const xstep = hist.length > 1 ? (w - pad * 2) / (hist.length - 1) : 0;
+    const y = (v) => pad + (1 - (v - lo) / (hi - lo || 1)) * (h - pad * 2);
+
+    const lines = s.players.map((p) => {
+      const pts = hist.map((pt, i) => `${(pad + i * xstep).toFixed(1)},${y(pt.worths[p.id] ?? 0).toFixed(1)}`).join(" ");
+      const lastY = y(hist[hist.length - 1].worths[p.id] ?? 0);
+      return `<polyline points="${pts}" fill="none" stroke="${p.hex}" stroke-width="2"
+                stroke-linejoin="round" stroke-linecap="round" opacity="${p.alive ? 1 : 0.35}" />
+              <circle cx="${(pad + (hist.length - 1) * xstep).toFixed(1)}" cy="${lastY.toFixed(1)}" r="3.5" fill="${p.hex}" />`;
+    }).join("");
+
+    return `
+      <svg class="chart chart--net" viewBox="0 0 ${w} ${h}" role="img" aria-label="Net worth over ${hist.length} rounds">
+        <line x1="0" y1="${y(0).toFixed(1)}" x2="${w}" y2="${y(0).toFixed(1)}" class="chart-grid" />
+        ${lines}
+      </svg>
+      <div class="chart-scale"><span>round 1</span><span>round ${hist[hist.length - 1].round}</span></div>`;
+  },
+
+  table(s, rows) {
+    const cell = (p) => {
+      const b = this.breakdown(s, p);
+      return `
+        <div class="net-table-row">
+          <span class="net-dot" style="background:${p.hex}"></span>
+          <span class="net-table-name">${p.name}</span>
+          <span>${MM.money(b.cash)}</span>
+          <span>${MM.money(b.property)}</span>
+          <span>${MM.money(b.shares)}</span>
+          <span>${MM.money(b.rent)}</span>
+        </div>`;
+    };
+    return `
+      <div class="net-table-scroll">
+        <div class="net-table">
+          <div class="net-table-head">
+            <span></span><span>Player</span><span>Cash</span><span>Property</span><span>Shares</span><span>Rent earned</span>
+          </div>
+          ${rows.map(cell).join("")}
+        </div>
+      </div>`;
+  },
+
+  render(s) {
+    const rows = this.leaderboard(s);
+    return `${this.legend(s, rows)}${this.chart(s)}${this.table(s, rows)}`;
+  },
+
+  open() {
+    const s = MM.state;
+    if (!s || s.phase === MM.PHASES.LOBBY) return;
+    MM.screens.modal("Net worth", this.render(s));
+  }
+};
+
+
 /* ── src/ui/panels.js ── */
 /* ═══ side rails, log, chat and the market tape ═══ */
 window.MM = window.MM || {};
@@ -4043,6 +4704,7 @@ MM.panels = {
       rules: el("#rules-list"),
       market: el("#market-panel"),
       props: el("#prop-list"),
+      trades: el("#trades-panel"),
       status: el("#status-card"),
       ticker: el("#ticker-track"),
       log: el("#log-feed"),
@@ -4057,6 +4719,7 @@ MM.panels = {
     MM.bus.on("chat", (e) => this.pushChat(e));
     MM.bus.on("cash", (e) => this.cashPop(e));
     MM.marketUI.mount(this.refs.market);
+    MM.tradeUI.mount(this.refs.trades);
   },
 
   renderAll() {
@@ -4064,6 +4727,7 @@ MM.panels = {
     this.renderHost();
     this.renderMarket();
     this.renderProps();
+    this.renderTrades();
   },
 
   /* ── players ────────────────────────────── */
@@ -4141,8 +4805,7 @@ MM.panels = {
       <h2 class="card-title card-title--center">Build status</h2>
       <div class="status-list">
         ${log.shipped.map(row).join("")}
-        <div class="status-split">On the way</div>
-        ${log.upcoming.map(row).join("")}
+        ${log.upcoming.length ? `<div class="status-split">On the way</div>${log.upcoming.map(row).join("")}` : ""}
       </div>
       <button class="btn btn--muted btn--sm status-more" data-action="show-status">See the full list</button>`;
 
@@ -4171,6 +4834,7 @@ MM.panels = {
 
   /* ── market ─────────────────────────────── */
   renderMarket() { MM.marketUI.render(); },
+  renderTrades() { MM.tradeUI.render(); },
 
   renderTicker() {
     const s = MM.state;
@@ -4365,6 +5029,7 @@ MM.screens = {
   modal(title, html) {
     this.modalTitle.textContent = title;
     this.modalBody.innerHTML = html;
+    this.modalEl.classList.remove("modal--single-action");
     this.modalEl.hidden = false;
   },
 
@@ -4387,11 +5052,12 @@ MM.screens = {
     const log = MM.changelog();
     this.modal(`What works today · ${MM.VERSION}`, `
       <p>Newest update first. Everything with a green tick is playable right
-      now; below the line is what's still being built.</p>
+      now${log.upcoming.length ? "; below the line is what's still being built." : "."}</p>
       <h3 class="vsection">Shipped</h3>
       ${log.shipped.map(group).join("")}
-      <h3 class="vsection vsection--soon">On the way</h3>
-      ${log.upcoming.map(group).join("")}`);
+      ${log.upcoming.length ? `
+        <h3 class="vsection vsection--soon">On the way</h3>
+        ${log.upcoming.map(group).join("")}` : ""}`);
   },
 
   rulesModal() {
@@ -4423,8 +5089,25 @@ MM.screens = {
       events, on Surprise cards, and on what gets built where — a hotel row lifts
       the realty stock, a bought-up airport lifts the airline.</p>
       <ul>${rows}</ul>
-      <p>Dividends land every time you pass START. The tape above the board is
-      already live; trading opens in V2.</p>`);
+      <p>Dividends land every time you pass START. Trade from the Market tab any
+      time, or trade a deed, cash and shares with another player from the Trades
+      tab on your own turn.</p>`);
+  },
+
+  /* the terminal screen: who won, and how everyone stacked up */
+  gameOverModal(winner) {
+    const s = MM.state;
+    const rows = MM.dashboardUI.leaderboard(s);
+    const headline = winner
+      ? `<p class="gameover-head">🏆 <b style="color:${winner.hex}">${winner.name}</b> owns the table with <b>${MM.money(MM.netWorth(s, winner))}</b></p>`
+      : `<p class="gameover-head">Everyone's out. Call it a draw.</p>`;
+
+    this.modal("Game over", `
+      ${headline}
+      ${MM.dashboardUI.legend(s, rows)}
+      ${MM.dashboardUI.chart(s)}
+      <button class="btn btn--primary" data-action="rematch">Play again</button>`);
+    this.modalEl.classList.add("modal--single-action");
   }
 };
 
@@ -4589,6 +5272,17 @@ MM.app = {
       MM.bus.emit("state", s);
     });
 
+    document.querySelector('[data-action="show-dashboard"]').addEventListener("click", () => MM.dashboardUI.open());
+
+    /* the game-over modal's own button is content, not a fixed control —
+       catch it by delegation since the modal body is rebuilt each time */
+    document.addEventListener("click", (e) => {
+      if (e.target.closest('[data-action="rematch"]')) {
+        this.rematch();
+        MM.screens.closeModal();
+      }
+    });
+
     document.querySelectorAll(".tab").forEach((tab) => {
       tab.addEventListener("click", () => {
         document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("is-active", t === tab));
@@ -4614,12 +5308,14 @@ MM.app = {
   primary() {
     const s = MM.state;
     if (s.phase === MM.PHASES.LOBBY) return this.startGame();
-    if (s.phase === MM.PHASES.GAME_OVER) {
-      this.newGame(s.players[0].name);
-      MM.screens.mode("lobby");
-      return this.syncAction();
-    }
+    if (s.phase === MM.PHASES.GAME_OVER) return this.rematch();
     if (s.phase === MM.PHASES.AWAIT_ROLL && !MM.currentPlayer(s).bot) MM.turn.roll(s);
+  },
+
+  rematch() {
+    this.newGame(MM.state.players[0].name);
+    MM.screens.mode("lobby");
+    this.syncAction();
   },
 
   startGame() {
@@ -4677,6 +5373,10 @@ MM.app = {
       if (p.bot && p.jailed && MM.state.rng.chance(0.4)) {
         MM.chat(MM.state, p.name, MM.state.rng.pick(MM.BOT_LINES.jail), p.hex);
       }
+    });
+
+    MM.bus.on("game-over", (winner) => {
+      setTimeout(() => MM.screens.gameOverModal(winner), 500);
     });
   }
 };

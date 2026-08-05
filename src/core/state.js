@@ -31,7 +31,7 @@ MM.createGame = function (opts) {
     id: 0, name: (opts && opts.nickname) || "You", avatar: "😀",
     color: "var(--p1)", hex: "#4e97ff", bot: false, personality: null,
     cash: settings.startingCash, pos: 0, jailed: false, jailTurns: 0,
-    doubles: 0, alive: true, portfolio: {}, basis: {}, getOut: 0, lastDelta: 0, divTotal: 0
+    doubles: 0, alive: true, portfolio: {}, basis: {}, getOut: 0, lastDelta: 0, divTotal: 0, rentTotal: 0
   });
 
   const roster = MM.PERSONALITIES.slice(0, Math.max(0, settings.players - 1));
@@ -41,7 +41,8 @@ MM.createGame = function (opts) {
       id: n + 1, name: p.name, avatar: p.avatar,
       color: p.color, hex: hexes[p.id], bot: true, personality: p.id,
       cash: settings.startingCash, pos: 0, jailed: false, jailTurns: 0,
-      doubles: 0, alive: true, portfolio: {}, basis: {}, getOut: 0, lastDelta: 0, divTotal: 0
+      doubles: 0, alive: true, portfolio: {}, basis: {}, getOut: 0, lastDelta: 0, divTotal: 0, rentTotal: 0,
+      tradeCooldown: 0
     });
   });
 
@@ -59,6 +60,7 @@ MM.createGame = function (opts) {
     stocks: MM.STOCKS.map((s) => Object.assign({}, s, { open: s.price, prev: s.price, base: s.price })),
     vacationPot: 0,
     headline: null,
+    worthHistory: [],       /* [{ round, worths: {playerId: netWorth} }] — feeds the dashboard */
     log: [],
     chat: [],
     room: "room-" + Math.random().toString(36).slice(2, 7)
@@ -92,6 +94,14 @@ MM.netWorth = function (s, player) {
     if (h && t.group) w += h * MM.GROUPS[t.group].house;
   });
   return w;
+};
+
+/* one point per round for the net-worth dashboard */
+MM.snapshotWorth = function (s) {
+  const worths = {};
+  s.players.forEach((p) => (worths[p.id] = Math.round(MM.netWorth(s, p))));
+  s.worthHistory.push({ round: s.round, worths });
+  if (s.worthHistory.length > 200) s.worthHistory.shift();
 };
 
 /* ── mutations ───────────────────────────── */
@@ -149,14 +159,7 @@ MM.bankrupt = function (s, debtor, creditor, reason) {
   /* shares transfer with the estate; to the bank they simply vanish */
   Object.keys(debtor.portfolio).forEach((sym) => {
     const qty = debtor.portfolio[sym];
-    if (qty > 0 && creditor && creditor.alive) {
-      const had = creditor.portfolio[sym] || 0;
-      const cost = MM.market.basis(debtor, sym);
-      creditor.basis = creditor.basis || {};
-      creditor.basis[sym] = (MM.market.basis(creditor, sym) * had + cost * qty) / (had + qty);
-      creditor.portfolio[sym] = had + qty;
-    }
-    debtor.portfolio[sym] = 0;
+    if (qty > 0) MM.market.transferShares(s, debtor, creditor && creditor.alive ? creditor : null, sym, qty);
   });
 
   if (creditor && creditor.alive) {

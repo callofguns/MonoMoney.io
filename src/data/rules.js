@@ -20,7 +20,9 @@ MM.RULE_DEFS = [
   { id: "dividends", ico: "📊", name: "Dividends on GO",
     desc: "Passing START pays out on every share you hold", on: true, since: "V2" },
   { id: "insiderCards", ico: "🃏", name: "Insider Surprise cards",
-    desc: "Some Surprise cards move a company's share price", on: true, since: "V2" }
+    desc: "Some Surprise cards move a company's share price", on: true, since: "V2" },
+  { id: "botTrades", ico: "🤝", name: "Bot-initiated trades",
+    desc: "Bots occasionally offer to buy a property from you", on: true, since: "V3" }
 ];
 
 /* Bot personalities. `weights` is the whole brain — src/core/bots.js reads

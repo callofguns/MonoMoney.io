@@ -15,6 +15,7 @@ MM.turn = {
     s.current = 0;
     s.round = 1;
     MM.log(s, "Game started with a randomised player order. Good luck!");
+    MM.snapshotWorth(s);
     MM.setPhase(s, MM.PHASES.AWAIT_ROLL);
     this.startTurn(s);
   },
@@ -28,11 +29,19 @@ MM.turn = {
     MM.bus.emit("turn", p);
     MM.bus.emit("state", s);
 
-    if (p.bot) {
-      setTimeout(() => {
-        if (s.phase === MM.PHASES.AWAIT_ROLL && MM.currentPlayer(s) === p) this.roll(s);
-      }, s.settings.botDelay);
-    }
+    if (p.bot) this.runBotTurn(s, p);
+  },
+
+  /* the delay before a bot's roll, with room for it to shop a trade
+     offer to the human first — same timing as before when it doesn't */
+  async runBotTurn(s, p) {
+    await wait(s.settings.botDelay);
+    if (s.phase !== MM.PHASES.AWAIT_ROLL || MM.currentPlayer(s) !== p) return;
+
+    if (!p.jailed) await MM.trades.maybeProposeToHuman(s, p);
+    if (s.phase !== MM.PHASES.AWAIT_ROLL || MM.currentPlayer(s) !== p) return;
+
+    this.roll(s);
   },
 
   /* ── roll ─────────────────────────────── */
@@ -158,7 +167,8 @@ MM.turn = {
           MM.log(s, `<b>${p.name}</b> landed on ${tile.name} — nothing to pay`, p);
           break;
         }
-        MM.pay(s, p, owner, due, "rent");
+        const paid = MM.pay(s, p, owner, due, "rent");
+        owner.rentTotal = (owner.rentTotal || 0) + paid;
         MM.log(s, `<b>${p.name}</b> paid <b>${owner.name}</b> <span class="money">${MM.money(due)}</span> in rent at ${tile.name}`, p);
         break;
       }
@@ -274,6 +284,7 @@ MM.turn = {
       if (s.current <= start) {
         s.round += 1;
         MM.driftMarket(s);
+        MM.snapshotWorth(s);
       }
     } while (!MM.currentPlayer(s).alive && s.current !== start);
 

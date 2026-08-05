@@ -95,7 +95,9 @@
 .screen--table[data-mode="lobby"] .rail-pane[data-pane="lobby"] { display: flex; }
 .screen--table[data-mode="game"]  .rail-pane[data-pane="game"]  { display: flex; }
 
-.rail-actions { display: flex; gap: 8px; justify-content: space-between; }
+.rail-actions { display: flex; flex-direction: column; gap: 8px; }
+.rail-actions-row { display: flex; gap: 8px; }
+.rail-actions-row .btn { flex: 1; min-width: 0; padding-left: 8px; padding-right: 8px; }
 
 .table-main {
   display: flex; flex-direction: column; gap: 10px;

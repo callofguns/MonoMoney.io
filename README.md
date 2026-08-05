@@ -19,7 +19,7 @@ To produce the single-file shareable build:
 node tools/build-artifact.mjs   # → dist/monomoney.html
 ```
 
-## What works today (V2.5)
+## What works today (V3)
 
 - **40-tile board** rendered on canvas: 8 colour groups, 4 airports, 2 utilities,
   2 taxes, Surprise and Treasure tiles, and the four corners (START, In Prison,
@@ -54,12 +54,21 @@ node tools/build-artifact.mjs   # → dist/monomoney.html
   personality's weights, so the Tycoon builds while the Banker compounds and the
   Shark pays over the odds to deny you a set. Bot skill scales their cushion and
   their conviction.
+- **Trades** — build a bundle of cash, deeds and shares from the Trades tab and put
+  it to any bot. Every bot values the offer through its own personality: the Banker
+  overpays for yield, the Shark won't hand over a set-completing tile for less than
+  triple its price. Bots occasionally offer to buy a property from you too, priced
+  by who's asking and how badly they want it.
+- **Dashboard** — a net-worth line for every player, round by round, plus a
+  cash / property / shares / rent breakdown. Opens from the rail or the game-over
+  screen, which now shows final standings and a chart the moment the game ends.
 
 The full working / coming list lives in `src/data/versions.js` and is rendered
 in-game: **Build status** in the lobby rail, or *See what works today* on the
 home screen. Keep that array in build order and append new releases to the end —
 `MM.changelog()` reverses the shipped ones so the log always reads newest first,
-with what's still coming pinned below the line.
+with what's still coming pinned below the line (hidden entirely once nothing's
+queued, as it is right now — V3 closes out the original roadmap).
 
 ## Roadmap
 
@@ -71,7 +80,7 @@ with what's still coming pinned below the line.
 | V2 | The exchange: trading, price shocks, dividends every lap | ✅ Working |
 | V2.0.1 | Changelog reads newest first | ✅ Working |
 | V2.5 | Bot personalities make their own property and portfolio calls | ✅ Working |
-| V3 | Trades, auctions, financial dashboard | Building next |
+| V3 | Trades and a net-worth dashboard | ✅ Working |
 
 ## Layout
 
@@ -90,20 +99,23 @@ src/
   data/market-events.js the headlines that move the tape
   core/rng.js           seedable RNG — same seed, same game
   core/emitter.js       event bus
-  core/state.js         game state and every mutation that touches it
+  core/state.js         game state, every mutation, net-worth snapshots
   core/dice.js          dice rolls
   core/market.js        the exchange: pricing, trading, dividends, fundamentals
   core/property.js      deeds: buying, rent, building, mortgaging, forced sales
   core/cards.js         drawing and resolving cards
   core/bots.js          the four personalities: buying, bidding, building, trading
   core/auction.js       ascending auction for a declined deed
+  core/trades.js        player-to-player trades: valuation, evaluation, execution
   core/turn.js          the turn state machine
   render/geometry.js    index → rectangle, index → token anchor
   render/icons.js       vector tile icons
   render/board-renderer.js  canvas painting, token movement, tooltips
   ui/dice-ui.js         the pair of dice
-  ui/deal.js            deed offers, card faces and auction bidding
+  ui/deal.js            deed offers, card faces, auction and trade prompts
   ui/market-ui.js       the Market tab: listings, charts and the trade panel
+  ui/trade-ui.js        the Trades tab: partner picker and bundle composer
+  ui/dashboard-ui.js    net-worth chart and breakdown, shared with game-over
   ui/panels.js          rails, log, chat, market tape
   ui/screens.js         screen switching and modals
   main.js               bootstrap and wiring
@@ -148,3 +160,31 @@ and shares are the first thing sold when someone can't cover a debt.
 
 Identity colours for the five listings come from the validated categorical palette
 and are in a fixed order — reordering them fails the colour-blindness checks.
+
+## Trades
+
+A bundle is cash, deeds and shares in one offer — `{ cash, tiles: [...], shares: {...} }`.
+Only bare tiles (no houses) can go on the table. `core/trades.js` prices a bundle
+twice: `marketValue()` for what the bank would pay, and `personalValue()` for what
+it's worth to the specific bot on the other side of the table, using the same
+`weights` that drive its buying and building.
+
+A bot's one hard rule sits outside the value math: handing over the last tile of a
+colour group to whoever's asking gets a 1.7×–3× cost penalty depending on how much
+the bot cares about blocking (`weights.block`) — checked against the whole bundle at
+once, so splitting two set-completing tiles across one trade doesn't slip past it.
+Everything else nets out to a margin-over-threshold decision, the threshold set by
+risk appetite and bot skill.
+
+Bots also initiate one canonical offer of their own: cash for the single tile they
+need to complete a set, if you own it. Frequency and premium both come from
+personality — the Shark asks often and pays well over price; the Banker rarely
+bothers.
+
+## Net worth
+
+`MM.snapshotWorth()` records every player's net worth once at kickoff and once per
+completed round, feeding a shared line chart used by both the Dashboard button and
+the game-over screen. Player identity colours are reused as-is, not freshly chosen —
+they already mean "this player" everywhere else on the table (token, avatar, chat),
+so the chart draws on an encoding that exists rather than inventing a new one.

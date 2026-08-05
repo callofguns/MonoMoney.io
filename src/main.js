@@ -157,6 +157,17 @@ MM.app = {
       MM.bus.emit("state", s);
     });
 
+    document.querySelector('[data-action="show-dashboard"]').addEventListener("click", () => MM.dashboardUI.open());
+
+    /* the game-over modal's own button is content, not a fixed control —
+       catch it by delegation since the modal body is rebuilt each time */
+    document.addEventListener("click", (e) => {
+      if (e.target.closest('[data-action="rematch"]')) {
+        this.rematch();
+        MM.screens.closeModal();
+      }
+    });
+
     document.querySelectorAll(".tab").forEach((tab) => {
       tab.addEventListener("click", () => {
         document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("is-active", t === tab));
@@ -182,12 +193,14 @@ MM.app = {
   primary() {
     const s = MM.state;
     if (s.phase === MM.PHASES.LOBBY) return this.startGame();
-    if (s.phase === MM.PHASES.GAME_OVER) {
-      this.newGame(s.players[0].name);
-      MM.screens.mode("lobby");
-      return this.syncAction();
-    }
+    if (s.phase === MM.PHASES.GAME_OVER) return this.rematch();
     if (s.phase === MM.PHASES.AWAIT_ROLL && !MM.currentPlayer(s).bot) MM.turn.roll(s);
+  },
+
+  rematch() {
+    this.newGame(MM.state.players[0].name);
+    MM.screens.mode("lobby");
+    this.syncAction();
   },
 
   startGame() {
@@ -245,6 +258,10 @@ MM.app = {
       if (p.bot && p.jailed && MM.state.rng.chance(0.4)) {
         MM.chat(MM.state, p.name, MM.state.rng.pick(MM.BOT_LINES.jail), p.hex);
       }
+    });
+
+    MM.bus.on("game-over", (winner) => {
+      setTimeout(() => MM.screens.gameOverModal(winner), 500);
     });
   }
 };

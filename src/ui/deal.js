@@ -123,5 +123,25 @@ MM.deal = {
                  : "Waiting for the first bid"}
       </div>
       <p class="deal-note">Auction in progress</p>`);
+  },
+
+  /* ── a bot wants to buy one of your tiles ── */
+  tradeOffer(s, bot, tile, cash) {
+    return new Promise((resolve) => {
+      this.open(`
+        <div class="trade-ask">
+          <div class="avatar" style="--pcolor:${bot.hex}">${bot.avatar}</div>
+          <p><b style="color:${bot.hex}">${bot.name}</b> wants to buy this from you</p>
+        </div>
+        ${this.deed(s, tile)}
+        <div class="deal-actions">
+          <button class="btn btn--primary" data-deal="accept">Accept · ${MM.money(cash)}</button>
+          <button class="btn btn--muted" data-deal="decline">Decline</button>
+        </div>`);
+
+      const done = (answer) => { this.hide(); resolve(answer); };
+      this.el.querySelector('[data-deal="accept"]').addEventListener("click", () => done(true));
+      this.el.querySelector('[data-deal="decline"]').addEventListener("click", () => done(false));
+    });
   }
 };

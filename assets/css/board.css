@@ -172,6 +172,9 @@
 .deal-note { font-size: 12px; color: var(--text-mut); }
 .auction-state { font-size: 13px; color: var(--text-dim); }
 
+.trade-ask { display: flex; align-items: center; gap: 10px; }
+.trade-ask p { font-size: 13.5px; color: var(--text-dim); text-align: left; }
+
 .card-face {
   position: relative; overflow: hidden;
   width: 100%; padding: 22px 20px;

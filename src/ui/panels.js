@@ -12,6 +12,7 @@ MM.panels = {
       rules: el("#rules-list"),
       market: el("#market-panel"),
       props: el("#prop-list"),
+      trades: el("#trades-panel"),
       status: el("#status-card"),
       ticker: el("#ticker-track"),
       log: el("#log-feed"),
@@ -26,6 +27,7 @@ MM.panels = {
     MM.bus.on("chat", (e) => this.pushChat(e));
     MM.bus.on("cash", (e) => this.cashPop(e));
     MM.marketUI.mount(this.refs.market);
+    MM.tradeUI.mount(this.refs.trades);
   },
 
   renderAll() {
@@ -33,6 +35,7 @@ MM.panels = {
     this.renderHost();
     this.renderMarket();
     this.renderProps();
+    this.renderTrades();
   },
 
   /* ── players ────────────────────────────── */
@@ -110,8 +113,7 @@ MM.panels = {
       <h2 class="card-title card-title--center">Build status</h2>
       <div class="status-list">
         ${log.shipped.map(row).join("")}
-        <div class="status-split">On the way</div>
-        ${log.upcoming.map(row).join("")}
+        ${log.upcoming.length ? `<div class="status-split">On the way</div>${log.upcoming.map(row).join("")}` : ""}
       </div>
       <button class="btn btn--muted btn--sm status-more" data-action="show-status">See the full list</button>`;
 
@@ -140,6 +142,7 @@ MM.panels = {
 
   /* ── market ─────────────────────────────── */
   renderMarket() { MM.marketUI.render(); },
+  renderTrades() { MM.tradeUI.render(); },
 
   renderTicker() {
     const s = MM.state;

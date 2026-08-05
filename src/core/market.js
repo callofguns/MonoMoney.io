@@ -156,6 +156,25 @@ MM.market = {
     MM.bus.emit("state", s);
   },
 
+  /* Move shares between two players (or to the void if `to` is null),
+     blending cost basis on the receiving side. A pure mutation — callers
+     emit "state" themselves once their whole operation is done. */
+  transferShares(s, from, to, sym, qty) {
+    if (qty <= 0) return;
+    const fromHad = this.held(from, sym);
+    const cost = this.basis(from, sym);
+
+    from.portfolio[sym] = fromHad - qty;
+    if (from.portfolio[sym] <= 0 && from.basis) delete from.basis[sym];
+
+    if (to) {
+      const toHad = this.held(to, sym);
+      to.basis = to.basis || {};
+      to.basis[sym] = (this.basis(to, sym) * toHad + cost * qty) / (toHad + qty);
+      to.portfolio[sym] = toHad + qty;
+    }
+  },
+
   /* ── dividends, paid on every lap ───────── */
   dividends(s, player) {
     if (!s.rules.dividends) return 0;
