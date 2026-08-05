@@ -77,6 +77,23 @@ wss.on("connection", (ws) => {
     /* ── join a room (host creates one, guest joins by code) ── */
     if (msg.type === "hello") {
       if (msg.role === "host") {
+        /* a dropped connection reconnecting (same clientId) reclaims its
+           OWN room instead of spinning up a fresh, empty one — without
+           this, a host's socket dying (e.g. iOS backgrounding the tab)
+           would silently orphan everyone already in the room */
+        if (msg.clientId) {
+          for (const [existingCode, existingRoom] of rooms) {
+            const m = existingRoom.seats.get(0);
+            if (m && m.clientId === msg.clientId) {
+              m.ws = ws; m.connected = true; m.name = msg.name || m.name;
+              room = existingRoom; seat = 0;
+              ws.send(JSON.stringify({ type: "hello-ack", room: existingCode, seat: 0, roster: roster(existingRoom), rejoin: true }));
+              broadcast(existingRoom, { type: "roster", roster: roster(existingRoom) }, 0);
+              return;
+            }
+          }
+        }
+
         const code = makeCode();
         room = { seats: new Map(), locked: false, lastSeen: Date.now() };
         rooms.set(code, room);

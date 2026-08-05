@@ -84,6 +84,19 @@
   padding: 8px 10px; margin: 0;
 }
 
+/* ── connection status ──────────────────────── */
+.net-status {
+  position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
+  z-index: 80;
+  padding: 7px 16px;
+  background: var(--warn); color: #1a1206;
+  font-weight: 700; font-size: 12.5px; letter-spacing: .01em;
+  border-radius: 999px;
+  box-shadow: var(--shadow-card);
+  animation: net-status-pulse 1.6s ease-in-out infinite;
+}
+@keyframes net-status-pulse { 50% { opacity: .7; } }
+
 /* ── guest waiting room ─────────────────────── */
 .screen--table[data-mode="guest-wait"] .rail-pane[data-pane="wait"] { display: flex; }
 #wait-room-code { font-family: var(--font-num); color: var(--gold); letter-spacing: .06em; }
