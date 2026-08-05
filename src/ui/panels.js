@@ -43,8 +43,15 @@ MM.panels = {
       const delta = p.lastDelta
         ? `<span class="player-delta ${p.lastDelta > 0 ? "up" : "down"}">${p.lastDelta > 0 ? "+" : "−"}${MM.money(Math.abs(p.lastDelta))}</span>`
         : "";
-      const sub = p.jailed ? "In prison"
-        : !p.alive ? "Bankrupt"
+      const deeds = MM.tilesOf(s, p.id).length;
+      const sets = MM.prop.setsOwned(s, p.id).length;
+      const holdings = deeds
+        ? `${deeds} deed${deeds > 1 ? "s" : ""}${sets ? ` · ${sets} set${sets > 1 ? "s" : ""}` : ""}`
+        : null;
+
+      const sub = !p.alive ? "Bankrupt"
+        : p.jailed ? "In prison"
+        : holdings ? holdings
         : p.bot ? MM.PERSONALITIES.find((x) => x.id === p.personality).tag
         : "That's you";
       return `<div class="player-row ${turn ? "is-turn" : ""} ${p.alive ? "" : "is-out"}" style="--pcolor:${p.hex}">
@@ -157,22 +164,80 @@ MM.panels = {
     this.refs.ticker.innerHTML = items;
   },
 
+  /* your deeds, with the controls to develop them */
   renderProps() {
     const s = MM.state;
     if (!s || !this.refs.props) return;
-    const mine = MM.tilesOf(s, 0);
+
+    const you = s.players[0];
+    const mine = MM.tilesOf(s, 0).sort((a, b) => a.i - b.i);
+
     if (!mine.length) {
-      this.refs.props.innerHTML = `<p class="empty-note">You don't own anything yet. Land on an unclaimed tile to buy it — purchases open in V1.5.</p>`;
+      this.refs.props.innerHTML = `<p class="empty-note">You don't own anything yet. Land on an unclaimed tile and the deed is offered to you.</p>`;
       return;
     }
-    this.refs.props.innerHTML = mine.map((t) => {
+
+    const canAct = MM.currentPlayer(s) === you && you.alive &&
+      !MM.turn.busy && s.phase === MM.PHASES.AWAIT_ROLL;
+    const sets = MM.prop.setsOwned(s, you.id);
+
+    const rows = mine.map((t) => {
       const color = t.group ? MM.GROUPS[t.group].color : "#2f7df6";
-      return `<div class="prop-row" style="--gcolor:${color}">
+      const houses = s.houses[t.i] || 0;
+      const mortgaged = !!s.mortgaged[t.i];
+
+      let status;
+      if (mortgaged) status = "Mortgaged";
+      else if (houses === 5) status = "Hotel";
+      else if (houses) status = `${houses} house${houses > 1 ? "s" : ""}`;
+      else if (t.group && MM.prop.ownsFullSet(s, you.id, t.group)) status = "Set complete";
+      else status = MM.money(MM.prop.rent(s, t, 7)) + " rent";
+
+      const btn = (act, label, ok, title) =>
+        `<button class="mini-btn" data-act="${act}" data-i="${t.i}" title="${title}" ${canAct && ok ? "" : "disabled"}>${label}</button>`;
+
+      const controls = [
+        t.type === "property"
+          ? btn("build", "＋", MM.prop.canBuild(s, you, t), `Build for ${MM.money(MM.prop.houseCost(t))}`)
+          : "",
+        t.type === "property" && houses
+          ? btn("sell", "－", MM.prop.canSellHouse(s, you, t), "Sell a building back to the bank")
+          : "",
+        mortgaged
+          ? btn("unmortgage", "↺", MM.prop.canUnmortgage(s, you, t), `Lift for ${MM.money(MM.prop.unmortgageCost(t))}`)
+          : btn("mortgage", "🏦", MM.prop.canMortgage(s, you, t), `Raise ${MM.money(t.price / 2)}`)
+      ].join("");
+
+      return `<div class="prop-row ${mortgaged ? "is-mortgaged" : ""}" style="--gcolor:${color}">
         <div class="prop-swatch"></div>
-        <div>${t.name}</div>
-        <div class="prop-rent">${MM.money(t.price)}</div>
+        <div class="prop-body">
+          <b>${t.name}</b>
+          <i>${status}</i>
+        </div>
+        <div class="prop-controls">${controls}</div>
       </div>`;
     }).join("");
+
+    this.refs.props.innerHTML = `
+      <div class="prop-summary">
+        <span>${mine.length} deed${mine.length > 1 ? "s" : ""}</span>
+        <span>${sets.length} set${sets.length === 1 ? "" : "s"}</span>
+        <span>Net worth <b>${MM.money(MM.netWorth(s, you))}</b></span>
+      </div>
+      ${rows}
+      ${canAct ? "" : `<p class="panel-note">Build, sell and mortgage on your own turn, before you roll.</p>`}`;
+
+    this.refs.props.querySelectorAll(".mini-btn").forEach((b) => {
+      b.addEventListener("click", () => {
+        const tile = MM.BOARD[+b.dataset.i];
+        const act = b.dataset.act;
+        if (act === "build") MM.prop.build(s, you, tile);
+        if (act === "sell") MM.prop.sellHouse(s, you, tile);
+        if (act === "mortgage") MM.prop.mortgage(s, you, tile);
+        if (act === "unmortgage") MM.prop.unmortgage(s, you, tile);
+        this.renderProps();
+      });
+    });
   },
 
   /* ── feeds ──────────────────────────────── */

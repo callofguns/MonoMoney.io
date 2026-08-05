@@ -19,23 +19,32 @@ To produce the single-file shareable build:
 node tools/build-artifact.mjs   # → dist/monomoney.html
 ```
 
-## What works today (V1.1)
+## What works today (V1.5)
 
 - **40-tile board** rendered on canvas: 8 colour groups, 4 airports, 2 utilities,
   2 taxes, Surprise and Treasure tiles, and the four corners (START, In Prison,
-  Vacation, Go to Prison). Tiles rotate per side; hovering one shows its price and
-  rent ladder.
+  Vacation, Go to Prison). Hovering a tile shows its price and rent ladder.
 - **Turn state machine** — `awaiting-roll → rolling → moving → resolving → turn-end`,
   with the human first and three bots auto-playing behind them.
 - **Dice** — two d6, doubles grant another roll, three doubles sends you to prison.
-  Prison costs three turns or $50 bail; doubles get you out early.
-- **Money already moves** — START salary, both taxes, and the vacation pot that
-  taxes feed into.
-- **Table UI** — blue trading-floor palette, player rail with live balances, event log, chat, and the market
-  tape above the board.
+  Prison costs three turns or $50 bail; doubles or a kept card get you out early.
+- **Property** — land on an unclaimed deed and a card offers it to you, showing the
+  whole rent ladder. Decline it and (with the rule on) it goes to auction, where you
+  bid against the bots.
+- **Rent** — base rent, doubled on a completed colour group, scaled by buildings.
+  Airports pay by how many you hold; utilities pay a multiple of the dice.
+- **Buildings** — houses and hotels, built evenly across a set, drawn on the board.
+- **Mortgages** — raise half the price, lift it later for 10% more; a mortgaged tile
+  pays no rent.
+- **Cards** — 28 Surprise and Treasure cards: moves, fines, collections, per-building
+  repairs and get-out-of-prison.
+- **Bankruptcy** — a player who's short sells buildings and mortgages deeds first;
+  if that isn't enough their whole estate passes to whoever broke them.
+- **Table UI** — blue trading-floor palette, player rail with balances and holdings,
+  a property manager for building and mortgaging, event log, chat, and the market tape.
 
-Purchases, rent and buildings land in **V1.5** — landing on an unclaimed tile
-currently just reports its price.
+Bots use one shared baseline brain for now (buy what they can afford, build on
+completed sets). The four personalities take over in **V2.5**.
 
 The full working / coming list lives in `src/data/versions.js` and is rendered
 in-game: **Build status** in the lobby rail, or *See what works today* on the
@@ -47,8 +56,8 @@ home screen. Add a release there and the UI updates itself.
 | ------- | ----- | ------ |
 | V1 | Board, tile dataset, turn engine, dice, prison, taxes | ✅ Working |
 | V1.1 | Blue palette, version naming, in-game build status | ✅ Working |
-| V1.5 | Buying, rent, colour sets, houses/hotels, mortgages, cards | Building next |
-| V2 | The exchange: trading, price shocks, dividends every lap | Planned |
+| V1.5 | Buying, rent, colour sets, houses/hotels, mortgages, auctions, cards, bankruptcy | ✅ Working |
+| V2 | The exchange: trading, price shocks, dividends every lap | Building next |
 | V2.5 | Bot personalities make their own property and portfolio calls | Planned |
 | V3 | Trades, auctions, financial dashboard | Planned |
 
@@ -65,15 +74,21 @@ src/
   data/versions.js      the release ladder that drives the build-status UI
   data/board.js         the 40 tiles, colour groups, rent tables
   data/rules.js         house rules, bot personalities, listed companies
+  data/cards.js         the Surprise and Treasure decks
   core/rng.js           seedable RNG — same seed, same game
   core/emitter.js       event bus
   core/state.js         game state and every mutation that touches it
   core/dice.js          dice rolls
+  core/property.js      deeds: buying, rent, building, mortgaging, forced sales
+  core/cards.js         drawing and resolving cards
+  core/bots.js          baseline bot decisions (V2.5 replaces this)
+  core/auction.js       ascending auction for a declined deed
   core/turn.js          the turn state machine
   render/geometry.js    index → rectangle, index → token anchor
   render/icons.js       vector tile icons
   render/board-renderer.js  canvas painting, token movement, tooltips
   ui/dice-ui.js         the pair of dice
+  ui/deal.js            deed offers, card faces and auction bidding
   ui/panels.js          rails, log, chat, market tape
   ui/screens.js         screen switching and modals
   main.js               bootstrap and wiring

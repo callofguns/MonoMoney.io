@@ -11,6 +11,7 @@ MM.PHASES = {
   ROLLING: "rolling",
   MOVING: "moving",
   RESOLVING: "resolving",
+  DECIDING: "deciding",
   TURN_END: "turn-end",
   GAME_OVER: "game-over"
 };
@@ -52,6 +53,7 @@ MM.createGame = function (opts) {
     phase: MM.PHASES.LOBBY,
     dice: { a: 1, b: 1, sum: 2, isDouble: false, rolled: false },
     ownership: {},          /* tileIndex → playerId          */
+    piles: {},              /* shuffled card piles           */
     houses: {},             /* tileIndex → 0–5 (5 = hotel)   */
     mortgaged: {},          /* tileIndex → true              */
     stocks: MM.STOCKS.map((s) => Object.assign({}, s, { open: s.price, prev: s.price })),
@@ -100,29 +102,60 @@ MM.credit = function (s, player, amount, reason) {
   player.cash += amount;
   player.lastDelta = amount;
   MM.bus.emit("cash", { player, amount, reason });
-  if (player.cash < 0) MM.bankrupt(s, player, reason);
   MM.bus.emit("state", s);
   return amount;
 };
 
 MM.debit = (s, player, amount, reason) => MM.credit(s, player, -amount, reason);
 
-/* V1.5 will force asset liquidation before this can push a player under. */
-MM.transfer = function (s, from, to, amount, reason) {
+/* The settlement path — every debt goes through here. A player who is short
+   sells buildings and mortgages deeds first; if that still isn't enough,
+   whatever is left goes to the creditor and they're out. `to` null = the bank. */
+MM.pay = function (s, from, to, amount, reason) {
+  if (amount <= 0 || !from.alive) return 0;
+
+  if (from.cash < amount) MM.prop.raiseCash(s, from, amount);
+
+  if (from.cash < amount) {
+    const left = Math.max(0, from.cash);
+    if (left > 0) {
+      MM.debit(s, from, left, reason);
+      if (to) MM.credit(s, to, left, reason);
+    }
+    MM.bankrupt(s, from, to, reason);
+    return left;
+  }
+
   MM.debit(s, from, amount, reason);
   if (to) MM.credit(s, to, amount, reason);
   return amount;
 };
 
-MM.bankrupt = function (s, player, reason) {
-  if (!player.alive) return;
-  player.alive = false;
-  player.cash = 0;
-  Object.keys(s.ownership).forEach((k) => {
-    if (s.ownership[k] === player.id) delete s.ownership[k];
+MM.bankrupt = function (s, debtor, creditor, reason) {
+  if (!debtor.alive) return;
+  debtor.alive = false;
+
+  /* buildings always go back to the bank at half price */
+  MM.tilesOf(s, debtor.id).forEach((t) => {
+    const h = s.houses[t.i] || 0;
+    if (h) {
+      debtor.cash += h * Math.round(MM.prop.houseCost(t) / 2);
+      delete s.houses[t.i];
+    }
   });
-  MM.log(s, `<b>${player.name}</b> went bankrupt${reason ? " — " + reason : ""}`, player);
-  MM.bus.emit("bankrupt", player);
+
+  if (creditor && creditor.alive) {
+    if (debtor.cash > 0) MM.credit(s, creditor, debtor.cash, "estate");
+    MM.prop.estateTo(s, debtor, creditor);
+    MM.log(s, `<b>${debtor.name}</b> went bankrupt — the whole estate passes to <b>${creditor.name}</b>`, debtor);
+  } else {
+    MM.prop.estateTo(s, debtor, null);
+    MM.log(s, `<b>${debtor.name}</b> went bankrupt${reason ? " — " + reason : ""}. The deeds return to the bank.`, debtor);
+  }
+
+  debtor.cash = 0;
+  MM.bus.emit("bankrupt", { debtor, creditor });
+  MM.bus.emit("state", s);
 };
 
 MM.log = function (s, html, player) {

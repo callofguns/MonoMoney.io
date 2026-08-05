@@ -41,6 +41,15 @@ MM.turn = {
     this.busy = true;
 
     const p = MM.currentPlayer(s);
+
+    /* a kept card beats the cell */
+    if (p.jailed && p.getOut > 0) {
+      p.getOut -= 1;
+      p.jailed = false;
+      p.jailTurns = 0;
+      MM.log(s, `<b>${p.name}</b> used a get-out-of-prison card`, p);
+    }
+
     const d = MM.rollDice(s.rng);
     s.dice = d;
 
@@ -62,7 +71,7 @@ MM.turn = {
       MM.log(s, `<b>${p.name}</b> rolled <b>${d.a}+${d.b}</b> = ${d.sum}`, p);
     }
 
-    await this.advance(s, p, d.sum);
+    await this.advance(s, p, d.sum, 0);
     return this.finishTurn(s, d.isDouble);
   },
 
@@ -71,17 +80,17 @@ MM.turn = {
       p.jailed = false;
       p.jailTurns = 0;
       MM.log(s, `<b>${p.name}</b> rolled doubles and walks free`, p);
-      await this.advance(s, p, d.sum);
+      await this.advance(s, p, d.sum, 0);
       return this.finishTurn(s, false);
     }
 
     p.jailTurns += 1;
     if (p.jailTurns >= 3) {
-      MM.debit(s, p, MM.BAIL, "bail");
+      MM.pay(s, p, null, MM.BAIL, "bail");
       p.jailed = false;
       p.jailTurns = 0;
       MM.log(s, `<b>${p.name}</b> paid <span class="money">${MM.money(MM.BAIL)}</span> bail`, p);
-      await this.advance(s, p, d.sum);
+      await this.advance(s, p, d.sum, 0);
     } else {
       MM.log(s, `<b>${p.name}</b> stays in prison (${p.jailTurns}/3)`, p);
       await wait(320);
@@ -90,13 +99,20 @@ MM.turn = {
   },
 
   /* ── movement ─────────────────────────── */
-  async advance(s, p, steps) {
+  /* depth guards card-chains; 99 means "just move, I'll resolve it myself" */
+  async advance(s, p, steps, depth) {
     MM.setPhase(s, MM.PHASES.MOVING);
     await MM.renderer.travel(p, steps, (index) => {
       if (index === 0) this.passGo(s, p);
     });
+    if (depth === 99) return;
     MM.setPhase(s, MM.PHASES.RESOLVING);
-    await this.resolveLanding(s, p, MM.tile(p.pos));
+    await this.resolveLanding(s, p, MM.tile(p.pos), depth || 0);
+  },
+
+  async walkTo(s, p, index) {
+    const steps = ((index - p.pos + 40) % 40) || 40;
+    await this.advance(s, p, steps, 99);
   },
 
   passGo(s, p) {
@@ -115,31 +131,44 @@ MM.turn = {
   },
 
   /* ── landing ──────────────────────────── */
-  async resolveLanding(s, p, tile) {
-    await wait(200);
+  async resolveLanding(s, p, tile, depth) {
+    if (!p.alive) return;
+    await wait(180);
 
     switch (tile.type) {
       case "property":
       case "airport":
       case "utility": {
         const owner = MM.ownerOf(s, tile.i);
-        if (!owner) {
-          MM.log(s, `<b>${p.name}</b> landed on ${tile.name} — unclaimed at <span class="money">${MM.money(tile.price)}</span>`, p);
-        } else if (owner.id === p.id) {
+
+        if (!owner) return this.offer(s, p, tile);
+
+        if (owner.id === p.id) {
           MM.log(s, `<b>${p.name}</b> is home at ${tile.name}`, p);
-        } else {
-          MM.log(s, `<b>${p.name}</b> owes rent at ${tile.name}`, p);
+          break;
         }
+        if (s.mortgaged[tile.i]) {
+          MM.log(s, `${tile.name} is mortgaged — no rent for <b>${owner.name}</b>`, owner);
+          break;
+        }
+
+        const due = MM.prop.rent(s, tile, s.dice.sum);
+        if (due <= 0) {
+          MM.log(s, `<b>${p.name}</b> landed on ${tile.name} — nothing to pay`, p);
+          break;
+        }
+        MM.pay(s, p, owner, due, "rent");
+        MM.log(s, `<b>${p.name}</b> paid <b>${owner.name}</b> <span class="money">${MM.money(due)}</span> in rent at ${tile.name}`, p);
         break;
       }
 
       case "tax": {
-        const due = tile.pct
+        const dueTax = tile.pct
           ? Math.min(tile.amount, Math.round((MM.netWorth(s, p) * tile.pct) / 100))
           : tile.amount;
-        MM.debit(s, p, due, "tax");
-        if (s.rules.vacationCash) s.vacationPot += due;
-        MM.log(s, `<b>${p.name}</b> paid <span class="money">${MM.money(due)}</span> ${tile.name.toLowerCase()}`, p);
+        MM.pay(s, p, null, dueTax, "tax");
+        if (s.rules.vacationCash) s.vacationPot += dueTax;
+        MM.log(s, `<b>${p.name}</b> paid <span class="money">${MM.money(dueTax)}</span> ${tile.name.toLowerCase()}`, p);
         break;
       }
 
@@ -164,9 +193,14 @@ MM.turn = {
         break;
 
       case "surprise":
-      case "treasure":
+      case "treasure": {
+        if ((depth || 0) >= 2) break; /* a card that lands you on a card stops here */
+        const card = MM.cards.draw(s, tile.type);
         MM.log(s, `<b>${p.name}</b> drew a ${tile.name} card`, p);
+        await MM.deal.showCard(s, tile.type, card, p);
+        await MM.cards.apply(s, p, card, depth || 0);
         break;
+      }
 
       case "go":
         MM.log(s, `<b>${p.name}</b> landed square on START`, p);
@@ -174,12 +208,44 @@ MM.turn = {
     }
 
     MM.bus.emit("state", s);
-    await wait(260);
+    await wait(220);
+  },
+
+  /* ── an unclaimed deed ────────────────── */
+  async offer(s, p, tile) {
+    const price = tile.price;
+
+    if (p.bot) {
+      await wait(320);
+      if (MM.bots.wantsToBuy(s, p, tile)) return MM.prop.buy(s, p, tile);
+      MM.log(s, `<b>${p.name}</b> passed on ${tile.name}`, p);
+      if (s.rules.auction) await MM.auction.run(s, tile);
+      return;
+    }
+
+    if (p.cash < price) {
+      MM.log(s, `<b>${p.name}</b> can't afford ${tile.name} at <span class="money">${MM.money(price)}</span>`, p);
+      if (s.rules.auction) await MM.auction.run(s, tile);
+      return;
+    }
+
+    MM.setPhase(s, MM.PHASES.DECIDING);
+    const buying = await MM.deal.offer(s, tile, p);
+    MM.setPhase(s, MM.PHASES.RESOLVING);
+
+    if (buying) return MM.prop.buy(s, p, tile);
+
+    MM.log(s, `<b>${p.name}</b> passed on ${tile.name}`, p);
+    if (s.rules.auction) await MM.auction.run(s, tile);
   },
 
   /* ── end of turn ──────────────────────── */
   finishTurn(s, rollAgain) {
     this.busy = false;
+    MM.deal.hide();
+
+    const p = MM.currentPlayer(s);
+    if (p.bot && p.alive) MM.bots.manage(s, p);
 
     const alive = MM.livePlayers(s);
     if (alive.length <= 1) {
@@ -189,7 +255,6 @@ MM.turn = {
       return;
     }
 
-    const p = MM.currentPlayer(s);
     if (rollAgain && p.alive && !p.jailed) {
       MM.setPhase(s, MM.PHASES.AWAIT_ROLL);
       MM.bus.emit("turn", p);

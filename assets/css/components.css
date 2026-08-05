@@ -252,8 +252,30 @@
   padding: 8px 10px; background: var(--ink-700); border-radius: var(--r-md);
   font-size: 13px;
 }
+.prop-row.is-mortgaged { opacity: .55; }
 .prop-swatch { align-self: stretch; border-radius: 99px; background: var(--gcolor, var(--accent)); }
+.prop-body b { display: block; font-size: 13px; font-weight: 600; }
+.prop-body i { font-style: normal; font-size: 11px; color: var(--text-mut); }
+.prop-controls { display: flex; gap: 4px; }
 .prop-rent { font-family: var(--font-num); font-size: 12px; color: var(--text-mut); }
+
+.mini-btn {
+  width: 26px; height: 26px;
+  display: grid; place-items: center;
+  border: 0; border-radius: var(--r-sm);
+  background: var(--ink-500); color: var(--text);
+  font-size: 12px; cursor: pointer;
+}
+.mini-btn:hover:not([disabled]) { background: var(--accent); }
+.mini-btn[disabled] { opacity: .3; cursor: not-allowed; }
+
+.prop-summary {
+  display: flex; justify-content: space-between; gap: 8px;
+  padding: 8px 10px; margin-bottom: 8px;
+  background: var(--ink-700); border-radius: var(--r-md);
+  font-size: 11.5px; color: var(--text-mut);
+}
+.prop-summary b { font-family: var(--font-num); color: var(--gold); }
 .empty-note { color: var(--text-mut); font-size: 12.5px; text-align: center; padding: 18px 8px; }
 
 /* ── chat ────────────────────────────────── */

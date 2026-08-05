@@ -37,6 +37,7 @@ MM.app = {
     MM.screens.init();
     MM.panels.init();
     MM.diceUI.init(document.getElementById("dice-tray"));
+    MM.deal.init();
     MM.renderer.init(
       document.getElementById("board"),
       document.getElementById("board-wrap"),
@@ -44,6 +45,7 @@ MM.app = {
     );
 
     this.action = document.getElementById("primary-action");
+    document.querySelectorAll(".ver-chip").forEach((c) => (c.textContent = MM.VERSION));
     this.bindHome();
     this.bindTable();
     this.bindBus();
@@ -151,7 +153,7 @@ MM.app = {
     document.querySelector('[data-action="bankrupt"]').addEventListener("click", () => {
       const s = MM.state;
       if (s.phase === MM.PHASES.LOBBY) return;
-      MM.bankrupt(s, s.players[0], "resigned");
+      MM.bankrupt(s, s.players[0], null, "resigned");
       MM.bus.emit("state", s);
     });
 
@@ -217,7 +219,10 @@ MM.app = {
       btn.textContent = p.bot ? `${p.name} is thinking…` : p.jailed ? "Roll for doubles" : "Roll the dice";
       btn.disabled = !!p.bot;
     } else {
-      btn.textContent = s.phase === MM.PHASES.ROLLING ? "Rolling…" : s.phase === MM.PHASES.MOVING ? "Moving…" : "…";
+      btn.textContent = s.phase === MM.PHASES.ROLLING ? "Rolling…"
+        : s.phase === MM.PHASES.MOVING ? "Moving…"
+        : s.phase === MM.PHASES.DECIDING ? "Your move…"
+        : "…";
       btn.disabled = true;
     }
   },

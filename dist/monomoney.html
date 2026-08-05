@@ -516,8 +516,30 @@ button, input, select { font: inherit; color: inherit; }
   padding: 8px 10px; background: var(--ink-700); border-radius: var(--r-md);
   font-size: 13px;
 }
+.prop-row.is-mortgaged { opacity: .55; }
 .prop-swatch { align-self: stretch; border-radius: 99px; background: var(--gcolor, var(--accent)); }
+.prop-body b { display: block; font-size: 13px; font-weight: 600; }
+.prop-body i { font-style: normal; font-size: 11px; color: var(--text-mut); }
+.prop-controls { display: flex; gap: 4px; }
 .prop-rent { font-family: var(--font-num); font-size: 12px; color: var(--text-mut); }
+
+.mini-btn {
+  width: 26px; height: 26px;
+  display: grid; place-items: center;
+  border: 0; border-radius: var(--r-sm);
+  background: var(--ink-500); color: var(--text);
+  font-size: 12px; cursor: pointer;
+}
+.mini-btn:hover:not([disabled]) { background: var(--accent); }
+.mini-btn[disabled] { opacity: .3; cursor: not-allowed; }
+
+.prop-summary {
+  display: flex; justify-content: space-between; gap: 8px;
+  padding: 8px 10px; margin-bottom: 8px;
+  background: var(--ink-700); border-radius: var(--r-md);
+  font-size: 11.5px; color: var(--text-mut);
+}
+.prop-summary b { font-family: var(--font-num); color: var(--gold); }
 .empty-note { color: var(--text-mut); font-size: 12.5px; text-align: center; padding: 18px 8px; }
 
 /* ── chat ────────────────────────────────── */
@@ -681,6 +703,63 @@ button, input, select { font: inherit; color: inherit; }
 
 .btn--action { min-width: 176px; font-size: 16px; padding: 13px 22px; }
 
+/* ── deal panel: deeds, cards, auctions ──── */
+.board-center.is-prompting .dice-tray,
+.board-center.is-prompting #primary-action,
+.board-center.is-prompting .log-feed { display: none; }
+
+.deal {
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+  width: min(330px, 92%);
+  animation: deal-in .22s ease-out;
+}
+.deal[hidden] { display: none; }
+@keyframes deal-in { from { opacity: 0; transform: translateY(12px) scale(.97); } }
+
+.deed {
+  width: 100%;
+  background: var(--ink-600);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  box-shadow: 0 22px 50px rgba(0,0,0,.55);
+}
+.deed-band {
+  padding: 7px; text-align: center;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+  color: #0a1120;
+}
+.deed-name {
+  padding: 12px 14px 6px;
+  font-family: var(--font-display); font-size: 21px; letter-spacing: -.02em; text-align: center;
+}
+.deed-rows { padding: 0 16px 14px; display: flex; flex-direction: column; gap: 3px; }
+.deed-row { display: flex; justify-content: space-between; gap: 12px; font-size: 12.5px; color: var(--text-dim); }
+.deed-row b { font-family: var(--font-num); font-variant-numeric: tabular-nums; color: var(--text); }
+.deed-row--foot { margin-top: 6px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,.07); }
+
+.deal-actions { display: flex; gap: 10px; }
+.deal-note { font-size: 12px; color: var(--text-mut); }
+.auction-state { font-size: 13px; color: var(--text-dim); }
+
+.card-face {
+  position: relative; overflow: hidden;
+  width: 100%; padding: 22px 20px;
+  border-radius: var(--r-lg); text-align: center;
+  background: linear-gradient(160deg, var(--ink-500), var(--ink-700));
+  border: 1px solid var(--line);
+  box-shadow: 0 22px 50px rgba(0,0,0,.55);
+}
+.card-face--surprise { border-color: rgba(90, 200, 250, .5); }
+.card-face--treasure { border-color: rgba(255, 194, 75, .5); }
+.card-kind { font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--text-mut); }
+.card-text { margin-top: 10px; font-size: 15px; line-height: 1.5; }
+.card-mark {
+  position: absolute; right: -4px; bottom: -30px;
+  font-family: var(--font-display); font-size: 96px; font-weight: 800;
+  opacity: .08; pointer-events: none;
+}
+
 /* ── event log ───────────────────────────── */
 .log-feed {
   display: flex; flex-direction: column-reverse; gap: 5px;
@@ -823,6 +902,8 @@ button, input, select { font: inherit; color: inherit; }
 
           <button class="btn btn--primary btn--action" id="primary-action">Start Game</button>
 
+          <div class="deal" id="deal" hidden></div>
+
           <div class="log-feed" id="log-feed" role="log" aria-live="polite"></div>
         </div>
       </div>
@@ -951,7 +1032,7 @@ button, input, select { font: inherit; color: inherit; }
    ═══════════════════════════════════════════ */
 window.MM = window.MM || {};
 
-MM.VERSION = "V1.1";
+MM.VERSION = "V1.5";
 
 MM.RELEASES = [
   {
@@ -977,18 +1058,22 @@ MM.RELEASES = [
     ]
   },
   {
-    v: "V1.5", name: "Property & rent", status: "next",
+    v: "V1.5", name: "Property & rent", status: "shipped",
     items: [
-      "Buy the tile you land on, or pass it to auction",
+      "Buy the tile you land on from a deed card showing its full rent ladder",
       "Rent collection, doubled on a completed colour group",
-      "Houses and hotels, built evenly across a set",
-      "Mortgage a tile for half its cost",
-      "Surprise and Treasure card decks",
-      "Bankruptcy that hands your deeds to whoever broke you"
+      "Airport rent that scales with how many you hold, utilities that scale with the dice",
+      "Houses and hotels, built evenly across a set, shown on the board",
+      "Mortgage for half the price, lift it later for 10% more",
+      "Auctions when a deed is declined — you bid against the bots",
+      "28 Surprise and Treasure cards: moves, fines, repairs, get-out-of-prison",
+      "Short of cash? Buildings sell and deeds mortgage automatically before you fold",
+      "Bankruptcy hands your whole estate to whoever broke you",
+      "Baseline bot buying and building (personalities arrive in V2.5)"
     ]
   },
   {
-    v: "V2", name: "The exchange", status: "planned",
+    v: "V2", name: "The exchange", status: "next",
     items: [
       "Buy and sell shares in all five companies from the Market tab",
       "Dividends paid on every lap past START",
@@ -1198,6 +1283,65 @@ MM.BOT_LINES = {
 };
 
 
+/* ── src/data/cards.js ── */
+/* ═══════════════════════════════════════════
+   Surprise and Treasure decks
+   effect types:
+     cash        { amount }            + or − from the bank
+     collectEach { amount }            every other player pays you
+     payEach     { amount }            you pay every other player
+     move        { to, back }          walk to a tile (back = no GO salary)
+     moveBy      { steps }             shuffle forward or back
+     nearest     { kind, multiplier }  walk to the next airport/utility
+     repairs     { house, hotel }      pay per building you own
+     jail        {}                    straight to the cell
+     getOut      {}                    keep the card, skip a jail turn later
+   ═══════════════════════════════════════════ */
+window.MM = window.MM || {};
+
+MM.DECKS = {
+  surprise: [
+    { text: "Advance to START and collect your salary.", effect: { type: "move", to: 0 } },
+    { text: "Take a trip to JFK Airport.", effect: { type: "move", to: 35 } },
+    { text: "The board's hottest address calls — advance to New York.", effect: { type: "move", to: 39 } },
+    { text: "Advance to Mumbai.", effect: { type: "move", to: 6 } },
+    { text: "You overshot. Go back three tiles.", effect: { type: "moveBy", steps: -3 } },
+    { text: "Caught cooking the books. Go directly to prison.", effect: { type: "jail" } },
+    { text: "Your lawyer earns her fee — get out of prison free.", effect: { type: "getOut" } },
+    { text: "The bank pays you a dividend of $50.", effect: { type: "cash", amount: 50 } },
+    { text: "Speeding fine — pay $15.", effect: { type: "cash", amount: -15 } },
+    { text: "Your building loan matures — collect $150.", effect: { type: "cash", amount: 150 } },
+    { text: "General repairs on everything you own: $25 per house, $100 per hotel.",
+      effect: { type: "repairs", house: 25, hotel: 100 } },
+    { text: "Advance to the nearest airport and pay the owner double.",
+      effect: { type: "nearest", kind: "airport", multiplier: 2 } },
+    { text: "Advance to the nearest utility. Rent is ten times your roll.",
+      effect: { type: "nearest", kind: "utility", multiplier: 10 } },
+    { text: "You are elected chair of the board — pay each player $50.",
+      effect: { type: "payEach", amount: 50 } }
+  ],
+
+  treasure: [
+    { text: "Bank error in your favour — collect $200.", effect: { type: "cash", amount: 200 } },
+    { text: "Doctor's fee — pay $50.", effect: { type: "cash", amount: -50 } },
+    { text: "Sale of stock — collect $50.", effect: { type: "cash", amount: 50 } },
+    { text: "A friend on the inside — get out of prison free.", effect: { type: "getOut" } },
+    { text: "Auditors did not like what they found. Go to prison.", effect: { type: "jail" } },
+    { text: "Holiday fund matures — collect $100.", effect: { type: "cash", amount: 100 } },
+    { text: "Income tax refund — collect $20.", effect: { type: "cash", amount: 20 } },
+    { text: "It's your birthday — collect $10 from every player.",
+      effect: { type: "collectEach", amount: 10 } },
+    { text: "Life insurance matures — collect $100.", effect: { type: "cash", amount: 100 } },
+    { text: "Hospital fees — pay $100.", effect: { type: "cash", amount: -100 } },
+    { text: "School fees — pay $50.", effect: { type: "cash", amount: -50 } },
+    { text: "You inherit $100.", effect: { type: "cash", amount: 100 } },
+    { text: "Street repairs: $40 per house, $115 per hotel.",
+      effect: { type: "repairs", house: 40, hotel: 115 } },
+    { text: "Second prize in a beauty contest — collect $10.", effect: { type: "cash", amount: 10 } }
+  ]
+};
+
+
 /* ── src/core/rng.js ── */
 /* ═══ seedable RNG — same seed, same game (handy for bug reports) ═══ */
 window.MM = window.MM || {};
@@ -1261,6 +1405,7 @@ MM.PHASES = {
   ROLLING: "rolling",
   MOVING: "moving",
   RESOLVING: "resolving",
+  DECIDING: "deciding",
   TURN_END: "turn-end",
   GAME_OVER: "game-over"
 };
@@ -1302,6 +1447,7 @@ MM.createGame = function (opts) {
     phase: MM.PHASES.LOBBY,
     dice: { a: 1, b: 1, sum: 2, isDouble: false, rolled: false },
     ownership: {},          /* tileIndex → playerId          */
+    piles: {},              /* shuffled card piles           */
     houses: {},             /* tileIndex → 0–5 (5 = hotel)   */
     mortgaged: {},          /* tileIndex → true              */
     stocks: MM.STOCKS.map((s) => Object.assign({}, s, { open: s.price, prev: s.price })),
@@ -1350,29 +1496,60 @@ MM.credit = function (s, player, amount, reason) {
   player.cash += amount;
   player.lastDelta = amount;
   MM.bus.emit("cash", { player, amount, reason });
-  if (player.cash < 0) MM.bankrupt(s, player, reason);
   MM.bus.emit("state", s);
   return amount;
 };
 
 MM.debit = (s, player, amount, reason) => MM.credit(s, player, -amount, reason);
 
-/* V1.5 will force asset liquidation before this can push a player under. */
-MM.transfer = function (s, from, to, amount, reason) {
+/* The settlement path — every debt goes through here. A player who is short
+   sells buildings and mortgages deeds first; if that still isn't enough,
+   whatever is left goes to the creditor and they're out. `to` null = the bank. */
+MM.pay = function (s, from, to, amount, reason) {
+  if (amount <= 0 || !from.alive) return 0;
+
+  if (from.cash < amount) MM.prop.raiseCash(s, from, amount);
+
+  if (from.cash < amount) {
+    const left = Math.max(0, from.cash);
+    if (left > 0) {
+      MM.debit(s, from, left, reason);
+      if (to) MM.credit(s, to, left, reason);
+    }
+    MM.bankrupt(s, from, to, reason);
+    return left;
+  }
+
   MM.debit(s, from, amount, reason);
   if (to) MM.credit(s, to, amount, reason);
   return amount;
 };
 
-MM.bankrupt = function (s, player, reason) {
-  if (!player.alive) return;
-  player.alive = false;
-  player.cash = 0;
-  Object.keys(s.ownership).forEach((k) => {
-    if (s.ownership[k] === player.id) delete s.ownership[k];
+MM.bankrupt = function (s, debtor, creditor, reason) {
+  if (!debtor.alive) return;
+  debtor.alive = false;
+
+  /* buildings always go back to the bank at half price */
+  MM.tilesOf(s, debtor.id).forEach((t) => {
+    const h = s.houses[t.i] || 0;
+    if (h) {
+      debtor.cash += h * Math.round(MM.prop.houseCost(t) / 2);
+      delete s.houses[t.i];
+    }
   });
-  MM.log(s, `<b>${player.name}</b> went bankrupt${reason ? " — " + reason : ""}`, player);
-  MM.bus.emit("bankrupt", player);
+
+  if (creditor && creditor.alive) {
+    if (debtor.cash > 0) MM.credit(s, creditor, debtor.cash, "estate");
+    MM.prop.estateTo(s, debtor, creditor);
+    MM.log(s, `<b>${debtor.name}</b> went bankrupt — the whole estate passes to <b>${creditor.name}</b>`, debtor);
+  } else {
+    MM.prop.estateTo(s, debtor, null);
+    MM.log(s, `<b>${debtor.name}</b> went bankrupt${reason ? " — " + reason : ""}. The deeds return to the bank.`, debtor);
+  }
+
+  debtor.cash = 0;
+  MM.bus.emit("bankrupt", { debtor, creditor });
+  MM.bus.emit("state", s);
 };
 
 MM.log = function (s, html, player) {
@@ -1414,6 +1591,432 @@ MM.rollDice = function (rng) {
 
 /* Rig a roll — used by tests and by the "3 doubles" demo in the rules modal. */
 MM.fixedRoll = (a, b) => ({ a, b, sum: a + b, isDouble: a === b, rolled: true });
+
+
+/* ── src/core/property.js ── */
+/* ═══════════════════════════════════════════
+   Deeds: buying, rent, building, mortgaging and
+   the forced sale that happens when someone can't pay.
+   ═══════════════════════════════════════════ */
+window.MM = window.MM || {};
+
+MM.prop = {
+  BUYABLE: ["property", "airport", "utility"],
+
+  isBuyable(t) { return this.BUYABLE.indexOf(t.type) >= 0; },
+
+  houseCost(t) { return t.group ? MM.GROUPS[t.group].house : 0; },
+
+  countType(s, playerId, type) {
+    return MM.BOARD.filter((t) => t.type === type && s.ownership[t.i] === playerId).length;
+  },
+
+  ownsFullSet(s, playerId, group) {
+    const tiles = MM.groupTiles(group);
+    return tiles.every((t) => s.ownership[t.i] === playerId);
+  },
+
+  setsOwned(s, playerId) {
+    return Object.keys(MM.GROUPS).filter((g) => this.ownsFullSet(s, playerId, g));
+  },
+
+  /* ── buying ─────────────────────────────── */
+  buy(s, player, tile, price) {
+    const cost = price === undefined ? tile.price : price;
+    MM.debit(s, player, cost, "purchase");
+    s.ownership[tile.i] = player.id;
+    MM.log(s, `<b>${player.name}</b> bought ${tile.name} for <span class="money">${MM.money(cost)}</span>`, player);
+    MM.bus.emit("bought", { player, tile, cost });
+    MM.bus.emit("state", s);
+  },
+
+  /* ── rent ───────────────────────────────── */
+  rent(s, tile, diceSum) {
+    const owner = MM.ownerOf(s, tile.i);
+    if (!owner || s.mortgaged[tile.i]) return 0;
+    if (s.rules.noRentInPrison && owner.jailed) return 0;
+
+    if (tile.type === "airport") return MM.AIRPORT_RENT[this.countType(s, owner.id, "airport")];
+    if (tile.type === "utility") return MM.UTILITY_MULT[this.countType(s, owner.id, "utility")] * diceSum;
+
+    const houses = s.houses[tile.i] || 0;
+    let due = tile.rent[houses];
+    if (houses === 0 && s.rules.doubleRent && this.ownsFullSet(s, owner.id, tile.group)) due *= 2;
+    return due;
+  },
+
+  /* ── building ───────────────────────────── */
+  canBuild(s, player, tile) {
+    if (tile.type !== "property" || s.ownership[tile.i] !== player.id) return false;
+    if (!this.ownsFullSet(s, player.id, tile.group)) return false;
+    if ((s.houses[tile.i] || 0) >= 5) return false;
+
+    const group = MM.groupTiles(tile.group);
+    if (group.some((t) => s.mortgaged[t.i])) return false;
+    if (s.rules.evenBuild) {
+      const low = Math.min(...group.map((t) => s.houses[t.i] || 0));
+      if ((s.houses[tile.i] || 0) > low) return false;
+    }
+    return player.cash >= this.houseCost(tile);
+  },
+
+  build(s, player, tile) {
+    if (!this.canBuild(s, player, tile)) return false;
+    const cost = this.houseCost(tile);
+    MM.debit(s, player, cost, "building");
+    s.houses[tile.i] = (s.houses[tile.i] || 0) + 1;
+    const what = s.houses[tile.i] === 5 ? "a hotel" : "a house";
+    MM.log(s, `<b>${player.name}</b> built ${what} on ${tile.name} for <span class="money">${MM.money(cost)}</span>`, player);
+    MM.bus.emit("built", { player, tile });
+    MM.bus.emit("state", s);
+    return true;
+  },
+
+  canSellHouse(s, player, tile) {
+    if (s.ownership[tile.i] !== player.id || !(s.houses[tile.i] > 0)) return false;
+    if (s.rules.evenBuild) {
+      const group = MM.groupTiles(tile.group);
+      const high = Math.max(...group.map((t) => s.houses[t.i] || 0));
+      if ((s.houses[tile.i] || 0) < high) return false;
+    }
+    return true;
+  },
+
+  /* the bank buys buildings back at half price */
+  sellHouse(s, player, tile, quiet) {
+    if (!this.canSellHouse(s, player, tile)) return 0;
+    const back = Math.round(this.houseCost(tile) / 2);
+    s.houses[tile.i] -= 1;
+    MM.credit(s, player, back, "sold building");
+    if (!quiet) MM.log(s, `<b>${player.name}</b> sold a building on ${tile.name} for <span class="money">${MM.money(back)}</span>`, player);
+    MM.bus.emit("state", s);
+    return back;
+  },
+
+  /* ── mortgaging ─────────────────────────── */
+  canMortgage(s, player, tile) {
+    return s.rules.mortgage && s.ownership[tile.i] === player.id &&
+      !s.mortgaged[tile.i] && !(s.houses[tile.i] > 0);
+  },
+
+  mortgage(s, player, tile, quiet) {
+    if (!this.canMortgage(s, player, tile)) return 0;
+    const raised = Math.round(tile.price / 2);
+    s.mortgaged[tile.i] = true;
+    MM.credit(s, player, raised, "mortgage");
+    if (!quiet) MM.log(s, `<b>${player.name}</b> mortgaged ${tile.name} for <span class="money">${MM.money(raised)}</span>`, player);
+    MM.bus.emit("state", s);
+    return raised;
+  },
+
+  unmortgageCost(tile) { return Math.round((tile.price / 2) * 1.1); },
+
+  canUnmortgage(s, player, tile) {
+    return s.ownership[tile.i] === player.id && s.mortgaged[tile.i] &&
+      player.cash >= this.unmortgageCost(tile);
+  },
+
+  unmortgage(s, player, tile) {
+    if (!this.canUnmortgage(s, player, tile)) return false;
+    const cost = this.unmortgageCost(tile);
+    MM.debit(s, player, cost, "unmortgage");
+    delete s.mortgaged[tile.i];
+    MM.log(s, `<b>${player.name}</b> lifted the mortgage on ${tile.name} for <span class="money">${MM.money(cost)}</span>`, player);
+    MM.bus.emit("state", s);
+    return true;
+  },
+
+  /* ── forced sale ────────────────────────── */
+  /* Everything a player could turn into cash without going bankrupt. */
+  liquidValue(s, player) {
+    let total = 0;
+    MM.tilesOf(s, player.id).forEach((t) => {
+      total += (s.houses[t.i] || 0) * Math.round(this.houseCost(t) / 2);
+      if (!s.mortgaged[t.i]) total += Math.round(t.price / 2);
+    });
+    return total;
+  },
+
+  /* Sell buildings first, then mortgage — cheapest deeds go last. */
+  raiseCash(s, player, target) {
+    const owned = () => MM.tilesOf(s, player.id).sort((a, b) => b.price - a.price);
+
+    let guard = 200;
+    while (player.cash < target && guard-- > 0) {
+      const withHouses = owned().filter((t) => this.canSellHouse(s, player, t));
+      if (withHouses.length) { this.sellHouse(s, player, withHouses[0], true); continue; }
+
+      const mortgageable = owned().filter((t) => this.canMortgage(s, player, t));
+      if (mortgageable.length) { this.mortgage(s, player, mortgageable[0], true); continue; }
+      break;
+    }
+
+    if (player.cash >= target) {
+      MM.log(s, `<b>${player.name}</b> sold and mortgaged assets to cover <span class="money">${MM.money(target)}</span>`, player);
+    }
+    return player.cash;
+  },
+
+  /* ── handing over the estate ────────────── */
+  estateTo(s, from, to) {
+    MM.tilesOf(s, from.id).forEach((t) => {
+      if (to) {
+        s.ownership[t.i] = to.id;
+      } else {
+        delete s.ownership[t.i];
+        delete s.mortgaged[t.i];
+      }
+      delete s.houses[t.i];
+    });
+    MM.bus.emit("state", s);
+  }
+};
+
+
+/* ── src/core/cards.js ── */
+/* ═══ drawing and resolving Surprise / Treasure cards ═══ */
+window.MM = window.MM || {};
+
+MM.cards = {
+  /* shuffle a fresh pile whenever one runs out */
+  refill(s, kind) {
+    const pile = MM.DECKS[kind].slice();
+    for (let i = pile.length - 1; i > 0; i--) {
+      const j = Math.floor(s.rng.float() * (i + 1));
+      [pile[i], pile[j]] = [pile[j], pile[i]];
+    }
+    s.piles[kind] = pile;
+  },
+
+  draw(s, kind) {
+    if (!s.piles[kind] || !s.piles[kind].length) this.refill(s, kind);
+    return s.piles[kind].pop();
+  },
+
+  async apply(s, player, card, depth) {
+    const e = card.effect;
+
+    switch (e.type) {
+      case "cash":
+        if (e.amount >= 0) {
+          MM.credit(s, player, e.amount, "card");
+          MM.log(s, `<b>${player.name}</b> collected <span class="money">${MM.money(e.amount)}</span>`, player);
+        } else {
+          MM.pay(s, player, null, -e.amount, "card");
+          MM.log(s, `<b>${player.name}</b> paid <span class="money">${MM.money(-e.amount)}</span>`, player);
+        }
+        break;
+
+      case "collectEach": {
+        let got = 0;
+        MM.livePlayers(s).forEach((other) => {
+          if (other !== player) got += MM.pay(s, other, player, e.amount, "card");
+        });
+        MM.log(s, `<b>${player.name}</b> collected <span class="money">${MM.money(got)}</span> from the table`, player);
+        break;
+      }
+
+      case "payEach": {
+        let paid = 0;
+        MM.livePlayers(s).forEach((other) => {
+          if (other !== player && player.alive) paid += MM.pay(s, player, other, e.amount, "card");
+        });
+        MM.log(s, `<b>${player.name}</b> paid out <span class="money">${MM.money(paid)}</span>`, player);
+        break;
+      }
+
+      case "repairs": {
+        let houses = 0, hotels = 0;
+        MM.tilesOf(s, player.id).forEach((t) => {
+          const h = s.houses[t.i] || 0;
+          if (h === 5) hotels += 1; else houses += h;
+        });
+        const bill = houses * e.house + hotels * e.hotel;
+        if (bill) {
+          MM.pay(s, player, null, bill, "repairs");
+          MM.log(s, `<b>${player.name}</b> paid <span class="money">${MM.money(bill)}</span> for repairs on ${houses} house${houses === 1 ? "" : "s"} and ${hotels} hotel${hotels === 1 ? "" : "s"}`, player);
+        } else {
+          MM.log(s, `<b>${player.name}</b> owns nothing to repair`, player);
+        }
+        break;
+      }
+
+      case "getOut":
+        player.getOut += 1;
+        MM.log(s, `<b>${player.name}</b> is holding a get-out-of-prison card`, player);
+        break;
+
+      case "jail":
+        await MM.turn.sendToPrison(s, player);
+        break;
+
+      case "move":
+        await MM.turn.walkTo(s, player, e.to, true);
+        await MM.turn.resolveLanding(s, player, MM.tile(player.pos), (depth || 0) + 1);
+        break;
+
+      case "moveBy":
+        if (e.steps > 0) {
+          await MM.turn.advance(s, player, e.steps, (depth || 0) + 1);
+        } else {
+          player.pos = (player.pos + e.steps + 40) % 40;
+          await MM.renderer.teleport(player, player.pos);
+          await MM.turn.resolveLanding(s, player, MM.tile(player.pos), (depth || 0) + 1);
+        }
+        break;
+
+      case "nearest": {
+        const type = e.kind;
+        let steps = 1;
+        while (steps < 40 && MM.tile(player.pos + steps).type !== type) steps += 1;
+        await MM.turn.advance(s, player, steps, 99); /* 99 = don't auto-resolve */
+
+        const tile = MM.tile(player.pos);
+        const owner = MM.ownerOf(s, tile.i);
+        if (!owner) {
+          await MM.turn.offer(s, player, tile);
+        } else if (owner.id !== player.id && !s.mortgaged[tile.i]) {
+          const due = type === "airport"
+            ? MM.AIRPORT_RENT[MM.prop.countType(s, owner.id, "airport")] * e.multiplier
+            : e.multiplier * s.dice.sum;
+          MM.pay(s, player, owner, due, "rent");
+          MM.log(s, `<b>${player.name}</b> paid <b>${owner.name}</b> <span class="money">${MM.money(due)}</span> at ${tile.name}`, player);
+        }
+        break;
+      }
+    }
+
+    MM.bus.emit("state", s);
+  }
+};
+
+
+/* ── src/core/bots.js ── */
+/* ═══════════════════════════════════════════
+   Baseline bot decisions (V1.5)
+   Deliberately one shared brain: everybody buys what
+   they can afford and builds when a set is complete.
+   V2.5 replaces this with the four personalities and
+   their weights from src/data/rules.js.
+   ═══════════════════════════════════════════ */
+window.MM = window.MM || {};
+
+MM.bots = {
+  RESERVE: 120,        /* cash a bot likes to keep in hand   */
+  BUILD_FLOOR: 450,    /* won't spend below this on building */
+
+  reserve(s, p) {
+    return this.RESERVE + (s.settings.botSkill === "ruthless" ? 0 : 60);
+  },
+
+  wantsToBuy(s, p, tile) {
+    if (p.cash < tile.price) return false;
+    /* completing or blocking a set is always worth the squeeze */
+    if (tile.group) {
+      const group = MM.groupTiles(tile.group);
+      const mine = group.filter((t) => s.ownership[t.i] === p.id).length;
+      if (mine === group.length - 1) return true;
+    }
+    return p.cash - tile.price >= this.reserve(s, p);
+  },
+
+  bidLimit(s, p, tile) {
+    const cap = Math.round(tile.price * 1.25);
+    return Math.min(cap, Math.max(0, p.cash - this.reserve(s, p)));
+  },
+
+  /* end-of-turn housekeeping: put spare cash into buildings */
+  manage(s, p) {
+    let guard = 6;
+    while (guard-- > 0 && p.cash > this.BUILD_FLOOR) {
+      const options = MM.tilesOf(s, p.id)
+        .filter((t) => MM.prop.canBuild(s, p, t) && p.cash - MM.prop.houseCost(t) > this.BUILD_FLOOR - 200)
+        .sort((a, b) => (s.houses[a.i] || 0) - (s.houses[b.i] || 0) || a.price - b.price);
+      if (!options.length) break;
+      MM.prop.build(s, p, options[0]);
+    }
+
+    /* lift a mortgage once the cash is comfortable again */
+    if (p.cash > 700) {
+      const held = MM.tilesOf(s, p.id).find((t) => MM.prop.canUnmortgage(s, p, t));
+      if (held) MM.prop.unmortgage(s, p, held);
+    }
+  }
+};
+
+
+/* ── src/core/auction.js ── */
+/* ═══════════════════════════════════════════
+   Ascending auction for a declined property.
+   Everyone still in the game gets a turn to beat the
+   standing bid; drop out and you're out for good.
+   ═══════════════════════════════════════════ */
+window.MM = window.MM || {};
+
+const pause = (ms) => new Promise((r) => setTimeout(r, ms));
+
+MM.auction = {
+  async run(s, tile) {
+    const step = Math.max(10, Math.round(tile.price * 0.1));
+    let live = MM.livePlayers(s).filter((p) => p.cash >= step);
+    if (!live.length) {
+      MM.log(s, `No one could bid on ${tile.name} — it stays with the bank`);
+      return null;
+    }
+
+    let price = 0;
+    let leader = null;
+    let i = 0;
+    let guard = 400;
+
+    MM.log(s, `${tile.name} goes to auction, bids rise in <span class="money">${MM.money(step)}</span> steps`);
+
+    while (guard-- > 0) {
+      if (!live.length) break;
+      if (live.length === 1 && leader === live[0]) break;
+
+      const p = live[i % live.length];
+      if (p === leader) { i += 1; continue; }
+
+      const bid = price + step;
+      let wants = false;
+
+      if (p.cash >= bid) {
+        if (p.bot) {
+          MM.deal.auctionWatch(s, tile, price, leader);
+          await pause(320);
+          wants = bid <= MM.bots.bidLimit(s, p, tile);
+        } else {
+          wants = await MM.deal.auctionBid(s, tile, bid, leader);
+        }
+      }
+
+      if (wants) {
+        price = bid;
+        leader = p;
+        MM.log(s, `<b>${p.name}</b> bids <span class="money">${MM.money(price)}</span>`, p);
+        MM.bus.emit("auction-bid", { player: p, tile, price });
+        i += 1;
+      } else {
+        const at = live.indexOf(p);
+        live.splice(at, 1);
+        if (at < i % (live.length + 1)) i -= 1;
+        if (i < 0 || i >= live.length) i = 0;
+        if (p.cash >= step) MM.log(s, `<b>${p.name}</b> dropped out`, p);
+      }
+    }
+
+    MM.deal.hide();
+
+    if (leader) {
+      MM.prop.buy(s, leader, tile, price);
+      return { winner: leader, price };
+    }
+
+    MM.log(s, `${tile.name} drew no bids and stays with the bank`);
+    return null;
+  }
+};
 
 
 /* ── src/core/turn.js ── */
@@ -1460,6 +2063,15 @@ MM.turn = {
     this.busy = true;
 
     const p = MM.currentPlayer(s);
+
+    /* a kept card beats the cell */
+    if (p.jailed && p.getOut > 0) {
+      p.getOut -= 1;
+      p.jailed = false;
+      p.jailTurns = 0;
+      MM.log(s, `<b>${p.name}</b> used a get-out-of-prison card`, p);
+    }
+
     const d = MM.rollDice(s.rng);
     s.dice = d;
 
@@ -1481,7 +2093,7 @@ MM.turn = {
       MM.log(s, `<b>${p.name}</b> rolled <b>${d.a}+${d.b}</b> = ${d.sum}`, p);
     }
 
-    await this.advance(s, p, d.sum);
+    await this.advance(s, p, d.sum, 0);
     return this.finishTurn(s, d.isDouble);
   },
 
@@ -1490,17 +2102,17 @@ MM.turn = {
       p.jailed = false;
       p.jailTurns = 0;
       MM.log(s, `<b>${p.name}</b> rolled doubles and walks free`, p);
-      await this.advance(s, p, d.sum);
+      await this.advance(s, p, d.sum, 0);
       return this.finishTurn(s, false);
     }
 
     p.jailTurns += 1;
     if (p.jailTurns >= 3) {
-      MM.debit(s, p, MM.BAIL, "bail");
+      MM.pay(s, p, null, MM.BAIL, "bail");
       p.jailed = false;
       p.jailTurns = 0;
       MM.log(s, `<b>${p.name}</b> paid <span class="money">${MM.money(MM.BAIL)}</span> bail`, p);
-      await this.advance(s, p, d.sum);
+      await this.advance(s, p, d.sum, 0);
     } else {
       MM.log(s, `<b>${p.name}</b> stays in prison (${p.jailTurns}/3)`, p);
       await wait(320);
@@ -1509,13 +2121,20 @@ MM.turn = {
   },
 
   /* ── movement ─────────────────────────── */
-  async advance(s, p, steps) {
+  /* depth guards card-chains; 99 means "just move, I'll resolve it myself" */
+  async advance(s, p, steps, depth) {
     MM.setPhase(s, MM.PHASES.MOVING);
     await MM.renderer.travel(p, steps, (index) => {
       if (index === 0) this.passGo(s, p);
     });
+    if (depth === 99) return;
     MM.setPhase(s, MM.PHASES.RESOLVING);
-    await this.resolveLanding(s, p, MM.tile(p.pos));
+    await this.resolveLanding(s, p, MM.tile(p.pos), depth || 0);
+  },
+
+  async walkTo(s, p, index) {
+    const steps = ((index - p.pos + 40) % 40) || 40;
+    await this.advance(s, p, steps, 99);
   },
 
   passGo(s, p) {
@@ -1534,31 +2153,44 @@ MM.turn = {
   },
 
   /* ── landing ──────────────────────────── */
-  async resolveLanding(s, p, tile) {
-    await wait(200);
+  async resolveLanding(s, p, tile, depth) {
+    if (!p.alive) return;
+    await wait(180);
 
     switch (tile.type) {
       case "property":
       case "airport":
       case "utility": {
         const owner = MM.ownerOf(s, tile.i);
-        if (!owner) {
-          MM.log(s, `<b>${p.name}</b> landed on ${tile.name} — unclaimed at <span class="money">${MM.money(tile.price)}</span>`, p);
-        } else if (owner.id === p.id) {
+
+        if (!owner) return this.offer(s, p, tile);
+
+        if (owner.id === p.id) {
           MM.log(s, `<b>${p.name}</b> is home at ${tile.name}`, p);
-        } else {
-          MM.log(s, `<b>${p.name}</b> owes rent at ${tile.name}`, p);
+          break;
         }
+        if (s.mortgaged[tile.i]) {
+          MM.log(s, `${tile.name} is mortgaged — no rent for <b>${owner.name}</b>`, owner);
+          break;
+        }
+
+        const due = MM.prop.rent(s, tile, s.dice.sum);
+        if (due <= 0) {
+          MM.log(s, `<b>${p.name}</b> landed on ${tile.name} — nothing to pay`, p);
+          break;
+        }
+        MM.pay(s, p, owner, due, "rent");
+        MM.log(s, `<b>${p.name}</b> paid <b>${owner.name}</b> <span class="money">${MM.money(due)}</span> in rent at ${tile.name}`, p);
         break;
       }
 
       case "tax": {
-        const due = tile.pct
+        const dueTax = tile.pct
           ? Math.min(tile.amount, Math.round((MM.netWorth(s, p) * tile.pct) / 100))
           : tile.amount;
-        MM.debit(s, p, due, "tax");
-        if (s.rules.vacationCash) s.vacationPot += due;
-        MM.log(s, `<b>${p.name}</b> paid <span class="money">${MM.money(due)}</span> ${tile.name.toLowerCase()}`, p);
+        MM.pay(s, p, null, dueTax, "tax");
+        if (s.rules.vacationCash) s.vacationPot += dueTax;
+        MM.log(s, `<b>${p.name}</b> paid <span class="money">${MM.money(dueTax)}</span> ${tile.name.toLowerCase()}`, p);
         break;
       }
 
@@ -1583,9 +2215,14 @@ MM.turn = {
         break;
 
       case "surprise":
-      case "treasure":
+      case "treasure": {
+        if ((depth || 0) >= 2) break; /* a card that lands you on a card stops here */
+        const card = MM.cards.draw(s, tile.type);
         MM.log(s, `<b>${p.name}</b> drew a ${tile.name} card`, p);
+        await MM.deal.showCard(s, tile.type, card, p);
+        await MM.cards.apply(s, p, card, depth || 0);
         break;
+      }
 
       case "go":
         MM.log(s, `<b>${p.name}</b> landed square on START`, p);
@@ -1593,12 +2230,44 @@ MM.turn = {
     }
 
     MM.bus.emit("state", s);
-    await wait(260);
+    await wait(220);
+  },
+
+  /* ── an unclaimed deed ────────────────── */
+  async offer(s, p, tile) {
+    const price = tile.price;
+
+    if (p.bot) {
+      await wait(320);
+      if (MM.bots.wantsToBuy(s, p, tile)) return MM.prop.buy(s, p, tile);
+      MM.log(s, `<b>${p.name}</b> passed on ${tile.name}`, p);
+      if (s.rules.auction) await MM.auction.run(s, tile);
+      return;
+    }
+
+    if (p.cash < price) {
+      MM.log(s, `<b>${p.name}</b> can't afford ${tile.name} at <span class="money">${MM.money(price)}</span>`, p);
+      if (s.rules.auction) await MM.auction.run(s, tile);
+      return;
+    }
+
+    MM.setPhase(s, MM.PHASES.DECIDING);
+    const buying = await MM.deal.offer(s, tile, p);
+    MM.setPhase(s, MM.PHASES.RESOLVING);
+
+    if (buying) return MM.prop.buy(s, p, tile);
+
+    MM.log(s, `<b>${p.name}</b> passed on ${tile.name}`, p);
+    if (s.rules.auction) await MM.auction.run(s, tile);
   },
 
   /* ── end of turn ──────────────────────── */
   finishTurn(s, rollAgain) {
     this.busy = false;
+    MM.deal.hide();
+
+    const p = MM.currentPlayer(s);
+    if (p.bot && p.alive) MM.bots.manage(s, p);
 
     const alive = MM.livePlayers(s);
     if (alive.length <= 1) {
@@ -1608,7 +2277,6 @@ MM.turn = {
       return;
     }
 
-    const p = MM.currentPlayer(s);
     if (rollAgain && p.alive && !p.jailed) {
       MM.setPhase(s, MM.PHASES.AWAIT_ROLL);
       MM.bus.emit("turn", p);
@@ -2462,6 +3130,136 @@ MM.diceUI = {
 };
 
 
+/* ── src/ui/deal.js ── */
+/* ═══════════════════════════════════════════
+   Everything the middle of the board asks you:
+   buy this deed, read this card, beat this bid.
+   Each method resolves a promise the turn engine awaits.
+   ═══════════════════════════════════════════ */
+window.MM = window.MM || {};
+
+MM.deal = {
+  init() {
+    this.el = document.getElementById("deal");
+    this.center = document.getElementById("board-center");
+  },
+
+  open(html) {
+    this.el.innerHTML = html;
+    this.el.hidden = false;
+    this.center.classList.add("is-prompting");
+  },
+
+  hide() {
+    if (!this.el) return;
+    this.el.hidden = true;
+    this.el.innerHTML = "";
+    this.center.classList.remove("is-prompting");
+  },
+
+  /* ── the deed itself ────────────────────── */
+  deed(s, tile) {
+    const color = tile.group ? MM.GROUPS[tile.group].color : "#2f7df6";
+    let rows;
+
+    if (tile.type === "property") {
+      const cost = MM.prop.houseCost(tile);
+      rows = `
+        <div class="deed-row"><span>Rent</span><b>${MM.money(tile.rent[0])}</b></div>
+        <div class="deed-row"><span>With colour set</span><b>${MM.money(tile.rent[0] * 2)}</b></div>
+        <div class="deed-row"><span>1 house</span><b>${MM.money(tile.rent[1])}</b></div>
+        <div class="deed-row"><span>3 houses</span><b>${MM.money(tile.rent[3])}</b></div>
+        <div class="deed-row"><span>Hotel</span><b>${MM.money(tile.rent[5])}</b></div>
+        <div class="deed-row deed-row--foot"><span>House cost</span><b>${MM.money(cost)}</b></div>`;
+    } else if (tile.type === "airport") {
+      rows = MM.AIRPORT_RENT.slice(1).map((r, n) =>
+        `<div class="deed-row"><span>${n + 1} airport${n ? "s" : ""}</span><b>${MM.money(r)}</b></div>`).join("");
+    } else {
+      rows = `
+        <div class="deed-row"><span>One utility</span><b>4× the dice</b></div>
+        <div class="deed-row"><span>Both utilities</span><b>10× the dice</b></div>`;
+    }
+
+    return `
+      <div class="deed">
+        <div class="deed-band" style="background:${color}">
+          ${tile.group ? MM.GROUPS[tile.group].name : tile.type === "airport" ? "Airport" : "Utility"}
+        </div>
+        <h3 class="deed-name">${tile.name}</h3>
+        <div class="deed-rows">${rows}</div>
+      </div>`;
+  },
+
+  /* ── buy or pass ────────────────────────── */
+  offer(s, tile, player) {
+    return new Promise((resolve) => {
+      this.open(`
+        ${this.deed(s, tile)}
+        <div class="deal-actions">
+          <button class="btn btn--primary" data-deal="buy">Buy · ${MM.money(tile.price)}</button>
+          <button class="btn btn--muted" data-deal="pass">${s.rules.auction ? "Auction it" : "Pass"}</button>
+        </div>
+        <p class="deal-note">You'd be left with ${MM.money(player.cash - tile.price)}</p>`);
+
+      const done = (answer) => { this.hide(); resolve(answer); };
+      this.el.querySelector('[data-deal="buy"]').addEventListener("click", () => done(true));
+      this.el.querySelector('[data-deal="pass"]').addEventListener("click", () => done(false));
+    });
+  },
+
+  /* ── a drawn card ───────────────────────── */
+  showCard(s, kind, card, player) {
+    const isSurprise = kind === "surprise";
+    return new Promise((resolve) => {
+      this.open(`
+        <div class="card-face card-face--${kind}">
+          <div class="card-kind">${isSurprise ? "Surprise" : "Treasure"}</div>
+          <p class="card-text">${card.text}</p>
+          <div class="card-mark">${isSurprise ? "?" : "★"}</div>
+        </div>
+        ${player.bot ? `<p class="deal-note">${player.name} drew this</p>`
+                     : `<button class="btn btn--primary" data-deal="ok">Continue</button>`}`);
+
+      const done = () => { clearTimeout(timer); this.hide(); resolve(); };
+      const timer = setTimeout(done, player.bot ? 1500 : 6000);
+      const ok = this.el.querySelector('[data-deal="ok"]');
+      if (ok) ok.addEventListener("click", done);
+    });
+  },
+
+  /* ── auction ────────────────────────────── */
+  auctionBid(s, tile, bid, leader) {
+    return new Promise((resolve) => {
+      this.open(`
+        ${this.deed(s, tile)}
+        <div class="auction-state">
+          ${leader ? `<b style="color:${leader.hex}">${leader.name}</b> leads at ${MM.money(bid - Math.max(10, Math.round(tile.price * 0.1)))}`
+                   : "No bids yet — the floor is yours"}
+        </div>
+        <div class="deal-actions">
+          <button class="btn btn--primary" data-deal="bid">Bid ${MM.money(bid)}</button>
+          <button class="btn btn--muted" data-deal="out">Drop out</button>
+        </div>`);
+
+      const done = (answer) => { this.hide(); resolve(answer); };
+      this.el.querySelector('[data-deal="bid"]').addEventListener("click", () => done(true));
+      this.el.querySelector('[data-deal="out"]').addEventListener("click", () => done(false));
+    });
+  },
+
+  /* what you watch once you've dropped out, or while the bots think */
+  auctionWatch(s, tile, price, leader) {
+    this.open(`
+      ${this.deed(s, tile)}
+      <div class="auction-state">
+        ${leader ? `<b style="color:${leader.hex}">${leader.name}</b> bids <span class="money">${MM.money(price)}</span>`
+                 : "Waiting for the first bid"}
+      </div>
+      <p class="deal-note">Auction in progress</p>`);
+  }
+};
+
+
 /* ── src/ui/panels.js ── */
 /* ═══ side rails, log, chat and the market tape ═══ */
 window.MM = window.MM || {};
@@ -2508,8 +3306,15 @@ MM.panels = {
       const delta = p.lastDelta
         ? `<span class="player-delta ${p.lastDelta > 0 ? "up" : "down"}">${p.lastDelta > 0 ? "+" : "−"}${MM.money(Math.abs(p.lastDelta))}</span>`
         : "";
-      const sub = p.jailed ? "In prison"
-        : !p.alive ? "Bankrupt"
+      const deeds = MM.tilesOf(s, p.id).length;
+      const sets = MM.prop.setsOwned(s, p.id).length;
+      const holdings = deeds
+        ? `${deeds} deed${deeds > 1 ? "s" : ""}${sets ? ` · ${sets} set${sets > 1 ? "s" : ""}` : ""}`
+        : null;
+
+      const sub = !p.alive ? "Bankrupt"
+        : p.jailed ? "In prison"
+        : holdings ? holdings
         : p.bot ? MM.PERSONALITIES.find((x) => x.id === p.personality).tag
         : "That's you";
       return `<div class="player-row ${turn ? "is-turn" : ""} ${p.alive ? "" : "is-out"}" style="--pcolor:${p.hex}">
@@ -2622,22 +3427,80 @@ MM.panels = {
     this.refs.ticker.innerHTML = items;
   },
 
+  /* your deeds, with the controls to develop them */
   renderProps() {
     const s = MM.state;
     if (!s || !this.refs.props) return;
-    const mine = MM.tilesOf(s, 0);
+
+    const you = s.players[0];
+    const mine = MM.tilesOf(s, 0).sort((a, b) => a.i - b.i);
+
     if (!mine.length) {
-      this.refs.props.innerHTML = `<p class="empty-note">You don't own anything yet. Land on an unclaimed tile to buy it — purchases open in V1.5.</p>`;
+      this.refs.props.innerHTML = `<p class="empty-note">You don't own anything yet. Land on an unclaimed tile and the deed is offered to you.</p>`;
       return;
     }
-    this.refs.props.innerHTML = mine.map((t) => {
+
+    const canAct = MM.currentPlayer(s) === you && you.alive &&
+      !MM.turn.busy && s.phase === MM.PHASES.AWAIT_ROLL;
+    const sets = MM.prop.setsOwned(s, you.id);
+
+    const rows = mine.map((t) => {
       const color = t.group ? MM.GROUPS[t.group].color : "#2f7df6";
-      return `<div class="prop-row" style="--gcolor:${color}">
+      const houses = s.houses[t.i] || 0;
+      const mortgaged = !!s.mortgaged[t.i];
+
+      let status;
+      if (mortgaged) status = "Mortgaged";
+      else if (houses === 5) status = "Hotel";
+      else if (houses) status = `${houses} house${houses > 1 ? "s" : ""}`;
+      else if (t.group && MM.prop.ownsFullSet(s, you.id, t.group)) status = "Set complete";
+      else status = MM.money(MM.prop.rent(s, t, 7)) + " rent";
+
+      const btn = (act, label, ok, title) =>
+        `<button class="mini-btn" data-act="${act}" data-i="${t.i}" title="${title}" ${canAct && ok ? "" : "disabled"}>${label}</button>`;
+
+      const controls = [
+        t.type === "property"
+          ? btn("build", "＋", MM.prop.canBuild(s, you, t), `Build for ${MM.money(MM.prop.houseCost(t))}`)
+          : "",
+        t.type === "property" && houses
+          ? btn("sell", "－", MM.prop.canSellHouse(s, you, t), "Sell a building back to the bank")
+          : "",
+        mortgaged
+          ? btn("unmortgage", "↺", MM.prop.canUnmortgage(s, you, t), `Lift for ${MM.money(MM.prop.unmortgageCost(t))}`)
+          : btn("mortgage", "🏦", MM.prop.canMortgage(s, you, t), `Raise ${MM.money(t.price / 2)}`)
+      ].join("");
+
+      return `<div class="prop-row ${mortgaged ? "is-mortgaged" : ""}" style="--gcolor:${color}">
         <div class="prop-swatch"></div>
-        <div>${t.name}</div>
-        <div class="prop-rent">${MM.money(t.price)}</div>
+        <div class="prop-body">
+          <b>${t.name}</b>
+          <i>${status}</i>
+        </div>
+        <div class="prop-controls">${controls}</div>
       </div>`;
     }).join("");
+
+    this.refs.props.innerHTML = `
+      <div class="prop-summary">
+        <span>${mine.length} deed${mine.length > 1 ? "s" : ""}</span>
+        <span>${sets.length} set${sets.length === 1 ? "" : "s"}</span>
+        <span>Net worth <b>${MM.money(MM.netWorth(s, you))}</b></span>
+      </div>
+      ${rows}
+      ${canAct ? "" : `<p class="panel-note">Build, sell and mortgage on your own turn, before you roll.</p>`}`;
+
+    this.refs.props.querySelectorAll(".mini-btn").forEach((b) => {
+      b.addEventListener("click", () => {
+        const tile = MM.BOARD[+b.dataset.i];
+        const act = b.dataset.act;
+        if (act === "build") MM.prop.build(s, you, tile);
+        if (act === "sell") MM.prop.sellHouse(s, you, tile);
+        if (act === "mortgage") MM.prop.mortgage(s, you, tile);
+        if (act === "unmortgage") MM.prop.unmortgage(s, you, tile);
+        this.renderProps();
+      });
+    });
   },
 
   /* ── feeds ──────────────────────────────── */
@@ -2841,6 +3704,7 @@ MM.app = {
     MM.screens.init();
     MM.panels.init();
     MM.diceUI.init(document.getElementById("dice-tray"));
+    MM.deal.init();
     MM.renderer.init(
       document.getElementById("board"),
       document.getElementById("board-wrap"),
@@ -2848,6 +3712,7 @@ MM.app = {
     );
 
     this.action = document.getElementById("primary-action");
+    document.querySelectorAll(".ver-chip").forEach((c) => (c.textContent = MM.VERSION));
     this.bindHome();
     this.bindTable();
     this.bindBus();
@@ -2955,7 +3820,7 @@ MM.app = {
     document.querySelector('[data-action="bankrupt"]').addEventListener("click", () => {
       const s = MM.state;
       if (s.phase === MM.PHASES.LOBBY) return;
-      MM.bankrupt(s, s.players[0], "resigned");
+      MM.bankrupt(s, s.players[0], null, "resigned");
       MM.bus.emit("state", s);
     });
 
@@ -3021,7 +3886,10 @@ MM.app = {
       btn.textContent = p.bot ? `${p.name} is thinking…` : p.jailed ? "Roll for doubles" : "Roll the dice";
       btn.disabled = !!p.bot;
     } else {
-      btn.textContent = s.phase === MM.PHASES.ROLLING ? "Rolling…" : s.phase === MM.PHASES.MOVING ? "Moving…" : "…";
+      btn.textContent = s.phase === MM.PHASES.ROLLING ? "Rolling…"
+        : s.phase === MM.PHASES.MOVING ? "Moving…"
+        : s.phase === MM.PHASES.DECIDING ? "Your move…"
+        : "…";
       btn.disabled = true;
     }
   },

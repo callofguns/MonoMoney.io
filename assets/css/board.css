@@ -116,6 +116,63 @@
 
 .btn--action { min-width: 176px; font-size: 16px; padding: 13px 22px; }
 
+/* ── deal panel: deeds, cards, auctions ──── */
+.board-center.is-prompting .dice-tray,
+.board-center.is-prompting #primary-action,
+.board-center.is-prompting .log-feed { display: none; }
+
+.deal {
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+  width: min(330px, 92%);
+  animation: deal-in .22s ease-out;
+}
+.deal[hidden] { display: none; }
+@keyframes deal-in { from { opacity: 0; transform: translateY(12px) scale(.97); } }
+
+.deed {
+  width: 100%;
+  background: var(--ink-600);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  box-shadow: 0 22px 50px rgba(0,0,0,.55);
+}
+.deed-band {
+  padding: 7px; text-align: center;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+  color: #0a1120;
+}
+.deed-name {
+  padding: 12px 14px 6px;
+  font-family: var(--font-display); font-size: 21px; letter-spacing: -.02em; text-align: center;
+}
+.deed-rows { padding: 0 16px 14px; display: flex; flex-direction: column; gap: 3px; }
+.deed-row { display: flex; justify-content: space-between; gap: 12px; font-size: 12.5px; color: var(--text-dim); }
+.deed-row b { font-family: var(--font-num); font-variant-numeric: tabular-nums; color: var(--text); }
+.deed-row--foot { margin-top: 6px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,.07); }
+
+.deal-actions { display: flex; gap: 10px; }
+.deal-note { font-size: 12px; color: var(--text-mut); }
+.auction-state { font-size: 13px; color: var(--text-dim); }
+
+.card-face {
+  position: relative; overflow: hidden;
+  width: 100%; padding: 22px 20px;
+  border-radius: var(--r-lg); text-align: center;
+  background: linear-gradient(160deg, var(--ink-500), var(--ink-700));
+  border: 1px solid var(--line);
+  box-shadow: 0 22px 50px rgba(0,0,0,.55);
+}
+.card-face--surprise { border-color: rgba(90, 200, 250, .5); }
+.card-face--treasure { border-color: rgba(255, 194, 75, .5); }
+.card-kind { font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--text-mut); }
+.card-text { margin-top: 10px; font-size: 15px; line-height: 1.5; }
+.card-mark {
+  position: absolute; right: -4px; bottom: -30px;
+  font-family: var(--font-display); font-size: 96px; font-weight: 800;
+  opacity: .08; pointer-events: none;
+}
+
 /* ── event log ───────────────────────────── */
 .log-feed {
   display: flex; flex-direction: column-reverse; gap: 5px;

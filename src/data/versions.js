@@ -9,7 +9,7 @@
    ═══════════════════════════════════════════ */
 window.MM = window.MM || {};
 
-MM.VERSION = "V1.1";
+MM.VERSION = "V1.5";
 
 MM.RELEASES = [
   {
@@ -35,18 +35,22 @@ MM.RELEASES = [
     ]
   },
   {
-    v: "V1.5", name: "Property & rent", status: "next",
+    v: "V1.5", name: "Property & rent", status: "shipped",
     items: [
-      "Buy the tile you land on, or pass it to auction",
+      "Buy the tile you land on from a deed card showing its full rent ladder",
       "Rent collection, doubled on a completed colour group",
-      "Houses and hotels, built evenly across a set",
-      "Mortgage a tile for half its cost",
-      "Surprise and Treasure card decks",
-      "Bankruptcy that hands your deeds to whoever broke you"
+      "Airport rent that scales with how many you hold, utilities that scale with the dice",
+      "Houses and hotels, built evenly across a set, shown on the board",
+      "Mortgage for half the price, lift it later for 10% more",
+      "Auctions when a deed is declined — you bid against the bots",
+      "28 Surprise and Treasure cards: moves, fines, repairs, get-out-of-prison",
+      "Short of cash? Buildings sell and deeds mortgage automatically before you fold",
+      "Bankruptcy hands your whole estate to whoever broke you",
+      "Baseline bot buying and building (personalities arrive in V2.5)"
     ]
   },
   {
-    v: "V2", name: "The exchange", status: "planned",
+    v: "V2", name: "The exchange", status: "next",
     items: [
       "Buy and sell shares in all five companies from the Market tab",
       "Dividends paid on every lap past START",
