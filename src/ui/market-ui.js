@@ -25,7 +25,7 @@ MM.marketUI = {
 
   /* ── list view ──────────────────────────── */
   list(s) {
-    const you = s.players[0];
+    const you = MM.net.myPlayer(s);
     const rows = s.stocks.map((st) => {
       const chg = ((st.price - st.open) / st.open) * 100;
       const dir = chg >= 0 ? "up" : "down";
@@ -62,7 +62,7 @@ MM.marketUI = {
   /* ── one listing, with the trade controls ── */
   tradePanel(s, sym) {
     const st = MM.market.stock(s, sym);
-    const you = s.players[0];
+    const you = MM.net.myPlayer(s);
     const qty = this.qty;
     const held = MM.market.held(you, sym);
     const chg = ((st.price - st.open) / st.open) * 100;
@@ -228,7 +228,7 @@ MM.marketUI = {
 
   /* ── wiring ─────────────────────────────── */
   bind(s) {
-    const you = s.players[0];
+    const you = MM.net.myPlayer(s);
 
     this.el.querySelectorAll("[data-sym]").forEach((row) =>
       row.addEventListener("click", () => { this.open = row.dataset.sym; this.qty = 1; this.render(); }));
@@ -253,8 +253,7 @@ MM.marketUI = {
     this.el.querySelectorAll("[data-trade]").forEach((b) =>
       b.addEventListener("click", () => {
         const sym = this.open;
-        if (b.dataset.trade === "buy") MM.market.buy(s, you, sym, this.qty);
-        else MM.market.sell(s, you, sym, this.qty);
+        MM.net.act(b.dataset.trade === "buy" ? "buyStock" : "sellStock", { sym, qty: this.qty });
         this.render();
       }));
   },

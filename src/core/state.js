@@ -18,6 +18,19 @@ MM.PHASES = {
 
 MM.money = (n) => (n < 0 ? "-$" : "$") + Math.abs(Math.round(n)).toLocaleString("en-US");
 
+/* Seat 0-3 each own a fixed identity colour and, for 1-3, a fixed bot
+   personality that fills the seat whenever no one's joined it — so a
+   seat means the same thing at the table whether a person or a bot is
+   sitting in it, and a human who takes over a bot's seat doesn't
+   reshuffle anyone else's colour. `opts.humans` is the roster of real
+   players by seat, in solo play just the one nickname at seat 0. */
+MM.SEAT_META = [
+  { hex: "#4e97ff", color: "var(--p1)", avatar: "😀" },
+  { hex: "#ff8455", color: "var(--p2)", avatar: "🙂", personality: "tycoon" },
+  { hex: "#2fd4a0", color: "var(--p3)", avatar: "😎", personality: "banker" },
+  { hex: "#f26a8d", color: "var(--p4)", avatar: "🤓", personality: "shark" }
+];
+
 MM.createGame = function (opts) {
   const settings = Object.assign({}, MM.DEFAULT_SETTINGS, opts && opts.settings);
   const rules = {};
@@ -27,24 +40,24 @@ MM.createGame = function (opts) {
   const rng = MM.createRng(opts && opts.seed);
   const players = [];
 
-  players.push({
-    id: 0, name: (opts && opts.nickname) || "You", avatar: "😀",
-    color: "var(--p1)", hex: "#4e97ff", bot: false, personality: null,
-    cash: settings.startingCash, pos: 0, jailed: false, jailTurns: 0,
-    doubles: 0, alive: true, portfolio: {}, basis: {}, getOut: 0, lastDelta: 0, divTotal: 0, rentTotal: 0
-  });
+  const humans = (opts && opts.humans) || [{ seat: 0, name: (opts && opts.nickname) || "You" }];
+  const humanBySeat = new Map(humans.map((h) => [h.seat, h]));
 
-  const roster = MM.PERSONALITIES.slice(0, Math.max(0, settings.players - 1));
-  const hexes = { tycoon: "#ff8455", banker: "#2fd4a0", shark: "#f26a8d", wildcard: "#ffd166" };
-  roster.forEach((p, n) => {
-    players.push({
-      id: n + 1, name: p.name, avatar: p.avatar,
-      color: p.color, hex: hexes[p.id], bot: true, personality: p.id,
+  for (let n = 0; n < settings.players; n++) {
+    const meta = MM.SEAT_META[n] || MM.SEAT_META[MM.SEAT_META.length - 1];
+    const human = humanBySeat.get(n);
+    const base = {
+      id: n, color: meta.color, hex: meta.hex,
       cash: settings.startingCash, pos: 0, jailed: false, jailTurns: 0,
-      doubles: 0, alive: true, portfolio: {}, basis: {}, getOut: 0, lastDelta: 0, divTotal: 0, rentTotal: 0,
-      tradeCooldown: 0
-    });
-  });
+      doubles: 0, alive: true, portfolio: {}, basis: {}, getOut: 0, lastDelta: 0, divTotal: 0, rentTotal: 0
+    };
+    if (human) {
+      players.push(Object.assign(base, { name: human.name, avatar: meta.avatar, bot: false, personality: null }));
+    } else {
+      const brain = MM.PERSONALITIES.find((p) => p.id === meta.personality) || MM.PERSONALITIES[0];
+      players.push(Object.assign(base, { name: brain.name, avatar: brain.avatar, bot: true, personality: brain.id, tradeCooldown: 0 }));
+    }
+  }
 
   const state = {
     settings, rules, rng,

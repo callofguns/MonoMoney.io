@@ -9,7 +9,7 @@
    ═══════════════════════════════════════════ */
 window.MM = window.MM || {};
 
-MM.VERSION = "V3.2";
+MM.VERSION = "V4";
 
 MM.RELEASES = [
   {
@@ -124,6 +124,19 @@ MM.RELEASES = [
       "The fundamental driver behind each price, in plain language — airports for SKY, utilities for VLT, buildings for BRK, cash on hand for AUR, and why TCH has none and runs on headlines alone",
       "Every headline and insider card that can move that specific stock, pulled live from the same data the market runs on — so the explanation can never drift out of sync with the game",
       "A note on order flow and random drift, so the price bar makes sense even on a quiet round"
+    ]
+  },
+  {
+    v: "V4", name: "Play with friends", status: "shipped",
+    items: [
+      "A real \"Play with friends\" — create a room from the home screen and get a code, or join one someone sent you; up to three other people can take the seats bots used to fill",
+      "Whoever creates the room runs the actual game, exactly like a solo game always has — everyone else's screen is a live view that sends their roll, buy, bid and trade back to be applied for real",
+      "Every decision still shows up as the same familiar deed card, auction bid or trade offer — just on the deciding player's own screen, never anyone else's",
+      "A seat's colour is fixed whether a person or a bot ends up sitting in it, so a human taking over the Banker's seat doesn't reshuffle anyone else's identity",
+      "Chat, the event log, dice and prices all stay in sync across every connected screen",
+      "A dropped connection can rejoin the same room and seat with the same code — the game picks up where it left off",
+      "Not yet: trading directly with another person (only with a bot, for now), and a seat that goes quiet doesn't hand itself to a bot — the table just waits",
+      "Needs a small relay server of your own to actually connect two devices — one's included in <code>server/</code> with instructions to run or deploy it; it can't work through a sandboxed preview link"
     ]
   }
 ];

@@ -36,10 +36,14 @@ MM.auction = {
       if (p.cash >= bid) {
         if (p.bot) {
           MM.deal.auctionWatch(s, tile, price, leader);
+          MM.net.tell("auctionWatch", { tile: tile.i, price, leaderId: leader ? leader.id : null });
           await pause(450);
           wants = bid <= MM.bots.bidLimit(s, p, tile);
         } else {
-          wants = await MM.deal.auctionBid(s, tile, bid, leader);
+          MM.deal.auctionWatch(s, tile, price, leader);
+          MM.net.tell("auctionWatch", { tile: tile.i, price, leaderId: leader ? leader.id : null }, { exceptSeat: p.id });
+          wants = await MM.net.ask(p, "auctionBid", { tile: tile.i, bid, leaderId: leader ? leader.id : null },
+            () => MM.deal.auctionBid(s, tile, bid, leader));
         }
       }
 

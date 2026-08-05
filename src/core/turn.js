@@ -219,7 +219,14 @@ MM.turn = {
         if ((depth || 0) >= 2) break; /* a card that lands you on a card stops here */
         const card = MM.cards.draw(s, tile.type);
         MM.log(s, `<b>${p.name}</b> drew a ${tile.name} card`, p);
-        await MM.deal.showCard(s, tile.type, card, p);
+        if (p.bot || MM.net.isMine(p)) {
+          await MM.deal.showCard(s, tile.type, card, p);
+        } else {
+          /* someone else's screen shows the card face — this one just
+             holds the same pause a human's "Continue" timer would have */
+          MM.net.tell("showCard", { kind: tile.type, card }, { to: p.id });
+          await wait(6000);
+        }
         await MM.cards.apply(s, p, card, depth || 0);
         break;
       }
@@ -252,7 +259,7 @@ MM.turn = {
     }
 
     MM.setPhase(s, MM.PHASES.DECIDING);
-    const buying = await MM.deal.offer(s, tile, p);
+    const buying = await MM.net.ask(p, "buyOffer", { tile: tile.i }, () => MM.deal.offer(s, tile, p));
     MM.setPhase(s, MM.PHASES.RESOLVING);
 
     if (buying) return MM.prop.buy(s, p, tile);

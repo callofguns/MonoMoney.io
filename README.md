@@ -1,9 +1,10 @@
 # MonoMoney.io
 
 A browser board game where the board is only half the economy. Forty tiles, two dice,
-three bots — and a stock exchange running alongside the rents.
+a bot for every empty seat — and a stock exchange running alongside the rents. Play
+solo against the bots, or open a room and split the seats with actual people.
 
-Vanilla HTML5 Canvas, CSS and JavaScript. No frameworks, no build step to play.
+Vanilla HTML5 Canvas, CSS and JavaScript. No frameworks, no build step to play solo.
 
 ## Run it
 
@@ -19,7 +20,7 @@ To produce the single-file shareable build:
 node tools/build-artifact.mjs   # → dist/monomoney.html
 ```
 
-## What works today (V3.2)
+## What works today (V4)
 
 - **40-tile board** rendered on canvas: 8 colour groups, 4 airports, 2 utilities,
   2 taxes, Surprise and Treasure tiles, and the four corners (START, In Prison,
@@ -77,13 +78,18 @@ node tools/build-artifact.mjs   # → dist/monomoney.html
   volatility read, the fundamental driver behind it, and every headline or
   insider card that can swing it, all pulled live from the same data the market
   runs on.
+- **Play with friends** — create a room from the home screen and get a code, or
+  join one someone sent you. Up to three other people can take the seats bots
+  used to fill, seeing the same board, dice, market and chat in real time, with
+  their own decisions showing up on their own screen. Needs a small relay
+  server to actually connect two devices — see `server/README.md`.
 
 The full working / coming list lives in `src/data/versions.js` and is rendered
 in-game: **Build status** in the lobby rail, or *See what works today* on the
 home screen. Keep that array in build order and append new releases to the end —
 `MM.changelog()` reverses the shipped ones so the log always reads newest first,
 with what's still coming pinned below the line (hidden entirely once nothing's
-queued, as it is right now — V3 closed out the original roadmap).
+queued, as it is right now).
 
 ## Roadmap
 
@@ -99,6 +105,7 @@ queued, as it is right now — V3 closed out the original roadmap).
 | V3.0.1 | Slower, more readable turn pacing | ✅ Working |
 | V3.1 | Built for phones — a bigger board, real touch targets, tap-to-inspect | ✅ Working |
 | V3.2 | Know your stock — an info icon explaining what moves each price | ✅ Working |
+| V4 | Play with friends — real rooms, real people in the seats bots used to fill | ✅ Working |
 
 ## Layout
 
@@ -118,6 +125,7 @@ src/
   core/rng.js           seedable RNG — same seed, same game
   core/emitter.js       event bus
   core/state.js         game state, every mutation, net-worth snapshots
+  net/net.js            the only file that knows a seat might be networked
   core/dice.js          dice rolls
   core/market.js        the exchange: pricing, trading, dividends, fundamentals
   core/property.js      deeds: buying, rent, building, mortgaging, forced sales
@@ -138,6 +146,7 @@ src/
   ui/screens.js         screen switching and modals
   main.js               bootstrap and wiring
 tools/build-artifact.mjs  bundles everything into one HTML file
+server/relay.mjs        optional — the WebSocket relay that makes rooms work
 ```
 
 ### How the modules talk
@@ -236,3 +245,44 @@ Touch-target sizing lives under `@media (pointer: coarse)` rather than a width
 breakpoint — it's a touch laptop or a tablet in a wide window that needs a bigger
 switch or tab just as much as a phone does, regardless of how much horizontal
 space happens to be available.
+
+## Multiplayer
+
+Every piece of this game — the turn engine, the bots, the market — was written
+as if seat 0 is always the one local human. Rather than rewrite all of that to
+be aware of a network, `src/net/net.js` is the one seam: whoever creates a room
+runs the entire simulation in their own browser, exactly like a solo game
+always has, and every other connected browser is a thin view that sends its
+intent (roll, buy, bid, trade) to be applied there for real. `MM.bus` already
+announces every mutation the engine makes, so replicating a game to every
+connected screen is just forwarding those same events over the wire — the
+renderer, the panels and the sound effects need no networking awareness of
+their own on either side.
+
+Two shapes of message cover everything a person can do. `MM.net.ask()` is an
+awaited decision — buy this deed? bid this much? — that already just shows a
+modal and resolves a promise on click; networked, the *same* call shows the
+*same* modal, just on the deciding player's own screen, with the click sent
+back over the wire instead of resolved on the spot. `MM.net.act()` is a
+fire-and-forget intent — roll, build, chat — that a guest can't apply to its
+own mirrored copy of the state, so it's sent to whoever's actually running the
+game to apply instead.
+
+`server/relay.mjs` is deliberately dumb: it tracks which connection is which
+seat in which room and forwards messages between them, and never once reads a
+rule of the game — the whole simulation still lives in exactly one browser.
+See `server/README.md` to run one locally or deploy it for real. A sandboxed
+preview link (an `Artifact` share URL, for instance) blocks outbound
+WebSocket connections for security, so **Play with friends** only works once
+the game is actually hosted somewhere you control, alongside a relay you or
+someone else is running.
+
+A seat's identity colour and avatar come from its position, not from whether
+a bot or a person is sitting in it (`MM.SEAT_META` in `core/state.js`) — a
+human taking over the seat the Banker would have filled shows up in the
+Banker's teal, not a freshly invented colour, so "seat 2 is teal" stays true
+all game. Not yet built: trading directly with another connected person (the
+Trades tab still only offers a bundle to a bot), and a seat that goes quiet
+doesn't hand itself to a bot — the table just waits for it to come back,
+which it can, with the same room code and a persisted client id reclaiming
+the same seat.

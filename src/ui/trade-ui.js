@@ -27,7 +27,7 @@ MM.tradeUI = {
     if (!s || !this.el) return;
     if (!this.give) this.reset();
 
-    const you = s.players[0];
+    const you = MM.net.myPlayer(s);
     const bots = MM.livePlayers(s).filter((p) => p.bot);
 
     if (!you.alive) {
@@ -47,7 +47,10 @@ MM.tradeUI = {
         <span class="avatar" style="--pcolor:${p.hex}">${p.avatar}</span>${p.name}
       </button>`).join("");
 
-    const yourTurn = MM.currentPlayer(s) === you && !MM.turn.busy && s.phase === MM.PHASES.AWAIT_ROLL;
+    /* MM.turn.busy only ever means anything on the browser actually
+       running the engine — the phase check alone is what's networked,
+       and it's already enough: nothing lets a trade through mid-roll */
+    const yourTurn = MM.currentPlayer(s) === you && s.phase === MM.PHASES.AWAIT_ROLL;
 
     let body;
     if (partner) {
@@ -172,8 +175,10 @@ MM.tradeUI = {
 
     const propose = this.el.querySelector('[data-trade-action="propose"]');
     if (propose) propose.addEventListener("click", () => {
-      const result = MM.trades.proposeToBot(s, you, partner, this.give, this.take);
-      this.flash = { ok: result.accept, text: result.accept ? "Deal! The trade went through." : `Declined — ${result.reason}` };
+      const result = MM.net.act("proposeTrade", { partnerId: partner.id, give: this.give, take: this.take });
+      /* networked and not the host: the result comes back through the
+         log a moment later instead of landing here synchronously */
+      if (result) this.flash = { ok: result.accept, text: result.accept ? "Deal! The trade went through." : `Declined — ${result.reason}` };
       this.reset(true);
       this.render();
     });

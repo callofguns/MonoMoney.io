@@ -152,16 +152,18 @@ MM.trades = {
   },
 
   /* ── the one offer bots initiate on their own: cash for the missing
-     piece of a set, aimed only at the human, on a personality-scaled
-     chance with a cooldown so it doesn't ask every turn ─────────── */
+     piece of a set, aimed at a live human seat (any of them, not just
+     one fixed player), on a personality-scaled chance with a cooldown
+     so it doesn't ask every turn ─────────────────────────────────── */
   async maybeProposeToHuman(s, bot) {
     if (!s.rules.botTrades) return;
 
     bot.tradeCooldown = Math.max(0, (bot.tradeCooldown || 0) - 1);
     if (bot.tradeCooldown > 0) return;
 
-    const human = s.players[0];
-    if (!human.alive || human.bot) return;
+    const humans = MM.livePlayers(s).filter((p) => !p.bot);
+    if (!humans.length) return;
+    const human = s.rng.pick(humans);
 
     const w = MM.bots.brain(bot).weights;
     const chance = { none: 0.35, income: 0.08, momentum: 0.5, random: 0.25 }[w.style] || 0.2;
@@ -182,7 +184,8 @@ MM.trades = {
     bot.tradeCooldown = this.PROPOSE_COOLDOWN;
     MM.log(s, `<b>${bot.name}</b> offers <b>${human.name}</b> <span class="money">${MM.money(offer)}</span> for ${target.name}`, bot);
 
-    const accepted = await MM.deal.tradeOffer(s, bot, target, offer);
+    const accepted = await MM.net.ask(human, "tradeOffer", { botId: bot.id, tile: target.i, cash: offer },
+      () => MM.deal.tradeOffer(s, bot, target, offer));
     if (accepted) {
       this.execute(s, human, bot,
         { cash: 0, tiles: [target.i], shares: {} },

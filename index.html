@@ -49,6 +49,33 @@
         <button class="btn btn--muted" data-action="quick-1">1 bot · fast game</button>
       </div>
 
+      <button class="ghost-btn" data-action="toggle-friends" id="friends-toggle">Play with friends →</button>
+
+      <div class="friends-panel" id="friends-panel" hidden>
+        <div class="tabs friends-tabs" role="tablist">
+          <button class="tab is-active" data-friends-tab="create" role="tab">Create a room</button>
+          <button class="tab" data-friends-tab="join" role="tab">Join a room</button>
+        </div>
+
+        <div class="friends-pane" data-friends-pane="create">
+          <p class="panel-note">You'll get a room code to send whoever's joining.</p>
+          <button class="btn btn--primary btn--block" data-action="create-room">Create room</button>
+        </div>
+
+        <div class="friends-pane" data-friends-pane="join" hidden>
+          <input id="join-code" class="field" type="text" maxlength="4" placeholder="Room code" autocapitalize="characters" />
+          <button class="btn btn--primary btn--block" data-action="join-room">Join room</button>
+        </div>
+
+        <div class="friends-relay">
+          <label for="relay-url">Relay server</label>
+          <input id="relay-url" class="field field--sm" type="text" placeholder="wss://your-relay.example.com" />
+          <p class="panel-note">A small server that introduces your browsers to each other — see <code>server/README.md</code> to run or deploy one.</p>
+        </div>
+
+        <p class="friends-error" id="friends-error" hidden></p>
+      </div>
+
       <ul class="home-facts">
         <li><b>40</b> tiles</li>
         <li><b>5</b> listed companies</li>
@@ -83,7 +110,7 @@
       </div>
 
       <div class="card card--share">
-        <h2 class="card-title">Share this game <span class="hint" title="Single-player prototype — the link is cosmetic for now">ⓘ</span></h2>
+        <h2 class="card-title">Share this game <span class="hint" id="share-hint" title="Start this table from the home screen's Play with friends panel to invite real people">ⓘ</span></h2>
         <div class="share-row">
           <input class="field field--sm" id="room-link" readonly value="https://monomoney.io/room/—" aria-label="Room link" />
           <button class="btn btn--muted btn--sm" data-action="copy-link">Copy</button>
@@ -194,6 +221,19 @@
         </div>
       </div>
 
+      <!-- guest, waiting for the host to start -->
+      <div class="rail-pane" data-pane="wait">
+        <div class="card card--host">
+          <h2 class="card-title card-title--center">Room <span id="wait-room-code">—</span></h2>
+          <p class="panel-note">Waiting for the host to start the game.</p>
+        </div>
+        <div class="card">
+          <h2 class="card-title card-title--center">At the table</h2>
+          <div class="bot-list" id="wait-roster"></div>
+        </div>
+        <button class="btn btn--muted btn--sm" data-action="leave-room">Leave room</button>
+      </div>
+
       <!-- game mode -->
       <div class="rail-pane" data-pane="game">
         <div class="card card--players">
@@ -247,6 +287,7 @@
 <script src="src/core/rng.js"></script>
 <script src="src/core/emitter.js"></script>
 <script src="src/core/state.js"></script>
+<script src="src/net/net.js"></script>
 <script src="src/core/dice.js"></script>
 <script src="src/core/market.js"></script>
 <script src="src/core/property.js"></script>

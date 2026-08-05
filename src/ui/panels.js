@@ -26,6 +26,7 @@ MM.panels = {
     MM.bus.on("log", (e) => this.pushLog(e));
     MM.bus.on("chat", (e) => this.pushChat(e));
     MM.bus.on("cash", (e) => this.cashPop(e));
+    MM.net.onRoster(() => { this.renderBots(); MM.app.renderWaitRoom && MM.app.renderWaitRoom(); });
     MM.marketUI.mount(this.refs.market);
     MM.tradeUI.mount(this.refs.trades);
   },
@@ -60,7 +61,8 @@ MM.panels = {
         : p.jailed ? "In prison"
         : holdings ? holdings
         : p.bot ? MM.PERSONALITIES.find((x) => x.id === p.personality).tag
-        : "That's you";
+        : MM.net.isMine(p) ? "That's you"
+        : "A player";
       return `<div class="player-row ${turn ? "is-turn" : ""} ${p.alive ? "" : "is-out"}" style="--pcolor:${p.hex}">
         <div class="avatar" style="--pcolor:${p.hex}">${p.avatar}</div>
         <div>
@@ -82,14 +84,31 @@ MM.panels = {
       <span class="host-badge">HOST</span>`;
   },
 
+  /* one row per seat 1-3 — a joined human replaces that seat's bot
+     without touching its colour, so "seat 2 is teal" stays true whether
+     a person or the Banker ends up sitting there */
   renderBots() {
     const s = MM.state;
-    if (!this.refs.bots) return;
+    if (!this.refs.bots || !s) return;
+    const netRoster = MM.net.enabled ? MM.net.roster : [];
+
     this.refs.bots.innerHTML = MM.PERSONALITIES.map((b, n) => {
-      const seated = n < s.settings.players - 1;
+      const seat = n + 1;
+      const human = netRoster.find((r) => r.seat === seat);
+      /* a joined person holds their seat regardless of the players
+         dropdown — that setting only ever trims bots, never people */
+      const seated = human ? true : seat < s.settings.players;
+
+      if (human) {
+        const meta = MM.SEAT_META[seat];
+        return `<div class="bot-row">
+          <div class="avatar" style="--pcolor:${meta.hex}">${meta.avatar}</div>
+          <div><b>${human.name}</b><i>${human.connected ? "Joined" : "Reconnecting…"}</i></div>
+        </div>`;
+      }
       return `<div class="bot-row" style="${seated ? "" : "opacity:.4"}">
         <div class="avatar" style="--pcolor:${b.color}">${b.avatar}</div>
-        <div><b>${b.name}</b><i>${seated ? b.blurb : "Not seated this game"}</i></div>
+        <div><b>${b.name}</b><i>${!seated ? "Not seated this game" : MM.net.enabled ? "Open — will play as a bot" : b.blurb}</i></div>
       </div>`;
     }).join("");
   },
@@ -164,16 +183,15 @@ MM.panels = {
     const s = MM.state;
     if (!s || !this.refs.props) return;
 
-    const you = s.players[0];
-    const mine = MM.tilesOf(s, 0).sort((a, b) => a.i - b.i);
+    const you = MM.net.myPlayer(s);
+    const mine = MM.tilesOf(s, you.id).sort((a, b) => a.i - b.i);
 
     if (!mine.length) {
       this.refs.props.innerHTML = `<p class="empty-note">You don't own anything yet. Land on an unclaimed tile and the deed is offered to you.</p>`;
       return;
     }
 
-    const canAct = MM.currentPlayer(s) === you && you.alive &&
-      !MM.turn.busy && s.phase === MM.PHASES.AWAIT_ROLL;
+    const canAct = MM.currentPlayer(s) === you && you.alive && s.phase === MM.PHASES.AWAIT_ROLL;
     const sets = MM.prop.setsOwned(s, you.id);
 
     const rows = mine.map((t) => {
@@ -222,14 +240,10 @@ MM.panels = {
       ${rows}
       ${canAct ? "" : `<p class="panel-note">Build, sell and mortgage on your own turn, before you roll.</p>`}`;
 
+    const ACTIONS = { build: "build", sell: "sellHouse", mortgage: "mortgage", unmortgage: "unmortgage" };
     this.refs.props.querySelectorAll(".mini-btn").forEach((b) => {
       b.addEventListener("click", () => {
-        const tile = MM.BOARD[+b.dataset.i];
-        const act = b.dataset.act;
-        if (act === "build") MM.prop.build(s, you, tile);
-        if (act === "sell") MM.prop.sellHouse(s, you, tile);
-        if (act === "mortgage") MM.prop.mortgage(s, you, tile);
-        if (act === "unmortgage") MM.prop.unmortgage(s, you, tile);
+        MM.net.act(ACTIONS[b.dataset.act], { i: +b.dataset.i });
         this.renderProps();
       });
     });
