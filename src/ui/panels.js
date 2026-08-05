@@ -94,18 +94,24 @@ MM.panels = {
   /* one row per release — green = playable, blue = being built */
   renderStatus() {
     if (!this.refs.status) return;
+
+    const log = MM.changelog();
+    const row = (r) => `
+      <div class="status-row ${r.v === MM.VERSION ? "is-now" : ""}">
+        <span class="status-dot ${r.status}"></span>
+        <div>
+          <span class="status-v">${r.v}</span>
+          <span class="status-name">${r.name}</span>
+        </div>
+        <span class="status-tag">${r.v === MM.VERSION ? "you're here" : MM.STATUS_LABEL[r.status]}</span>
+      </div>`;
+
     this.refs.status.innerHTML = `
       <h2 class="card-title card-title--center">Build status</h2>
       <div class="status-list">
-        ${MM.RELEASES.map((r) => `
-          <div class="status-row ${r.v === MM.VERSION ? "is-now" : ""}">
-            <span class="status-dot ${r.status}"></span>
-            <div>
-              <span class="status-v">${r.v}</span>
-              <span class="status-name">${r.name}</span>
-            </div>
-            <span class="status-tag">${r.v === MM.VERSION ? "you're here" : MM.STATUS_LABEL[r.status]}</span>
-          </div>`).join("")}
+        ${log.shipped.map(row).join("")}
+        <div class="status-split">On the way</div>
+        ${log.upcoming.map(row).join("")}
       </div>
       <button class="btn btn--muted btn--sm status-more" data-action="show-status">See the full list</button>`;
 

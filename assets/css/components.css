@@ -140,6 +140,22 @@
 .status-tag { font-size: 11px; color: var(--text-mut); white-space: nowrap; }
 .status-more { width: 100%; margin-top: 10px; }
 
+/* the line between what's done and what isn't */
+.status-split {
+  display: flex; align-items: center; gap: 8px;
+  margin: 8px 2px 4px;
+  font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-mut);
+}
+.status-split::after {
+  content: ""; flex: 1; height: 1px; background: var(--line);
+}
+
+.vsection {
+  margin-top: 14px;
+  font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-mut);
+}
+.vsection--soon { padding-top: 14px; border-top: 1px solid var(--line); }
+
 /* full list inside the modal */
 .vgroup { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
 .vhead { display: flex; align-items: center; gap: 8px; color: var(--text); font-size: 14px; }

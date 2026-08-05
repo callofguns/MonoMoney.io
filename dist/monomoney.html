@@ -404,6 +404,22 @@ button, input, select { font: inherit; color: inherit; }
 .status-tag { font-size: 11px; color: var(--text-mut); white-space: nowrap; }
 .status-more { width: 100%; margin-top: 10px; }
 
+/* the line between what's done and what isn't */
+.status-split {
+  display: flex; align-items: center; gap: 8px;
+  margin: 8px 2px 4px;
+  font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-mut);
+}
+.status-split::after {
+  content: ""; flex: 1; height: 1px; background: var(--line);
+}
+
+.vsection {
+  margin-top: 14px;
+  font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-mut);
+}
+.vsection--soon { padding-top: 14px; border-top: 1px solid var(--line); }
+
 /* full list inside the modal */
 .vgroup { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
 .vhead { display: flex; align-items: center; gap: 8px; color: var(--text); font-size: 14px; }
@@ -1107,7 +1123,7 @@ button, input, select { font: inherit; color: inherit; }
    ═══════════════════════════════════════════ */
 window.MM = window.MM || {};
 
-MM.VERSION = "V2";
+MM.VERSION = "V2.0.1";
 
 MM.RELEASES = [
   {
@@ -1162,6 +1178,13 @@ MM.RELEASES = [
     ]
   },
   {
+    v: "V2.0.1", name: "Changelog order", status: "shipped",
+    items: [
+      "The update log now reads newest first, oldest at the bottom",
+      "What's still being built sits below the line, in the order it'll arrive"
+    ]
+  },
+  {
     v: "V2.5", name: "Bot brains", status: "next",
     items: [
       "The Tycoon buys and builds relentlessly",
@@ -1186,6 +1209,14 @@ MM.STATUS_LABEL = { shipped: "Working", next: "Building next", planned: "Planned
 
 MM.currentRelease = () => MM.RELEASES.find((r) => r.v === MM.VERSION);
 MM.releasesBy = (status) => MM.RELEASES.filter((r) => r.status === status);
+
+/* Reading order for the changelog: what shipped, newest first — then what's
+   still coming, in the order it will arrive. RELEASES itself stays in build
+   order, so a new entry only ever gets appended in the right place. */
+MM.changelog = () => ({
+  shipped: MM.releasesBy("shipped").slice().reverse(),
+  upcoming: MM.RELEASES.filter((r) => r.status !== "shipped")
+});
 
 
 /* ── src/data/board.js ── */
@@ -3893,18 +3924,24 @@ MM.panels = {
   /* one row per release — green = playable, blue = being built */
   renderStatus() {
     if (!this.refs.status) return;
+
+    const log = MM.changelog();
+    const row = (r) => `
+      <div class="status-row ${r.v === MM.VERSION ? "is-now" : ""}">
+        <span class="status-dot ${r.status}"></span>
+        <div>
+          <span class="status-v">${r.v}</span>
+          <span class="status-name">${r.name}</span>
+        </div>
+        <span class="status-tag">${r.v === MM.VERSION ? "you're here" : MM.STATUS_LABEL[r.status]}</span>
+      </div>`;
+
     this.refs.status.innerHTML = `
       <h2 class="card-title card-title--center">Build status</h2>
       <div class="status-list">
-        ${MM.RELEASES.map((r) => `
-          <div class="status-row ${r.v === MM.VERSION ? "is-now" : ""}">
-            <span class="status-dot ${r.status}"></span>
-            <div>
-              <span class="status-v">${r.v}</span>
-              <span class="status-name">${r.name}</span>
-            </div>
-            <span class="status-tag">${r.v === MM.VERSION ? "you're here" : MM.STATUS_LABEL[r.status]}</span>
-          </div>`).join("")}
+        ${log.shipped.map(row).join("")}
+        <div class="status-split">On the way</div>
+        ${log.upcoming.map(row).join("")}
       </div>
       <button class="btn btn--muted btn--sm status-more" data-action="show-status">See the full list</button>`;
 
@@ -4146,10 +4183,14 @@ MM.screens = {
         </ul>
       </div>`;
 
+    const log = MM.changelog();
     this.modal(`What works today · ${MM.VERSION}`, `
-      <p>Everything with a green tick is playable right now. Everything below it
-      is on the way, in the order it'll arrive.</p>
-      ${MM.RELEASES.map(group).join("")}`);
+      <p>Newest update first. Everything with a green tick is playable right
+      now; below the line is what's still being built.</p>
+      <h3 class="vsection">Shipped</h3>
+      ${log.shipped.map(group).join("")}
+      <h3 class="vsection vsection--soon">On the way</h3>
+      ${log.upcoming.map(group).join("")}`);
   },
 
   rulesModal() {
@@ -4166,7 +4207,8 @@ MM.screens = {
       </ul>
       <h3>Built so far</h3>
       <ul>
-        ${MM.RELEASES.map((r) => `<li><b>${r.v}</b> — ${r.name}${r.v === MM.VERSION ? " <i>You're here.</i>" : ""}</li>`).join("")}
+        ${MM.changelog().shipped.concat(MM.changelog().upcoming)
+            .map((r) => `<li><b>${r.v}</b> — ${r.name}${r.v === MM.VERSION ? " <i>You're here.</i>" : ""}</li>`).join("")}
       </ul>
       <p>Open <b>Build status</b> in the lobby for the full working / coming list.</p>`);
   },

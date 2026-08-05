@@ -9,7 +9,7 @@
    ═══════════════════════════════════════════ */
 window.MM = window.MM || {};
 
-MM.VERSION = "V2";
+MM.VERSION = "V2.0.1";
 
 MM.RELEASES = [
   {
@@ -64,6 +64,13 @@ MM.RELEASES = [
     ]
   },
   {
+    v: "V2.0.1", name: "Changelog order", status: "shipped",
+    items: [
+      "The update log now reads newest first, oldest at the bottom",
+      "What's still being built sits below the line, in the order it'll arrive"
+    ]
+  },
+  {
     v: "V2.5", name: "Bot brains", status: "next",
     items: [
       "The Tycoon buys and builds relentlessly",
@@ -88,3 +95,11 @@ MM.STATUS_LABEL = { shipped: "Working", next: "Building next", planned: "Planned
 
 MM.currentRelease = () => MM.RELEASES.find((r) => r.v === MM.VERSION);
 MM.releasesBy = (status) => MM.RELEASES.filter((r) => r.status === status);
+
+/* Reading order for the changelog: what shipped, newest first — then what's
+   still coming, in the order it will arrive. RELEASES itself stays in build
+   order, so a new entry only ever gets appended in the right place. */
+MM.changelog = () => ({
+  shipped: MM.releasesBy("shipped").slice().reverse(),
+  upcoming: MM.RELEASES.filter((r) => r.status !== "shipped")
+});

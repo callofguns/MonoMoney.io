@@ -19,7 +19,7 @@ To produce the single-file shareable build:
 node tools/build-artifact.mjs   # → dist/monomoney.html
 ```
 
-## What works today (V2)
+## What works today (V2.0.1)
 
 - **40-tile board** rendered on canvas: 8 colour groups, 4 airports, 2 utilities,
   2 taxes, Surprise and Treasure tiles, and the four corners (START, In Prison,
@@ -56,7 +56,9 @@ over in **V2.5**.
 
 The full working / coming list lives in `src/data/versions.js` and is rendered
 in-game: **Build status** in the lobby rail, or *See what works today* on the
-home screen. Add a release there and the UI updates itself.
+home screen. Keep that array in build order and append new releases to the end —
+`MM.changelog()` reverses the shipped ones so the log always reads newest first,
+with what's still coming pinned below the line.
 
 ## Roadmap
 
@@ -66,6 +68,7 @@ home screen. Add a release there and the UI updates itself.
 | V1.1 | Blue palette, version naming, in-game build status | ✅ Working |
 | V1.5 | Buying, rent, colour sets, houses/hotels, mortgages, auctions, cards, bankruptcy | ✅ Working |
 | V2 | The exchange: trading, price shocks, dividends every lap | ✅ Working |
+| V2.0.1 | Changelog reads newest first | ✅ Working |
 | V2.5 | Bot personalities make their own property and portfolio calls | Building next |
 | V3 | Trades, auctions, financial dashboard | Planned |
 

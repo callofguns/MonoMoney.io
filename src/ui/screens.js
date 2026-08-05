@@ -66,10 +66,14 @@ MM.screens = {
         </ul>
       </div>`;
 
+    const log = MM.changelog();
     this.modal(`What works today · ${MM.VERSION}`, `
-      <p>Everything with a green tick is playable right now. Everything below it
-      is on the way, in the order it'll arrive.</p>
-      ${MM.RELEASES.map(group).join("")}`);
+      <p>Newest update first. Everything with a green tick is playable right
+      now; below the line is what's still being built.</p>
+      <h3 class="vsection">Shipped</h3>
+      ${log.shipped.map(group).join("")}
+      <h3 class="vsection vsection--soon">On the way</h3>
+      ${log.upcoming.map(group).join("")}`);
   },
 
   rulesModal() {
@@ -86,7 +90,8 @@ MM.screens = {
       </ul>
       <h3>Built so far</h3>
       <ul>
-        ${MM.RELEASES.map((r) => `<li><b>${r.v}</b> — ${r.name}${r.v === MM.VERSION ? " <i>You're here.</i>" : ""}</li>`).join("")}
+        ${MM.changelog().shipped.concat(MM.changelog().upcoming)
+            .map((r) => `<li><b>${r.v}</b> — ${r.name}${r.v === MM.VERSION ? " <i>You're here.</i>" : ""}</li>`).join("")}
       </ul>
       <p>Open <b>Build status</b> in the lobby for the full working / coming list.</p>`);
   },
