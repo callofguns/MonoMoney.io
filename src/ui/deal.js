@@ -88,7 +88,7 @@ MM.deal = {
                      : `<button class="btn btn--primary" data-deal="ok">Continue</button>`}`);
 
       const done = () => { clearTimeout(timer); this.hide(); resolve(); };
-      const timer = setTimeout(done, player.bot ? 1500 : 6000);
+      const timer = setTimeout(done, player.bot ? 2200 : 6000);
       const ok = this.el.querySelector('[data-deal="ok"]');
       if (ok) ok.addEventListener("click", done);
     });

@@ -7,6 +7,17 @@ window.MM = window.MM || {};
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/* Named pauses so the table reads at a watchable pace rather than a
+   flicker — every one of these is a moment where something just
+   happened and the log/board deserves a beat before the next thing does. */
+const PACE = {
+  JAIL_STAY: 450,       /* "stays in prison" before the turn moves on       */
+  LANDING_IN: 260,      /* breath after the token lands, before it resolves */
+  LANDING_OUT: 340,     /* breath after resolving, before the turn ends     */
+  BOT_BUY_THINK: 450,   /* a bot "deciding" whether to buy                  */
+  NEXT_PLAYER: 380      /* between turn-end and the next player's turn      */
+};
+
 MM.turn = {
   busy: false,
 
@@ -102,7 +113,7 @@ MM.turn = {
       await this.advance(s, p, d.sum, 0);
     } else {
       MM.log(s, `<b>${p.name}</b> stays in prison (${p.jailTurns}/3)`, p);
-      await wait(320);
+      await wait(PACE.JAIL_STAY);
     }
     return this.finishTurn(s, false);
   },
@@ -143,7 +154,7 @@ MM.turn = {
   /* ── landing ──────────────────────────── */
   async resolveLanding(s, p, tile, depth) {
     if (!p.alive) return;
-    await wait(180);
+    await wait(PACE.LANDING_IN);
 
     switch (tile.type) {
       case "property":
@@ -219,7 +230,7 @@ MM.turn = {
     }
 
     MM.bus.emit("state", s);
-    await wait(220);
+    await wait(PACE.LANDING_OUT);
   },
 
   /* ── an unclaimed deed ────────────────── */
@@ -227,7 +238,7 @@ MM.turn = {
     const price = tile.price;
 
     if (p.bot) {
-      await wait(320);
+      await wait(PACE.BOT_BUY_THINK);
       if (MM.bots.wantsToBuy(s, p, tile)) return MM.prop.buy(s, p, tile);
       MM.log(s, `<b>${p.name}</b> passed on ${tile.name}`, p);
       if (s.rules.auction) await MM.auction.run(s, tile);
@@ -274,7 +285,7 @@ MM.turn = {
     }
 
     MM.setPhase(s, MM.PHASES.TURN_END);
-    setTimeout(() => this.nextPlayer(s), 260);
+    setTimeout(() => this.nextPlayer(s), PACE.NEXT_PLAYER);
   },
 
   nextPlayer(s) {

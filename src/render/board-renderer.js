@@ -436,7 +436,7 @@ MM.renderer = {
   },
 
   async travel(p, steps, onEnter) {
-    const dur = Math.max(115, 250 - steps * 9);
+    const dur = Math.max(160, 340 - steps * 10);
     for (let n = 0; n < steps; n++) {
       const to = (p.pos + 1) % 40;
       await this.animate(p, p.pos, to, dur);

@@ -36,7 +36,7 @@ MM.auction = {
       if (p.cash >= bid) {
         if (p.bot) {
           MM.deal.auctionWatch(s, tile, price, leader);
-          await pause(320);
+          await pause(450);
           wants = bid <= MM.bots.bidLimit(s, p, tile);
         } else {
           wants = await MM.deal.auctionBid(s, tile, bid, leader);

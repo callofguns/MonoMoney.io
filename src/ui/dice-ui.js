@@ -36,7 +36,7 @@ MM.diceUI = {
 
   roll(d) {
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const span = reduced ? 180 : 720;
+    const span = reduced ? 180 : 1000;
 
     this.tray.classList.remove("is-double");
     this.tray.classList.add("is-rolling");
@@ -51,7 +51,7 @@ MM.diceUI = {
         this.tray.classList.remove("is-rolling");
         this.show(d.a, d.b);
         if (d.isDouble) this.tray.classList.add("is-double");
-        setTimeout(resolve, reduced ? 40 : 220);
+        setTimeout(resolve, reduced ? 40 : 300);
       }, span);
     });
   }

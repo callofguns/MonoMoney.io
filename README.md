@@ -19,7 +19,7 @@ To produce the single-file shareable build:
 node tools/build-artifact.mjs   # → dist/monomoney.html
 ```
 
-## What works today (V3)
+## What works today (V3.0.1)
 
 - **40-tile board** rendered on canvas: 8 colour groups, 4 airports, 2 utilities,
   2 taxes, Surprise and Treasure tiles, and the four corners (START, In Prison,
@@ -62,13 +62,17 @@ node tools/build-artifact.mjs   # → dist/monomoney.html
 - **Dashboard** — a net-worth line for every player, round by round, plus a
   cash / property / shares / rent breakdown. Opens from the rail or the game-over
   screen, which now shows final standings and a chart the moment the game ends.
+- **A calmer pace** — every pause in a turn runs about 40% longer: landing on a
+  tile, a bot deciding whether to buy, staying in prison, the gap before the next
+  player. The dice tumble a full second before settling, tokens step across the
+  board more slowly, and bots take longer to act, scaled by bot skill.
 
 The full working / coming list lives in `src/data/versions.js` and is rendered
 in-game: **Build status** in the lobby rail, or *See what works today* on the
 home screen. Keep that array in build order and append new releases to the end —
 `MM.changelog()` reverses the shipped ones so the log always reads newest first,
 with what's still coming pinned below the line (hidden entirely once nothing's
-queued, as it is right now — V3 closes out the original roadmap).
+queued, as it is right now — V3 closed out the original roadmap).
 
 ## Roadmap
 
@@ -81,6 +85,7 @@ queued, as it is right now — V3 closes out the original roadmap).
 | V2.0.1 | Changelog reads newest first | ✅ Working |
 | V2.5 | Bot personalities make their own property and portfolio calls | ✅ Working |
 | V3 | Trades and a net-worth dashboard | ✅ Working |
+| V3.0.1 | Slower, more readable turn pacing | ✅ Working |
 
 ## Layout
 

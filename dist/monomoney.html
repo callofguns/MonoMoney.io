@@ -1245,7 +1245,7 @@ button, input, select { font: inherit; color: inherit; }
    ═══════════════════════════════════════════ */
 window.MM = window.MM || {};
 
-MM.VERSION = "V3";
+MM.VERSION = "V3.0.1";
 
 MM.RELEASES = [
   {
@@ -1328,6 +1328,16 @@ MM.RELEASES = [
       "Dashboard: a net-worth line for every player, round by round, plus a cash/property/shares/rent breakdown",
       "Game over now ends on a proper screen — final standings, a net-worth chart and a Play again button",
       "Rent collected per player tracked all game, shown on the dashboard"
+    ]
+  },
+  {
+    v: "V3.0.1", name: "Slower pace", status: "shipped",
+    items: [
+      "Every pause in a turn runs ~40% longer — landing on a tile, a bot deciding to buy, staying in prison, the gap before the next player",
+      "Bots take longer to act on their turn, scaled by bot skill",
+      "The dice tumble for a full second before settling",
+      "Tokens now step across the board more slowly",
+      "Auction bids and bot card reveals hold a beat longer too"
     ]
   }
 ];
@@ -2664,7 +2674,7 @@ MM.auction = {
       if (p.cash >= bid) {
         if (p.bot) {
           MM.deal.auctionWatch(s, tile, price, leader);
-          await pause(320);
+          await pause(450);
           wants = bid <= MM.bots.bidLimit(s, p, tile);
         } else {
           wants = await MM.deal.auctionBid(s, tile, bid, leader);
@@ -2908,6 +2918,17 @@ window.MM = window.MM || {};
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/* Named pauses so the table reads at a watchable pace rather than a
+   flicker — every one of these is a moment where something just
+   happened and the log/board deserves a beat before the next thing does. */
+const PACE = {
+  JAIL_STAY: 450,       /* "stays in prison" before the turn moves on       */
+  LANDING_IN: 260,      /* breath after the token lands, before it resolves */
+  LANDING_OUT: 340,     /* breath after resolving, before the turn ends     */
+  BOT_BUY_THINK: 450,   /* a bot "deciding" whether to buy                  */
+  NEXT_PLAYER: 380      /* between turn-end and the next player's turn      */
+};
+
 MM.turn = {
   busy: false,
 
@@ -3003,7 +3024,7 @@ MM.turn = {
       await this.advance(s, p, d.sum, 0);
     } else {
       MM.log(s, `<b>${p.name}</b> stays in prison (${p.jailTurns}/3)`, p);
-      await wait(320);
+      await wait(PACE.JAIL_STAY);
     }
     return this.finishTurn(s, false);
   },
@@ -3044,7 +3065,7 @@ MM.turn = {
   /* ── landing ──────────────────────────── */
   async resolveLanding(s, p, tile, depth) {
     if (!p.alive) return;
-    await wait(180);
+    await wait(PACE.LANDING_IN);
 
     switch (tile.type) {
       case "property":
@@ -3120,7 +3141,7 @@ MM.turn = {
     }
 
     MM.bus.emit("state", s);
-    await wait(220);
+    await wait(PACE.LANDING_OUT);
   },
 
   /* ── an unclaimed deed ────────────────── */
@@ -3128,7 +3149,7 @@ MM.turn = {
     const price = tile.price;
 
     if (p.bot) {
-      await wait(320);
+      await wait(PACE.BOT_BUY_THINK);
       if (MM.bots.wantsToBuy(s, p, tile)) return MM.prop.buy(s, p, tile);
       MM.log(s, `<b>${p.name}</b> passed on ${tile.name}`, p);
       if (s.rules.auction) await MM.auction.run(s, tile);
@@ -3175,7 +3196,7 @@ MM.turn = {
     }
 
     MM.setPhase(s, MM.PHASES.TURN_END);
-    setTimeout(() => this.nextPlayer(s), 260);
+    setTimeout(() => this.nextPlayer(s), PACE.NEXT_PLAYER);
   },
 
   nextPlayer(s) {
@@ -3901,7 +3922,7 @@ MM.renderer = {
   },
 
   async travel(p, steps, onEnter) {
-    const dur = Math.max(115, 250 - steps * 9);
+    const dur = Math.max(160, 340 - steps * 10);
     for (let n = 0; n < steps; n++) {
       const to = (p.pos + 1) % 40;
       await this.animate(p, p.pos, to, dur);
@@ -3999,7 +4020,7 @@ MM.diceUI = {
 
   roll(d) {
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const span = reduced ? 180 : 720;
+    const span = reduced ? 180 : 1000;
 
     this.tray.classList.remove("is-double");
     this.tray.classList.add("is-rolling");
@@ -4014,7 +4035,7 @@ MM.diceUI = {
         this.tray.classList.remove("is-rolling");
         this.show(d.a, d.b);
         if (d.isDouble) this.tray.classList.add("is-double");
-        setTimeout(resolve, reduced ? 40 : 220);
+        setTimeout(resolve, reduced ? 40 : 300);
       }, span);
     });
   }
@@ -4112,7 +4133,7 @@ MM.deal = {
                      : `<button class="btn btn--primary" data-deal="ok">Continue</button>`}`);
 
       const done = () => { clearTimeout(timer); this.hide(); resolve(); };
-      const timer = setTimeout(done, player.bot ? 1500 : 6000);
+      const timer = setTimeout(done, player.bot ? 2200 : 6000);
       const ok = this.el.querySelector('[data-deal="ok"]');
       if (ok) ok.addEventListener("click", done);
     });
@@ -5177,7 +5198,7 @@ MM.app = {
         players: +document.getElementById("set-players").value,
         startingCash: +document.getElementById("set-cash").value,
         volatility: document.getElementById("set-vol").value,
-        botDelay: { casual: 1400, normal: 900, ruthless: 550 }[document.getElementById("set-skill").value]
+        botDelay: { casual: 1900, normal: 1300, ruthless: 800 }[document.getElementById("set-skill").value]
       }
     });
     document.getElementById("room-link").value = "https://monomoney.io/" + s.room;

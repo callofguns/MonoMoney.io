@@ -62,7 +62,7 @@ MM.app = {
         players: +document.getElementById("set-players").value,
         startingCash: +document.getElementById("set-cash").value,
         volatility: document.getElementById("set-vol").value,
-        botDelay: { casual: 1400, normal: 900, ruthless: 550 }[document.getElementById("set-skill").value]
+        botDelay: { casual: 1900, normal: 1300, ruthless: 800 }[document.getElementById("set-skill").value]
       }
     });
     document.getElementById("room-link").value = "https://monomoney.io/" + s.room;

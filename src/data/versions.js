@@ -9,7 +9,7 @@
    ═══════════════════════════════════════════ */
 window.MM = window.MM || {};
 
-MM.VERSION = "V3";
+MM.VERSION = "V3.0.1";
 
 MM.RELEASES = [
   {
@@ -92,6 +92,16 @@ MM.RELEASES = [
       "Dashboard: a net-worth line for every player, round by round, plus a cash/property/shares/rent breakdown",
       "Game over now ends on a proper screen — final standings, a net-worth chart and a Play again button",
       "Rent collected per player tracked all game, shown on the dashboard"
+    ]
+  },
+  {
+    v: "V3.0.1", name: "Slower pace", status: "shipped",
+    items: [
+      "Every pause in a turn runs ~40% longer — landing on a tile, a bot deciding to buy, staying in prison, the gap before the next player",
+      "Bots take longer to act on their turn, scaled by bot skill",
+      "The dice tumble for a full second before settling",
+      "Tokens now step across the board more slowly",
+      "Auction bids and bot card reveals hold a beat longer too"
     ]
   }
 ];
