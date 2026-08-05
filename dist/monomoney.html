@@ -192,9 +192,12 @@ button, .tab, .partner-chip, .switch, .mini-btn, [role="tab"] {
 .home-core {
   position: relative;
   height: calc(100% - 132px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
+  justify-content: safe center; /* falls back to plain center where "safe" isn't recognised */
   gap: 22px;
-  padding: 0 20px;
+  padding: 12px 20px;
 }
 
 .tagline {
@@ -223,6 +226,7 @@ button, .tab, .partner-chip, .switch, .mini-btn, [role="tab"] {
   background: var(--ink-700); border: 1px solid var(--line);
   border-radius: var(--r-lg); padding: 14px;
 }
+.friends-panel[hidden] { display: none; }
 .friends-tabs.tabs { grid-template-columns: repeat(2, 1fr); margin-bottom: 2px; }
 .friends-pane { display: flex; flex-direction: column; gap: 10px; }
 .friends-pane[hidden] { display: none; }
