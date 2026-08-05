@@ -571,6 +571,17 @@ button, input, select { font: inherit; color: inherit; }
 .trade-stats b { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 13px; }
 .trade-stats b.up { color: var(--up); }
 
+.pnl-row {
+  display: flex; justify-content: space-between; gap: 8px;
+  padding: 7px 10px; margin-bottom: 10px;
+  background: var(--ink-700); border-radius: var(--r-md);
+  font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 11.5px;
+  color: var(--text-mut);
+}
+.pnl-row b { color: var(--text-dim); }
+.pnl-row .up { color: var(--up); }
+.pnl-row .down { color: var(--down); }
+
 .qty-row { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
 .qty-value {
   min-width: 44px; text-align: center;
@@ -1123,7 +1134,7 @@ button, input, select { font: inherit; color: inherit; }
    ═══════════════════════════════════════════ */
 window.MM = window.MM || {};
 
-MM.VERSION = "V2.0.1";
+MM.VERSION = "V2.5";
 
 MM.RELEASES = [
   {
@@ -1185,17 +1196,20 @@ MM.RELEASES = [
     ]
   },
   {
-    v: "V2.5", name: "Bot brains", status: "next",
+    v: "V2.5", name: "Bot brains", status: "shipped",
     items: [
-      "The Tycoon buys and builds relentlessly",
-      "The Banker hoards dividend stock and a cash buffer",
-      "The Shark blocks monopolies and times volatile sells",
-      "The Wildcard splits its bankroll on a coin flip",
-      "Bot skill setting that actually sharpens their decisions"
+      "The Tycoon buys almost anything and pours every spare dollar into buildings — it will sell shares to fund a hotel",
+      "The Banker keeps a $500 cushion, buys the fattest dividend and holds it",
+      "The Shark pays over the odds to deny you your last tile, and trades the dips",
+      "The Wildcard coin-flips its way through both the board and the tape",
+      "Bot skill now bites: casual keeps a bigger cushion and second-guesses, ruthless commits",
+      "Auction limits follow personality — risk appetite, set-completion and blocking all move the ceiling",
+      "Cost basis tracked per holding, so bots take profits and you see your P/L",
+      "Bots say something when they do something characteristic"
     ]
   },
   {
-    v: "V3", name: "Trades & dashboard", status: "planned",
+    v: "V3", name: "Trades & dashboard", status: "next",
     items: [
       "Player-to-player trades of cash, property and shares",
       "Live auctions when a property is declined",
@@ -1335,27 +1349,40 @@ MM.RULE_DEFS = [
     desc: "Some Surprise cards move a company's share price", on: true, since: "V2" }
 ];
 
-/* Bot personalities — V2.5 reads `weights`; today they only show them off. */
+/* Bot personalities. `weights` is the whole brain — src/core/bots.js reads
+   nothing else — and `style` picks how each one treats the tape:
+     none     ignores shares, sells them only to pour concrete
+     income   buys the fattest dividend and sits on it
+     momentum buys what's fallen, sells what's run
+     random   coin-flips its way through the market  */
 MM.PERSONALITIES = [
   {
-    id: "tycoon", tag: "Buys everything", name: "The Tycoon", avatar: "🎩", color: "var(--p2)",
+    id: "tycoon", tag: "Buys everything", name: "The Tycoon", avatar: "\ud83c\udfa9", color: "var(--p2)",
     blurb: "Buys everything, builds fast, sells shares only to fund concrete.",
-    weights: { buyProperty: 0.95, build: 0.9, buyStock: 0.1, cashFloor: 100, riskAppetite: 0.8 }
+    weights: { buyProperty: 0.95, build: 0.9, buyStock: 0.1, cashFloor: 100,
+               riskAppetite: 0.8, block: 0.4, style: "none", stockTarget: 0 },
+    lines: ["another one for the portfolio", "hotels don't build themselves", "concrete beats paper"]
   },
   {
-    id: "banker", tag: "Dividend hunter", name: "The Banker", avatar: "🏦", color: "var(--p3)",
+    id: "banker", tag: "Dividend hunter", name: "The Banker", avatar: "\ud83c\udfe6", color: "var(--p3)",
     blurb: "Loads up on high-dividend stock early and sits on a fat cash buffer.",
-    weights: { buyProperty: 0.5, build: 0.4, buyStock: 0.85, cashFloor: 500, riskAppetite: 0.25 }
+    weights: { buyProperty: 0.5, build: 0.4, buyStock: 0.85, cashFloor: 500,
+               riskAppetite: 0.25, block: 0.2, style: "income", stockTarget: 0.4 },
+    lines: ["dividends over dice", "compounding, quietly", "I'll keep the cash, thanks"]
   },
   {
-    id: "shark", tag: "Monopoly blocker", name: "The Shark", avatar: "🦈", color: "var(--p4)",
+    id: "shark", tag: "Monopoly blocker", name: "The Shark", avatar: "\ud83e\udd88", color: "var(--p4)",
     blurb: "Blocks monopolies, trades hard, cashes out volatility to raise hotels.",
-    weights: { buyProperty: 0.75, build: 0.7, buyStock: 0.6, cashFloor: 300, riskAppetite: 0.65 }
+    weights: { buyProperty: 0.75, build: 0.7, buyStock: 0.6, cashFloor: 300,
+               riskAppetite: 0.65, block: 0.95, style: "momentum", stockTarget: 0.25 },
+    lines: ["not on my board", "you needed that one, didn't you", "buying the dip"]
   },
   {
-    id: "wildcard", tag: "Coin-flip investor", name: "The Wildcard", avatar: "🃏", color: "var(--p5)",
+    id: "wildcard", tag: "Coin-flip investor", name: "The Wildcard", avatar: "\ud83c\udccf", color: "var(--p5)",
     blurb: "Splits the bankroll between whatever it just landed on and a hot ticker.",
-    weights: { buyProperty: 0.6, build: 0.5, buyStock: 0.7, cashFloor: 50, riskAppetite: 1 }
+    weights: { buyProperty: 0.6, build: 0.5, buyStock: 0.7, cashFloor: 50,
+               riskAppetite: 1, block: 0.3, style: "random", stockTarget: 0.3 },
+    lines: ["why not", "feels like a green day", "all in on a hunch"]
   }
 ];
 
@@ -1566,7 +1593,7 @@ MM.createGame = function (opts) {
     id: 0, name: (opts && opts.nickname) || "You", avatar: "😀",
     color: "var(--p1)", hex: "#4e97ff", bot: false, personality: null,
     cash: settings.startingCash, pos: 0, jailed: false, jailTurns: 0,
-    doubles: 0, alive: true, portfolio: {}, getOut: 0, lastDelta: 0, divTotal: 0
+    doubles: 0, alive: true, portfolio: {}, basis: {}, getOut: 0, lastDelta: 0, divTotal: 0
   });
 
   const roster = MM.PERSONALITIES.slice(0, Math.max(0, settings.players - 1));
@@ -1576,7 +1603,7 @@ MM.createGame = function (opts) {
       id: n + 1, name: p.name, avatar: p.avatar,
       color: p.color, hex: hexes[p.id], bot: true, personality: p.id,
       cash: settings.startingCash, pos: 0, jailed: false, jailTurns: 0,
-      doubles: 0, alive: true, portfolio: {}, getOut: 0, lastDelta: 0, divTotal: 0
+      doubles: 0, alive: true, portfolio: {}, basis: {}, getOut: 0, lastDelta: 0, divTotal: 0
     });
   });
 
@@ -1685,7 +1712,11 @@ MM.bankrupt = function (s, debtor, creditor, reason) {
   Object.keys(debtor.portfolio).forEach((sym) => {
     const qty = debtor.portfolio[sym];
     if (qty > 0 && creditor && creditor.alive) {
-      creditor.portfolio[sym] = (creditor.portfolio[sym] || 0) + qty;
+      const had = creditor.portfolio[sym] || 0;
+      const cost = MM.market.basis(debtor, sym);
+      creditor.basis = creditor.basis || {};
+      creditor.basis[sym] = (MM.market.basis(creditor, sym) * had + cost * qty) / (had + qty);
+      creditor.portfolio[sym] = had + qty;
     }
     debtor.portfolio[sym] = 0;
   });
@@ -1753,6 +1784,13 @@ MM.market = {
 
   stock(s, sym) { return s.stocks.find((x) => x.sym === sym); },
   held(player, sym) { return player.portfolio[sym] || 0; },
+  basis(player, sym) { return (player.basis && player.basis[sym]) || 0; },
+
+  /* gain or loss against average cost — the Shark trades on this */
+  unrealized(player, st) {
+    const cost = this.basis(player, st.sym);
+    return cost > 0 ? (st.price - cost) / cost : 0;
+  },
 
   /* Seed a little prior history so the charts read as a market that was
      already running when you sat down, rather than a single dot. */
@@ -1855,8 +1893,11 @@ MM.market = {
     const bill = this.cost(s, sym, qty);
     if (player.cash < bill) return false;
 
+    const had = this.held(player, sym);
     MM.debit(s, player, bill, "shares");
-    player.portfolio[sym] = this.held(player, sym) + qty;
+    player.portfolio[sym] = had + qty;
+    player.basis = player.basis || {};
+    player.basis[sym] = (this.basis(player, sym) * had + bill) / (had + qty);
     st.price = this.clamp(st.price * (1 + Math.min(this.MAX_IMPACT, this.IMPACT * qty)));
 
     MM.log(s, `<b>${player.name}</b> bought <b>${qty}</b> ${sym} for <span class="money">${MM.money(bill)}</span>`, player);
@@ -1872,6 +1913,7 @@ MM.market = {
     const proceeds = this.cost(s, sym, qty);
     MM.credit(s, player, proceeds, "shares");
     player.portfolio[sym] = have - qty;
+    if (player.portfolio[sym] === 0 && player.basis) delete player.basis[sym];
     st.price = this.clamp(st.price * (1 - Math.min(this.MAX_IMPACT, this.IMPACT * qty)));
 
     MM.log(s, `<b>${player.name}</b> sold <b>${qty}</b> ${sym} for <span class="money">${MM.money(proceeds)}</span>`, player);
@@ -2246,67 +2288,202 @@ MM.cards = {
 
 /* ── src/core/bots.js ── */
 /* ═══════════════════════════════════════════
-   Baseline bot decisions (V1.5)
-   Deliberately one shared brain: everybody buys what
-   they can afford and builds when a set is complete.
-   V2.5 replaces this with the four personalities and
-   their weights from src/data/rules.js.
+   Bot brains (V2.5)
+   Every decision reads the personality's weights from
+   src/data/rules.js, so the four of them genuinely play
+   different games: what they'll buy, how hard they bid,
+   when they build, and what they do with the tape.
    ═══════════════════════════════════════════ */
 window.MM = window.MM || {};
 
 MM.bots = {
-  RESERVE: 120,        /* cash a bot likes to keep in hand   */
-  BUILD_FLOOR: 450,    /* won't spend below this on building */
-  INVEST_FLOOR: 800,   /* cash above this can go into shares    */
-
-  reserve(s, p) {
-    return this.RESERVE + (s.settings.botSkill === "ruthless" ? 0 : 60);
+  /* Bot skill sharpens the same brain: a casual bot keeps a bigger
+     cushion and second-guesses itself, a ruthless one commits. */
+  SKILL: {
+    casual:   { edge: 0.75, noise: 0.30 },
+    normal:   { edge: 1.00, noise: 0.12 },
+    ruthless: { edge: 1.30, noise: 0.00 }
   },
 
+  brain(p) {
+    return MM.PERSONALITIES.find((x) => x.id === p.personality) || MM.PERSONALITIES[0];
+  },
+
+  skill(s) { return this.SKILL[s.settings.botSkill] || this.SKILL.normal; },
+
+  /* the cash a bot wants left in hand after any spend */
+  floor(s, p) {
+    return Math.round(this.brain(p).weights.cashFloor / this.skill(s).edge);
+  },
+
+  /* ── reading the board ──────────────────── */
+  completes(s, p, tile) {
+    if (!tile.group) return false;
+    const group = MM.groupTiles(tile.group);
+    return group.filter((t) => s.ownership[t.i] === p.id).length === group.length - 1;
+  },
+
+  /* 1 = someone else is one tile from a set, 0.4 = they've started on it */
+  blockValue(s, p, tile) {
+    if (!tile.group) return 0;
+    const group = MM.groupTiles(tile.group);
+    let worst = 0;
+    MM.livePlayers(s).forEach((o) => {
+      if (o.id === p.id) return;
+      const owned = group.filter((t) => s.ownership[t.i] === o.id).length;
+      if (owned === group.length - 1) worst = Math.max(worst, 1);
+      else if (owned > 0) worst = Math.max(worst, 0.4);
+    });
+    return worst;
+  },
+
+  /* ── landing on an unclaimed deed ───────── */
   wantsToBuy(s, p, tile) {
     if (p.cash < tile.price) return false;
-    /* completing or blocking a set is always worth the squeeze */
-    if (tile.group) {
-      const group = MM.groupTiles(tile.group);
-      const mine = group.filter((t) => s.ownership[t.i] === p.id).length;
-      if (mine === group.length - 1) return true;
+
+    const w = this.brain(p).weights;
+    const k = this.skill(s);
+    const after = p.cash - tile.price;
+    const block = this.blockValue(s, p, tile);
+
+    /* nobody walks past a set they can finish */
+    if (this.completes(s, p, tile)) return true;
+
+    /* denying a rival their last tile is the Shark's whole game */
+    if (block >= 1 && w.block >= 0.6 && after >= this.floor(s, p) * 0.4) {
+      this.say(s, p, 0.4);
+      return true;
     }
-    return p.cash - tile.price >= this.reserve(s, p);
+
+    if (after < this.floor(s, p)) return false;
+
+    const appetite = w.buyProperty * k.edge
+      + w.block * block * 0.35
+      + (s.rng.float() - 0.5) * k.noise * 2;
+
+    return appetite > 0.5;
   },
 
+  /* ── auctions ───────────────────────────── */
   bidLimit(s, p, tile) {
-    const cap = Math.round(tile.price * 1.25);
-    return Math.min(cap, Math.max(0, p.cash - this.reserve(s, p)));
+    const w = this.brain(p).weights;
+    const k = this.skill(s);
+
+    let ceiling = tile.price * (0.75 + w.riskAppetite * 0.55);
+    if (this.completes(s, p, tile)) ceiling *= 1.35;
+    ceiling *= 1 + w.block * this.blockValue(s, p, tile) * 0.3;
+    if (w.style === "random") ceiling *= 0.7 + s.rng.float() * 0.9;
+    ceiling *= k.edge;
+
+    return Math.min(Math.round(ceiling), Math.max(0, p.cash - this.floor(s, p) * 0.5));
   },
 
-  /* end-of-turn housekeeping: put spare cash into buildings */
+  /* ── end of turn ────────────────────────── */
   manage(s, p) {
-    let guard = 6;
-    while (guard-- > 0 && p.cash > this.BUILD_FLOOR) {
-      const options = MM.tilesOf(s, p.id)
-        .filter((t) => MM.prop.canBuild(s, p, t) && p.cash - MM.prop.houseCost(t) > this.BUILD_FLOOR - 200)
-        .sort((a, b) => (s.houses[a.i] || 0) - (s.houses[b.i] || 0) || a.price - b.price);
-      if (!options.length) break;
-      MM.prop.build(s, p, options[0]);
-    }
+    this.develop(s, p);
+    this.trade(s, p);
 
-    /* lift a mortgage once the cash is comfortable again */
-    if (p.cash > 700) {
+    /* clear a mortgage once there's comfort again */
+    if (p.cash > this.floor(s, p) * 2.5) {
       const held = MM.tilesOf(s, p.id).find((t) => MM.prop.canUnmortgage(s, p, t));
       if (held) MM.prop.unmortgage(s, p, held);
     }
-
-    this.invest(s, p);
   },
 
-  /* Baseline investing: park spare cash in the best dividend on offer.
-     V2.5 gives each personality its own view of the tape. */
-  invest(s, p) {
-    if (p.cash < this.INVEST_FLOOR) return;
-    const spend = Math.floor((p.cash - this.INVEST_FLOOR) * 0.5);
-    const pick = s.stocks.slice().sort((a, b) => b.yield - a.yield)[0];
-    const qty = Math.floor(spend / pick.price);
-    if (qty > 0) MM.market.buy(s, p, pick.sym, qty);
+  /* how much cash each personality insists on keeping while building */
+  buildReserve(s, p) {
+    const w = this.brain(p).weights;
+    return Math.round(this.floor(s, p) * (0.8 + (1 - w.build)));
+  },
+
+  develop(s, p) {
+    const w = this.brain(p).weights;
+    const k = this.skill(s);
+    if (s.rng.float() > w.build * k.edge) return;
+
+    const reserve = this.buildReserve(s, p);
+    let guard = 8;
+
+    while (guard-- > 0) {
+      const options = MM.tilesOf(s, p.id)
+        .filter((t) => MM.prop.canBuild(s, p, t))
+        /* build out the priciest set first — that's where the rent is */
+        .sort((a, b) => (s.houses[a.i] || 0) - (s.houses[b.i] || 0) || b.price - a.price);
+      if (!options.length) break;
+
+      const tile = options[0];
+      const cost = MM.prop.houseCost(tile);
+
+      if (p.cash - cost < reserve) {
+        /* the Tycoon will cash out shares to keep pouring concrete */
+        if (w.style === "none" && MM.portfolioValue(s, p) > cost) {
+          MM.market.liquidateFor(s, p, cost + reserve);
+          if (p.cash - cost < reserve) break;
+        } else break;
+      }
+
+      MM.prop.build(s, p, tile);
+      if ((s.houses[tile.i] || 0) === 5) this.say(s, p, 0.5);
+    }
+  },
+
+  /* ── the tape ───────────────────────────── */
+  trade(s, p) {
+    const w = this.brain(p).weights;
+    const spare = p.cash - this.floor(s, p) - 200;
+
+    if (w.style === "none") return;                /* the Tycoon does not invest */
+
+    if (w.style === "income") {
+      /* buy the fattest dividend until the portfolio is the target slice */
+      const worth = Math.max(1, MM.netWorth(s, p));
+      if (MM.portfolioValue(s, p) / worth >= w.stockTarget || spare <= 0) return;
+      const pick = s.stocks.slice().sort((a, b) => b.yield - a.yield)[0];
+      const qty = Math.floor(Math.min(spare, worth * 0.2) / pick.price);
+      if (qty > 0 && MM.market.buy(s, p, pick.sym, qty)) this.say(s, p, 0.25);
+      return;
+    }
+
+    if (w.style === "momentum") {
+      /* take profits on anything that has run, then buy what's fallen */
+      const winner = s.stocks.find((st) => MM.market.held(p, st.sym) > 0 &&
+        MM.market.unrealized(p, st) > 0.12);
+      if (winner) {
+        MM.market.sell(s, p, winner.sym, MM.market.held(p, winner.sym));
+        this.say(s, p, 0.35);
+        return;
+      }
+      if (spare <= 0) return;
+      const dip = s.stocks.slice().sort((a, b) => (a.price / a.anchor) - (b.price / b.anchor))[0];
+      if (dip.price < dip.anchor) {
+        const qty = Math.floor(Math.min(spare, spare * w.stockTarget * 2) / dip.price);
+        if (qty > 0 && MM.market.buy(s, p, dip.sym, qty)) this.say(s, p, 0.25);
+      }
+      return;
+    }
+
+    /* random: the Wildcard does whatever it feels like */
+    if (s.rng.chance(0.18)) {
+      const holding = s.stocks.filter((st) => MM.market.held(p, st.sym) > 0);
+      if (holding.length) {
+        const st = s.rng.pick(holding);
+        MM.market.sell(s, p, st.sym, MM.market.held(p, st.sym));
+        this.say(s, p, 0.3);
+        return;
+      }
+    }
+    if (spare > 0 && s.rng.chance(0.4)) {
+      const st = s.rng.pick(s.stocks);
+      const qty = Math.floor((spare * (0.2 + s.rng.float() * 0.6)) / st.price);
+      if (qty > 0 && MM.market.buy(s, p, st.sym, qty)) this.say(s, p, 0.3);
+    }
+  },
+
+  /* a line in chat, so the personality is visible from outside */
+  say(s, p, chance) {
+    const lines = this.brain(p).lines;
+    if (!lines || !s.rng.chance(chance)) return;
+    MM.chat(s, p.name, s.rng.pick(lines), p.hex);
   }
 };
 
@@ -3697,8 +3874,9 @@ MM.marketUI = {
     const cost = MM.market.cost(s, sym, qty);
     const canBuy = you.cash >= cost && you.alive;
     const canSell = held >= qty && you.alive;
-    const lo = Math.min(...st.history);
-    const hi = Math.max(...st.history);
+    const band = this.series(st);
+    const lo = Math.min(...band);
+    const hi = Math.max(...band);
 
     return `
       <div class="trade-head">
@@ -3723,6 +3901,7 @@ MM.marketUI = {
         <div><span>Position</span><b>${MM.money(held * st.price)}</b></div>
         <div><span>Per lap</span><b class="up">${MM.money(Math.round(held * st.price * st.yield))}</b></div>
       </div>
+      ${held ? this.pnl(s, you, st, held) : ""}
 
       <div class="qty-row">
         <button class="mini-btn" data-qty="-1">−</button>
@@ -3738,7 +3917,29 @@ MM.marketUI = {
       </div>`;
   },
 
+  /* what the position has actually done since you bought it */
+  pnl(s, you, st, held) {
+    const cost = MM.market.basis(you, st.sym);
+    if (!cost) return "";
+    const gain = (st.price - cost) * held;
+    const pct = MM.market.unrealized(you, st) * 100;
+    const dir = gain >= 0 ? "up" : "down";
+    return `
+      <div class="pnl-row">
+        <span>Avg cost <b>$${cost.toFixed(2)}</b></span>
+        <span class="${dir}">${gain >= 0 ? "+" : "−"}${MM.money(Math.abs(gain))} (${pct >= 0 ? "+" : ""}${pct.toFixed(1)}%)</span>
+      </div>`;
+  },
+
   /* ── charts ─────────────────────────────── */
+  /* history only records on round ticks, so pin the live price on the end —
+     otherwise a mid-round shock shows in the number but not the line */
+  series(st) {
+    const hist = st.history.slice();
+    if (hist[hist.length - 1] !== st.price) hist.push(st.price);
+    return hist.length > 1 ? hist : [st.price, st.price];
+  },
+
   points(hist, w, h, pad) {
     const lo = Math.min(...hist);
     const hi = Math.max(...hist);
@@ -3752,7 +3953,7 @@ MM.marketUI = {
   },
 
   spark(st, w, h) {
-    const hist = st.history.length > 1 ? st.history : [st.price, st.price];
+    const hist = this.series(st);
     const pts = this.points(hist, w, h, 3);
     const rising = hist[hist.length - 1] >= hist[0];
     const stroke = rising ? "var(--up)" : "var(--down)";
@@ -3768,7 +3969,7 @@ MM.marketUI = {
 
   chart(st) {
     const w = 300, h = 110;
-    const hist = st.history.length > 1 ? st.history : [st.price, st.price];
+    const hist = this.series(st);
     const pts = this.points(hist, w, h, 8);
     const rising = hist[hist.length - 1] >= hist[0];
     const stroke = rising ? "var(--up)" : "var(--down)";

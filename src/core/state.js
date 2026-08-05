@@ -31,7 +31,7 @@ MM.createGame = function (opts) {
     id: 0, name: (opts && opts.nickname) || "You", avatar: "😀",
     color: "var(--p1)", hex: "#4e97ff", bot: false, personality: null,
     cash: settings.startingCash, pos: 0, jailed: false, jailTurns: 0,
-    doubles: 0, alive: true, portfolio: {}, getOut: 0, lastDelta: 0, divTotal: 0
+    doubles: 0, alive: true, portfolio: {}, basis: {}, getOut: 0, lastDelta: 0, divTotal: 0
   });
 
   const roster = MM.PERSONALITIES.slice(0, Math.max(0, settings.players - 1));
@@ -41,7 +41,7 @@ MM.createGame = function (opts) {
       id: n + 1, name: p.name, avatar: p.avatar,
       color: p.color, hex: hexes[p.id], bot: true, personality: p.id,
       cash: settings.startingCash, pos: 0, jailed: false, jailTurns: 0,
-      doubles: 0, alive: true, portfolio: {}, getOut: 0, lastDelta: 0, divTotal: 0
+      doubles: 0, alive: true, portfolio: {}, basis: {}, getOut: 0, lastDelta: 0, divTotal: 0
     });
   });
 
@@ -150,7 +150,11 @@ MM.bankrupt = function (s, debtor, creditor, reason) {
   Object.keys(debtor.portfolio).forEach((sym) => {
     const qty = debtor.portfolio[sym];
     if (qty > 0 && creditor && creditor.alive) {
-      creditor.portfolio[sym] = (creditor.portfolio[sym] || 0) + qty;
+      const had = creditor.portfolio[sym] || 0;
+      const cost = MM.market.basis(debtor, sym);
+      creditor.basis = creditor.basis || {};
+      creditor.basis[sym] = (MM.market.basis(creditor, sym) * had + cost * qty) / (had + qty);
+      creditor.portfolio[sym] = had + qty;
     }
     debtor.portfolio[sym] = 0;
   });

@@ -14,6 +14,13 @@ MM.market = {
 
   stock(s, sym) { return s.stocks.find((x) => x.sym === sym); },
   held(player, sym) { return player.portfolio[sym] || 0; },
+  basis(player, sym) { return (player.basis && player.basis[sym]) || 0; },
+
+  /* gain or loss against average cost — the Shark trades on this */
+  unrealized(player, st) {
+    const cost = this.basis(player, st.sym);
+    return cost > 0 ? (st.price - cost) / cost : 0;
+  },
 
   /* Seed a little prior history so the charts read as a market that was
      already running when you sat down, rather than a single dot. */
@@ -116,8 +123,11 @@ MM.market = {
     const bill = this.cost(s, sym, qty);
     if (player.cash < bill) return false;
 
+    const had = this.held(player, sym);
     MM.debit(s, player, bill, "shares");
-    player.portfolio[sym] = this.held(player, sym) + qty;
+    player.portfolio[sym] = had + qty;
+    player.basis = player.basis || {};
+    player.basis[sym] = (this.basis(player, sym) * had + bill) / (had + qty);
     st.price = this.clamp(st.price * (1 + Math.min(this.MAX_IMPACT, this.IMPACT * qty)));
 
     MM.log(s, `<b>${player.name}</b> bought <b>${qty}</b> ${sym} for <span class="money">${MM.money(bill)}</span>`, player);
@@ -133,6 +143,7 @@ MM.market = {
     const proceeds = this.cost(s, sym, qty);
     MM.credit(s, player, proceeds, "shares");
     player.portfolio[sym] = have - qty;
+    if (player.portfolio[sym] === 0 && player.basis) delete player.basis[sym];
     st.price = this.clamp(st.price * (1 - Math.min(this.MAX_IMPACT, this.IMPACT * qty)));
 
     MM.log(s, `<b>${player.name}</b> sold <b>${qty}</b> ${sym} for <span class="money">${MM.money(proceeds)}</span>`, player);

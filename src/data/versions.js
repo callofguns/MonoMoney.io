@@ -9,7 +9,7 @@
    ═══════════════════════════════════════════ */
 window.MM = window.MM || {};
 
-MM.VERSION = "V2.0.1";
+MM.VERSION = "V2.5";
 
 MM.RELEASES = [
   {
@@ -71,17 +71,20 @@ MM.RELEASES = [
     ]
   },
   {
-    v: "V2.5", name: "Bot brains", status: "next",
+    v: "V2.5", name: "Bot brains", status: "shipped",
     items: [
-      "The Tycoon buys and builds relentlessly",
-      "The Banker hoards dividend stock and a cash buffer",
-      "The Shark blocks monopolies and times volatile sells",
-      "The Wildcard splits its bankroll on a coin flip",
-      "Bot skill setting that actually sharpens their decisions"
+      "The Tycoon buys almost anything and pours every spare dollar into buildings — it will sell shares to fund a hotel",
+      "The Banker keeps a $500 cushion, buys the fattest dividend and holds it",
+      "The Shark pays over the odds to deny you your last tile, and trades the dips",
+      "The Wildcard coin-flips its way through both the board and the tape",
+      "Bot skill now bites: casual keeps a bigger cushion and second-guesses, ruthless commits",
+      "Auction limits follow personality — risk appetite, set-completion and blocking all move the ceiling",
+      "Cost basis tracked per holding, so bots take profits and you see your P/L",
+      "Bots say something when they do something characteristic"
     ]
   },
   {
-    v: "V3", name: "Trades & dashboard", status: "planned",
+    v: "V3", name: "Trades & dashboard", status: "next",
     items: [
       "Player-to-player trades of cash, property and shares",
       "Live auctions when a property is declined",

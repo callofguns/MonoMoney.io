@@ -19,7 +19,7 @@ To produce the single-file shareable build:
 node tools/build-artifact.mjs   # → dist/monomoney.html
 ```
 
-## What works today (V2.0.1)
+## What works today (V2.5)
 
 - **40-tile board** rendered on canvas: 8 colour groups, 4 airports, 2 utilities,
   2 taxes, Surprise and Treasure tiles, and the four corners (START, In Prison,
@@ -50,9 +50,10 @@ node tools/build-artifact.mjs   # → dist/monomoney.html
 - **Table UI** — blue trading-floor palette, player rail with balances and holdings,
   a property manager for building and mortgaging, event log, chat, and the market tape.
 
-Bots use one shared baseline brain for now (buy what they can afford, build on
-completed sets, park spare cash in the best dividend). The four personalities take
-over in **V2.5**.
+- **Four bot brains** — every decision (buy, bid, build, trade) reads the
+  personality's weights, so the Tycoon builds while the Banker compounds and the
+  Shark pays over the odds to deny you a set. Bot skill scales their cushion and
+  their conviction.
 
 The full working / coming list lives in `src/data/versions.js` and is rendered
 in-game: **Build status** in the lobby rail, or *See what works today* on the
@@ -69,8 +70,8 @@ with what's still coming pinned below the line.
 | V1.5 | Buying, rent, colour sets, houses/hotels, mortgages, auctions, cards, bankruptcy | ✅ Working |
 | V2 | The exchange: trading, price shocks, dividends every lap | ✅ Working |
 | V2.0.1 | Changelog reads newest first | ✅ Working |
-| V2.5 | Bot personalities make their own property and portfolio calls | Building next |
-| V3 | Trades, auctions, financial dashboard | Planned |
+| V2.5 | Bot personalities make their own property and portfolio calls | ✅ Working |
+| V3 | Trades, auctions, financial dashboard | Building next |
 
 ## Layout
 
@@ -94,7 +95,7 @@ src/
   core/market.js        the exchange: pricing, trading, dividends, fundamentals
   core/property.js      deeds: buying, rent, building, mortgaging, forced sales
   core/cards.js         drawing and resolving cards
-  core/bots.js          baseline bot decisions (V2.5 replaces this)
+  core/bots.js          the four personalities: buying, bidding, building, trading
   core/auction.js       ascending auction for a declined deed
   core/turn.js          the turn state machine
   render/geometry.js    index → rectangle, index → token anchor
@@ -121,13 +122,20 @@ either owning the other.
 
 | Bot | Plays like |
 | --- | ---------- |
-| 🎩 The Tycoon | Buys everything, builds fast, sells shares only to fund concrete |
-| 🏦 The Banker | High-dividend stock early, fat cash buffer, patient |
-| 🦈 The Shark | Blocks monopolies, trades hard, times volatility to raise hotels |
-| 🃏 The Wildcard | Splits the bankroll between the tile it just hit and a hot ticker |
+| 🎩 The Tycoon | Buys almost anything, keeps only $100 back, pours everything into buildings — sells shares to fund a hotel, never buys them |
+| 🏦 The Banker | Keeps a $500 cushion, buys the fattest dividend up to 40% of net worth, holds it |
+| 🦈 The Shark | Pays over the odds for the tile that denies you a set; buys the dips, takes profits above +12% |
+| 🃏 The Wildcard | Coin-flips both halves of the game — 90% buy rate on the board, random dumps on the tape |
 
-Personalities and their weights are declared in `src/data/rules.js`; V2.5 reads
-them to make decisions.
+Weights live in `src/data/rules.js` and are the whole brain: `core/bots.js` reads
+nothing else. `style` picks the trading behaviour (`none` / `income` / `momentum` /
+`random`), and the **Bot skill** setting scales the cushion each one keeps and how
+often it second-guesses a buy.
+
+Measured over a self-playing 24-round game: the Tycoon finished with 6 houses and
+no shares, the Banker with 21 shares and $376 of dividends, the Shark holding
+seven deeds it mostly bought to block, the Wildcard with the deeds and nothing
+else.
 
 ## The exchange
 

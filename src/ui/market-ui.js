@@ -67,8 +67,9 @@ MM.marketUI = {
     const cost = MM.market.cost(s, sym, qty);
     const canBuy = you.cash >= cost && you.alive;
     const canSell = held >= qty && you.alive;
-    const lo = Math.min(...st.history);
-    const hi = Math.max(...st.history);
+    const band = this.series(st);
+    const lo = Math.min(...band);
+    const hi = Math.max(...band);
 
     return `
       <div class="trade-head">
@@ -93,6 +94,7 @@ MM.marketUI = {
         <div><span>Position</span><b>${MM.money(held * st.price)}</b></div>
         <div><span>Per lap</span><b class="up">${MM.money(Math.round(held * st.price * st.yield))}</b></div>
       </div>
+      ${held ? this.pnl(s, you, st, held) : ""}
 
       <div class="qty-row">
         <button class="mini-btn" data-qty="-1">−</button>
@@ -108,7 +110,29 @@ MM.marketUI = {
       </div>`;
   },
 
+  /* what the position has actually done since you bought it */
+  pnl(s, you, st, held) {
+    const cost = MM.market.basis(you, st.sym);
+    if (!cost) return "";
+    const gain = (st.price - cost) * held;
+    const pct = MM.market.unrealized(you, st) * 100;
+    const dir = gain >= 0 ? "up" : "down";
+    return `
+      <div class="pnl-row">
+        <span>Avg cost <b>$${cost.toFixed(2)}</b></span>
+        <span class="${dir}">${gain >= 0 ? "+" : "−"}${MM.money(Math.abs(gain))} (${pct >= 0 ? "+" : ""}${pct.toFixed(1)}%)</span>
+      </div>`;
+  },
+
   /* ── charts ─────────────────────────────── */
+  /* history only records on round ticks, so pin the live price on the end —
+     otherwise a mid-round shock shows in the number but not the line */
+  series(st) {
+    const hist = st.history.slice();
+    if (hist[hist.length - 1] !== st.price) hist.push(st.price);
+    return hist.length > 1 ? hist : [st.price, st.price];
+  },
+
   points(hist, w, h, pad) {
     const lo = Math.min(...hist);
     const hi = Math.max(...hist);
@@ -122,7 +146,7 @@ MM.marketUI = {
   },
 
   spark(st, w, h) {
-    const hist = st.history.length > 1 ? st.history : [st.price, st.price];
+    const hist = this.series(st);
     const pts = this.points(hist, w, h, 3);
     const rising = hist[hist.length - 1] >= hist[0];
     const stroke = rising ? "var(--up)" : "var(--down)";
@@ -138,7 +162,7 @@ MM.marketUI = {
 
   chart(st) {
     const w = 300, h = 110;
-    const hist = st.history.length > 1 ? st.history : [st.price, st.price];
+    const hist = this.series(st);
     const pts = this.points(hist, w, h, 8);
     const rising = hist[hist.length - 1] >= hist[0];
     const stroke = rising ? "var(--up)" : "var(--down)";

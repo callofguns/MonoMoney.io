@@ -23,27 +23,40 @@ MM.RULE_DEFS = [
     desc: "Some Surprise cards move a company's share price", on: true, since: "V2" }
 ];
 
-/* Bot personalities — V2.5 reads `weights`; today they only show them off. */
+/* Bot personalities. `weights` is the whole brain — src/core/bots.js reads
+   nothing else — and `style` picks how each one treats the tape:
+     none     ignores shares, sells them only to pour concrete
+     income   buys the fattest dividend and sits on it
+     momentum buys what's fallen, sells what's run
+     random   coin-flips its way through the market  */
 MM.PERSONALITIES = [
   {
-    id: "tycoon", tag: "Buys everything", name: "The Tycoon", avatar: "🎩", color: "var(--p2)",
+    id: "tycoon", tag: "Buys everything", name: "The Tycoon", avatar: "\ud83c\udfa9", color: "var(--p2)",
     blurb: "Buys everything, builds fast, sells shares only to fund concrete.",
-    weights: { buyProperty: 0.95, build: 0.9, buyStock: 0.1, cashFloor: 100, riskAppetite: 0.8 }
+    weights: { buyProperty: 0.95, build: 0.9, buyStock: 0.1, cashFloor: 100,
+               riskAppetite: 0.8, block: 0.4, style: "none", stockTarget: 0 },
+    lines: ["another one for the portfolio", "hotels don't build themselves", "concrete beats paper"]
   },
   {
-    id: "banker", tag: "Dividend hunter", name: "The Banker", avatar: "🏦", color: "var(--p3)",
+    id: "banker", tag: "Dividend hunter", name: "The Banker", avatar: "\ud83c\udfe6", color: "var(--p3)",
     blurb: "Loads up on high-dividend stock early and sits on a fat cash buffer.",
-    weights: { buyProperty: 0.5, build: 0.4, buyStock: 0.85, cashFloor: 500, riskAppetite: 0.25 }
+    weights: { buyProperty: 0.5, build: 0.4, buyStock: 0.85, cashFloor: 500,
+               riskAppetite: 0.25, block: 0.2, style: "income", stockTarget: 0.4 },
+    lines: ["dividends over dice", "compounding, quietly", "I'll keep the cash, thanks"]
   },
   {
-    id: "shark", tag: "Monopoly blocker", name: "The Shark", avatar: "🦈", color: "var(--p4)",
+    id: "shark", tag: "Monopoly blocker", name: "The Shark", avatar: "\ud83e\udd88", color: "var(--p4)",
     blurb: "Blocks monopolies, trades hard, cashes out volatility to raise hotels.",
-    weights: { buyProperty: 0.75, build: 0.7, buyStock: 0.6, cashFloor: 300, riskAppetite: 0.65 }
+    weights: { buyProperty: 0.75, build: 0.7, buyStock: 0.6, cashFloor: 300,
+               riskAppetite: 0.65, block: 0.95, style: "momentum", stockTarget: 0.25 },
+    lines: ["not on my board", "you needed that one, didn't you", "buying the dip"]
   },
   {
-    id: "wildcard", tag: "Coin-flip investor", name: "The Wildcard", avatar: "🃏", color: "var(--p5)",
+    id: "wildcard", tag: "Coin-flip investor", name: "The Wildcard", avatar: "\ud83c\udccf", color: "var(--p5)",
     blurb: "Splits the bankroll between whatever it just landed on and a hot ticker.",
-    weights: { buyProperty: 0.6, build: 0.5, buyStock: 0.7, cashFloor: 50, riskAppetite: 1 }
+    weights: { buyProperty: 0.6, build: 0.5, buyStock: 0.7, cashFloor: 50,
+               riskAppetite: 1, block: 0.3, style: "random", stockTarget: 0.3 },
+    lines: ["why not", "feels like a green day", "all in on a hunch"]
   }
 ];
 
