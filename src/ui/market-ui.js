@@ -31,18 +31,21 @@ MM.marketUI = {
       const dir = chg >= 0 ? "up" : "down";
       const qty = MM.market.held(you, st.sym);
       return `
-        <button class="stock-row stock-row--btn" data-sym="${st.sym}">
-          <div class="stock-sym" style="--scolor:${st.color}">${st.sym}</div>
-          <div class="stock-id">
-            <div class="stock-name">${st.name}</div>
-            <div class="stock-meta">${qty ? `You hold ${qty}` : `${st.sector} · ${(st.yield * 100).toFixed(0)}% yield`}</div>
-          </div>
-          ${this.spark(st, 64, 24)}
-          <div class="stock-price">
-            <b>$${st.price.toFixed(2)}</b>
-            <span class="stock-chg ${dir}">${chg >= 0 ? "▲" : "▼"} ${Math.abs(chg).toFixed(1)}%</span>
-          </div>
-        </button>`;
+        <div class="stock-row-wrap">
+          <button class="info-btn" data-info="${st.sym}" title="What moves ${st.sym}" aria-label="What moves ${st.sym}">ⓘ</button>
+          <button class="stock-row stock-row--btn" data-sym="${st.sym}">
+            <div class="stock-sym" style="--scolor:${st.color}">${st.sym}</div>
+            <div class="stock-id">
+              <div class="stock-name">${st.name}</div>
+              <div class="stock-meta">${qty ? `You hold ${qty}` : `${st.sector} · ${(st.yield * 100).toFixed(0)}% yield`}</div>
+            </div>
+            ${this.spark(st, 64, 24)}
+            <div class="stock-price">
+              <b>$${st.price.toFixed(2)}</b>
+              <span class="stock-chg ${dir}">${chg >= 0 ? "▲" : "▼"} ${Math.abs(chg).toFixed(1)}%</span>
+            </div>
+          </button>
+        </div>`;
     }).join("");
 
     const worth = MM.portfolioValue(s, you);
@@ -79,6 +82,7 @@ MM.marketUI = {
           <div class="stock-name">${st.name}</div>
           <div class="stock-meta">${st.sector} · ${(st.yield * 100).toFixed(0)}% per lap</div>
         </div>
+        <button class="info-btn" data-info="${st.sym}" title="What moves ${st.sym}" aria-label="What moves ${st.sym}">ⓘ</button>
       </div>
 
       <div class="trade-price">
@@ -122,6 +126,46 @@ MM.marketUI = {
         <span>Avg cost <b>$${cost.toFixed(2)}</b></span>
         <span class="${dir}">${gain >= 0 ? "+" : "−"}${MM.money(Math.abs(gain))} (${pct >= 0 ? "+" : ""}${pct.toFixed(1)}%)</span>
       </div>`;
+  },
+
+  /* ── the ⓘ next to a stock: what moves it, in plain language ──
+     Reads live off the actual data — market events, insider cards, the
+     current volatility band — so this can never drift out of sync with
+     what the exchange is actually doing. Only the "what is this company"
+     blurb and its fundamental driver are hand-written, in src/data/rules.js. */
+  infoModal(sym) {
+    const s = MM.state;
+    const st = MM.market.stock(s, sym);
+    const meta = MM.STOCKS.find((x) => x.sym === sym);
+    const volLabel = st.vol > 0.08 ? "High" : st.vol > 0.045 ? "Medium" : "Low";
+    const volNote = st.vol > 0.08 ? "the most volatile listing on the exchange"
+      : st.vol < 0.045 ? "one of the steadier listings"
+      : "middling — not the calmest listing, not the wildest";
+
+    const headlines = MM.MARKET_EVENTS.filter((e) => e.sym === sym);
+    const wholeMarket = MM.MARKET_EVENTS.filter((e) => e.all !== undefined);
+    const insider = [].concat(MM.DECKS.surprise, MM.DECKS.treasure)
+      .filter((c) => c.insider && c.effect.sym === sym);
+
+    const pct = (p) => `<span class="${p >= 0 ? "up" : "down"}">${p >= 0 ? "+" : ""}${Math.round(p * 100)}%</span>`;
+
+    MM.screens.modal(`${meta.name} · ${sym}`, `
+      <p>${meta.blurb}</p>
+      <h3>The numbers</h3>
+      <ul>
+        <li><b>${meta.sector}</b> sector</li>
+        <li><b>${(meta.yield * 100).toFixed(0)}%</b> of the share price, paid as a dividend every lap you pass START</li>
+        <li><b>${volLabel} volatility</b> — ${volNote}</li>
+      </ul>
+      <h3>What moves the price</h3>
+      <ul>
+        <li>${meta.driver}</li>
+        ${headlines.map((h) => `<li>Headline — "${h.head}" ${pct(h.pct)}</li>`).join("")}
+        <li>Whole-market headlines — two events that move every listing together, ${wholeMarket.map((w) => pct(w.all)).join(" or ")}</li>
+        ${insider.map((c) => `<li>Insider Surprise card <i>(the house rule for it)</i> — "${c.text}" ${pct(c.effect.pct)}</li>`).join("")}
+        <li>Every order nudges the price up to 3% — a big trade, yours or a bot's, moves it further</li>
+        <li>A little random drift every round, sized by its own volatility</li>
+      </ul>`);
   },
 
   /* ── charts ─────────────────────────────── */
@@ -188,6 +232,12 @@ MM.marketUI = {
 
     this.el.querySelectorAll("[data-sym]").forEach((row) =>
       row.addEventListener("click", () => { this.open = row.dataset.sym; this.qty = 1; this.render(); }));
+
+    this.el.querySelectorAll("[data-info]").forEach((b) =>
+      b.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this.infoModal(b.dataset.info);
+      }));
 
     const back = this.el.querySelector("[data-back]");
     if (back) back.addEventListener("click", () => { this.open = null; this.render(); });

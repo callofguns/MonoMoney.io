@@ -67,15 +67,25 @@ MM.PERSONALITIES = [
    palette, in this order — swapping them around fails the CVD checks. */
 MM.STOCKS = [
   { sym: "SKY", name: "Skyline Air Group", sector: "Airports",   color: "#3987e5",
-    price: 120, yield: 0.05, vol: 0.05 },
+    price: 120, yield: 0.05, vol: 0.05,
+    blurb: "Runs the routes out of every airport on the board.",
+    driver: "Tracks airports in play — each of the four (LHR, DXB, HND, JFK) anyone owns lifts it about 7%." },
   { sym: "VLT", name: "Voltaic Power",     sector: "Utilities",  color: "#d95926",
-    price: 95,  yield: 0.06, vol: 0.04 },
+    price: 95,  yield: 0.06, vol: 0.04,
+    blurb: "Keeps the lights on for both utilities on the board.",
+    driver: "Tracks utilities in play — Power Company and Water Company each lift it about 9%." },
   { sym: "BRK", name: "Brickstone Realty", sector: "Property",   color: "#199e70",
-    price: 150, yield: 0.03, vol: 0.06 },
+    price: 150, yield: 0.03, vol: 0.06,
+    blurb: "Builds and manages the housing going up around the table.",
+    driver: "Tracks total development — every house or hotel anyone builds, anywhere, lifts it about 2.8%." },
   { sym: "TCH", name: "Helix Tech",        sector: "Technology", color: "#c98500",
-    price: 210, yield: 0.01, vol: 0.11 },
+    price: 210, yield: 0.01, vol: 0.11,
+    blurb: "A chipmaker with no stake in the board at all.",
+    driver: "No fundamental anchor — nothing you build or buy moves it. The highest volatility on the exchange, so it runs almost entirely on headlines and noise." },
   { sym: "AUR", name: "Aurum Bank",        sector: "Finance",    color: "#d55181",
-    price: 80,  yield: 0.08, vol: 0.03 }
+    price: 80,  yield: 0.08, vol: 0.03,
+    blurb: "Finances the table — its fortunes track the players', not the board.",
+    driver: "Tracks total cash in every live player's hand, capped at a 50% lift." }
 ];
 
 MM.VOLATILITY = { calm: 0.5, normal: 1, wild: 2.1 };

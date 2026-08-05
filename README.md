@@ -19,7 +19,7 @@ To produce the single-file shareable build:
 node tools/build-artifact.mjs   # → dist/monomoney.html
 ```
 
-## What works today (V3.1)
+## What works today (V3.2)
 
 - **40-tile board** rendered on canvas: 8 colour groups, 4 airports, 2 utilities,
   2 taxes, Surprise and Treasure tiles, and the four corners (START, In Prison,
@@ -72,6 +72,11 @@ node tools/build-artifact.mjs   # → dist/monomoney.html
   Market/Properties/Trades tabs sit right below the board; chat moved down. Every
   button, tab and toggle sizes up to a real touch target on a touchscreen, and
   text inputs no longer trigger iOS's zoom-on-focus.
+- **Know your stock** — an ⓘ next to every listing (and another in its trade
+  panel) opens what actually moves that price: sector, dividend yield, a plain
+  volatility read, the fundamental driver behind it, and every headline or
+  insider card that can swing it, all pulled live from the same data the market
+  runs on.
 
 The full working / coming list lives in `src/data/versions.js` and is rendered
 in-game: **Build status** in the lobby rail, or *See what works today* on the
@@ -93,6 +98,7 @@ queued, as it is right now — V3 closed out the original roadmap).
 | V3 | Trades and a net-worth dashboard | ✅ Working |
 | V3.0.1 | Slower, more readable turn pacing | ✅ Working |
 | V3.1 | Built for phones — a bigger board, real touch targets, tap-to-inspect | ✅ Working |
+| V3.2 | Know your stock — an info icon explaining what moves each price | ✅ Working |
 
 ## Layout
 

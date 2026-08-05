@@ -9,7 +9,7 @@
    ═══════════════════════════════════════════ */
 window.MM = window.MM || {};
 
-MM.VERSION = "V3.1";
+MM.VERSION = "V3.2";
 
 MM.RELEASES = [
   {
@@ -114,6 +114,16 @@ MM.RELEASES = [
       "Text inputs no longer trigger iOS's zoom-on-focus",
       "No more 300ms tap delay or the grey flash Android/iOS show on every button press",
       "A widescreen table (net worth, game over) fades at the edge to signal it scrolls sideways, instead of just clipping"
+    ]
+  },
+  {
+    v: "V3.2", name: "Know your stock", status: "shipped",
+    items: [
+      "An ⓘ next to every listing in the Market tab, and another in its trade panel, opens what actually moves that stock",
+      "Sector, dividend yield and a plain volatility read (low/medium/high) for all five companies",
+      "The fundamental driver behind each price, in plain language — airports for SKY, utilities for VLT, buildings for BRK, cash on hand for AUR, and why TCH has none and runs on headlines alone",
+      "Every headline and insider card that can move that specific stock, pulled live from the same data the market runs on — so the explanation can never drift out of sync with the game",
+      "A note on order flow and random drift, so the price bar makes sense even on a quiet round"
     ]
   }
 ];

@@ -91,6 +91,8 @@ button, .tab, .partner-chip, .switch, .mini-btn, [role="tab"] {
 ::-webkit-scrollbar-thumb:hover { background: var(--line); }
 
 .num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+.up { color: var(--up); }
+.down { color: var(--down); }
 
 /* ── wordmark ───────────────────────────────── */
 .brand { display: flex; align-items: center; gap: 14px; }

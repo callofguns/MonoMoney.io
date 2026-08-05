@@ -272,6 +272,22 @@
   transition: background .15s;
 }
 .stock-row--btn:hover { background: var(--ink-500); }
+
+/* the row stays one button (so it still opens the trade panel on a
+   click anywhere on it) with the info button as a sibling, not nested
+   inside it — a button inside a button isn't valid HTML */
+.stock-row-wrap { display: flex; align-items: stretch; gap: 6px; }
+.stock-row-wrap .stock-row--btn { flex: 1; min-width: 0; }
+
+.info-btn {
+  flex: none; width: 30px;
+  display: grid; place-items: center;
+  border: 0; border-radius: var(--r-md);
+  background: var(--ink-700); color: var(--text-mut);
+  font-size: 15px; cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.info-btn:hover { background: var(--ink-500); color: var(--accent-lift); }
 .stock-id { min-width: 0; }
 .stock-id .stock-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
@@ -287,7 +303,7 @@
 .port-strip b { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 14px; }
 .port-strip b.up { color: var(--up); }
 
-.trade-head { display: grid; grid-template-columns: auto 30px 1fr; gap: 10px; align-items: center; margin-bottom: 10px; }
+.trade-head { display: grid; grid-template-columns: auto 30px 1fr auto; gap: 10px; align-items: center; margin-bottom: 10px; }
 .trade-price { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; }
 .trade-price b { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 26px; letter-spacing: -.02em; }
 
@@ -522,6 +538,7 @@
 @media (pointer: coarse) {
   .icon-btn { width: 40px; height: 40px; font-size: 15px; }
   .mini-btn { width: 38px; height: 38px; font-size: 14px; }
+  .info-btn { width: 38px; font-size: 16px; }
   .chip-btn { padding: 8px 13px; font-size: 12.5px; }
   .btn--sm { padding: 11px 14px; }
   .tab { padding: 12px 4px; }

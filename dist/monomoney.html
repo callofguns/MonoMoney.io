@@ -95,6 +95,8 @@ button, .tab, .partner-chip, .switch, .mini-btn, [role="tab"] {
 ::-webkit-scrollbar-thumb:hover { background: var(--line); }
 
 .num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+.up { color: var(--up); }
+.down { color: var(--down); }
 
 /* ── wordmark ───────────────────────────────── */
 .brand { display: flex; align-items: center; gap: 14px; }
@@ -580,6 +582,22 @@ button, .tab, .partner-chip, .switch, .mini-btn, [role="tab"] {
   transition: background .15s;
 }
 .stock-row--btn:hover { background: var(--ink-500); }
+
+/* the row stays one button (so it still opens the trade panel on a
+   click anywhere on it) with the info button as a sibling, not nested
+   inside it — a button inside a button isn't valid HTML */
+.stock-row-wrap { display: flex; align-items: stretch; gap: 6px; }
+.stock-row-wrap .stock-row--btn { flex: 1; min-width: 0; }
+
+.info-btn {
+  flex: none; width: 30px;
+  display: grid; place-items: center;
+  border: 0; border-radius: var(--r-md);
+  background: var(--ink-700); color: var(--text-mut);
+  font-size: 15px; cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.info-btn:hover { background: var(--ink-500); color: var(--accent-lift); }
 .stock-id { min-width: 0; }
 .stock-id .stock-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
@@ -595,7 +613,7 @@ button, .tab, .partner-chip, .switch, .mini-btn, [role="tab"] {
 .port-strip b { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 14px; }
 .port-strip b.up { color: var(--up); }
 
-.trade-head { display: grid; grid-template-columns: auto 30px 1fr; gap: 10px; align-items: center; margin-bottom: 10px; }
+.trade-head { display: grid; grid-template-columns: auto 30px 1fr auto; gap: 10px; align-items: center; margin-bottom: 10px; }
 .trade-price { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; }
 .trade-price b { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 26px; letter-spacing: -.02em; }
 
@@ -830,6 +848,7 @@ button, .tab, .partner-chip, .switch, .mini-btn, [role="tab"] {
 @media (pointer: coarse) {
   .icon-btn { width: 40px; height: 40px; font-size: 15px; }
   .mini-btn { width: 38px; height: 38px; font-size: 14px; }
+  .info-btn { width: 38px; font-size: 16px; }
   .chip-btn { padding: 8px 13px; font-size: 12.5px; }
   .btn--sm { padding: 11px 14px; }
   .tab { padding: 12px 4px; }
@@ -1328,7 +1347,7 @@ button, .tab, .partner-chip, .switch, .mini-btn, [role="tab"] {
    ═══════════════════════════════════════════ */
 window.MM = window.MM || {};
 
-MM.VERSION = "V3.1";
+MM.VERSION = "V3.2";
 
 MM.RELEASES = [
   {
@@ -1433,6 +1452,16 @@ MM.RELEASES = [
       "Text inputs no longer trigger iOS's zoom-on-focus",
       "No more 300ms tap delay or the grey flash Android/iOS show on every button press",
       "A widescreen table (net worth, game over) fades at the edge to signal it scrolls sideways, instead of just clipping"
+    ]
+  },
+  {
+    v: "V3.2", name: "Know your stock", status: "shipped",
+    items: [
+      "An ⓘ next to every listing in the Market tab, and another in its trade panel, opens what actually moves that stock",
+      "Sector, dividend yield and a plain volatility read (low/medium/high) for all five companies",
+      "The fundamental driver behind each price, in plain language — airports for SKY, utilities for VLT, buildings for BRK, cash on hand for AUR, and why TCH has none and runs on headlines alone",
+      "Every headline and insider card that can move that specific stock, pulled live from the same data the market runs on — so the explanation can never drift out of sync with the game",
+      "A note on order flow and random drift, so the price bar makes sense even on a quiet round"
     ]
   }
 ];
@@ -1611,15 +1640,25 @@ MM.PERSONALITIES = [
    palette, in this order — swapping them around fails the CVD checks. */
 MM.STOCKS = [
   { sym: "SKY", name: "Skyline Air Group", sector: "Airports",   color: "#3987e5",
-    price: 120, yield: 0.05, vol: 0.05 },
+    price: 120, yield: 0.05, vol: 0.05,
+    blurb: "Runs the routes out of every airport on the board.",
+    driver: "Tracks airports in play — each of the four (LHR, DXB, HND, JFK) anyone owns lifts it about 7%." },
   { sym: "VLT", name: "Voltaic Power",     sector: "Utilities",  color: "#d95926",
-    price: 95,  yield: 0.06, vol: 0.04 },
+    price: 95,  yield: 0.06, vol: 0.04,
+    blurb: "Keeps the lights on for both utilities on the board.",
+    driver: "Tracks utilities in play — Power Company and Water Company each lift it about 9%." },
   { sym: "BRK", name: "Brickstone Realty", sector: "Property",   color: "#199e70",
-    price: 150, yield: 0.03, vol: 0.06 },
+    price: 150, yield: 0.03, vol: 0.06,
+    blurb: "Builds and manages the housing going up around the table.",
+    driver: "Tracks total development — every house or hotel anyone builds, anywhere, lifts it about 2.8%." },
   { sym: "TCH", name: "Helix Tech",        sector: "Technology", color: "#c98500",
-    price: 210, yield: 0.01, vol: 0.11 },
+    price: 210, yield: 0.01, vol: 0.11,
+    blurb: "A chipmaker with no stake in the board at all.",
+    driver: "No fundamental anchor — nothing you build or buy moves it. The highest volatility on the exchange, so it runs almost entirely on headlines and noise." },
   { sym: "AUR", name: "Aurum Bank",        sector: "Finance",    color: "#d55181",
-    price: 80,  yield: 0.08, vol: 0.03 }
+    price: 80,  yield: 0.08, vol: 0.03,
+    blurb: "Finances the table — its fortunes track the players', not the board.",
+    driver: "Tracks total cash in every live player's hand, capped at a 50% lift." }
 ];
 
 MM.VOLATILITY = { calm: 0.5, normal: 1, wild: 2.1 };
@@ -4356,18 +4395,21 @@ MM.marketUI = {
       const dir = chg >= 0 ? "up" : "down";
       const qty = MM.market.held(you, st.sym);
       return `
-        <button class="stock-row stock-row--btn" data-sym="${st.sym}">
-          <div class="stock-sym" style="--scolor:${st.color}">${st.sym}</div>
-          <div class="stock-id">
-            <div class="stock-name">${st.name}</div>
-            <div class="stock-meta">${qty ? `You hold ${qty}` : `${st.sector} · ${(st.yield * 100).toFixed(0)}% yield`}</div>
-          </div>
-          ${this.spark(st, 64, 24)}
-          <div class="stock-price">
-            <b>$${st.price.toFixed(2)}</b>
-            <span class="stock-chg ${dir}">${chg >= 0 ? "▲" : "▼"} ${Math.abs(chg).toFixed(1)}%</span>
-          </div>
-        </button>`;
+        <div class="stock-row-wrap">
+          <button class="info-btn" data-info="${st.sym}" title="What moves ${st.sym}" aria-label="What moves ${st.sym}">ⓘ</button>
+          <button class="stock-row stock-row--btn" data-sym="${st.sym}">
+            <div class="stock-sym" style="--scolor:${st.color}">${st.sym}</div>
+            <div class="stock-id">
+              <div class="stock-name">${st.name}</div>
+              <div class="stock-meta">${qty ? `You hold ${qty}` : `${st.sector} · ${(st.yield * 100).toFixed(0)}% yield`}</div>
+            </div>
+            ${this.spark(st, 64, 24)}
+            <div class="stock-price">
+              <b>$${st.price.toFixed(2)}</b>
+              <span class="stock-chg ${dir}">${chg >= 0 ? "▲" : "▼"} ${Math.abs(chg).toFixed(1)}%</span>
+            </div>
+          </button>
+        </div>`;
     }).join("");
 
     const worth = MM.portfolioValue(s, you);
@@ -4404,6 +4446,7 @@ MM.marketUI = {
           <div class="stock-name">${st.name}</div>
           <div class="stock-meta">${st.sector} · ${(st.yield * 100).toFixed(0)}% per lap</div>
         </div>
+        <button class="info-btn" data-info="${st.sym}" title="What moves ${st.sym}" aria-label="What moves ${st.sym}">ⓘ</button>
       </div>
 
       <div class="trade-price">
@@ -4447,6 +4490,46 @@ MM.marketUI = {
         <span>Avg cost <b>$${cost.toFixed(2)}</b></span>
         <span class="${dir}">${gain >= 0 ? "+" : "−"}${MM.money(Math.abs(gain))} (${pct >= 0 ? "+" : ""}${pct.toFixed(1)}%)</span>
       </div>`;
+  },
+
+  /* ── the ⓘ next to a stock: what moves it, in plain language ──
+     Reads live off the actual data — market events, insider cards, the
+     current volatility band — so this can never drift out of sync with
+     what the exchange is actually doing. Only the "what is this company"
+     blurb and its fundamental driver are hand-written, in src/data/rules.js. */
+  infoModal(sym) {
+    const s = MM.state;
+    const st = MM.market.stock(s, sym);
+    const meta = MM.STOCKS.find((x) => x.sym === sym);
+    const volLabel = st.vol > 0.08 ? "High" : st.vol > 0.045 ? "Medium" : "Low";
+    const volNote = st.vol > 0.08 ? "the most volatile listing on the exchange"
+      : st.vol < 0.045 ? "one of the steadier listings"
+      : "middling — not the calmest listing, not the wildest";
+
+    const headlines = MM.MARKET_EVENTS.filter((e) => e.sym === sym);
+    const wholeMarket = MM.MARKET_EVENTS.filter((e) => e.all !== undefined);
+    const insider = [].concat(MM.DECKS.surprise, MM.DECKS.treasure)
+      .filter((c) => c.insider && c.effect.sym === sym);
+
+    const pct = (p) => `<span class="${p >= 0 ? "up" : "down"}">${p >= 0 ? "+" : ""}${Math.round(p * 100)}%</span>`;
+
+    MM.screens.modal(`${meta.name} · ${sym}`, `
+      <p>${meta.blurb}</p>
+      <h3>The numbers</h3>
+      <ul>
+        <li><b>${meta.sector}</b> sector</li>
+        <li><b>${(meta.yield * 100).toFixed(0)}%</b> of the share price, paid as a dividend every lap you pass START</li>
+        <li><b>${volLabel} volatility</b> — ${volNote}</li>
+      </ul>
+      <h3>What moves the price</h3>
+      <ul>
+        <li>${meta.driver}</li>
+        ${headlines.map((h) => `<li>Headline — "${h.head}" ${pct(h.pct)}</li>`).join("")}
+        <li>Whole-market headlines — two events that move every listing together, ${wholeMarket.map((w) => pct(w.all)).join(" or ")}</li>
+        ${insider.map((c) => `<li>Insider Surprise card <i>(the house rule for it)</i> — "${c.text}" ${pct(c.effect.pct)}</li>`).join("")}
+        <li>Every order nudges the price up to 3% — a big trade, yours or a bot's, moves it further</li>
+        <li>A little random drift every round, sized by its own volatility</li>
+      </ul>`);
   },
 
   /* ── charts ─────────────────────────────── */
@@ -4513,6 +4596,12 @@ MM.marketUI = {
 
     this.el.querySelectorAll("[data-sym]").forEach((row) =>
       row.addEventListener("click", () => { this.open = row.dataset.sym; this.qty = 1; this.render(); }));
+
+    this.el.querySelectorAll("[data-info]").forEach((b) =>
+      b.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this.infoModal(b.dataset.info);
+      }));
 
     const back = this.el.querySelector("[data-back]");
     if (back) back.addEventListener("click", () => { this.open = null; this.render(); });
