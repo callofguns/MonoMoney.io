@@ -49,9 +49,19 @@ MM.screens = {
     this.modalBody.innerHTML = html;
     this.modalEl.classList.remove("modal--single-action");
     this.modalEl.hidden = false;
+    /* anything else taking over the shared modal (game-over showing up
+       mid-trade, say) preempts a live trades popup — tradeUI.open()
+       re-sets this true right after calling modal() for its own case */
+    if (MM.tradeUI) MM.tradeUI.isOpen = false;
   },
 
-  closeModal() { this.modalEl.hidden = true; },
+  closeModal() {
+    this.modalEl.hidden = true;
+    /* the trades popup stops rendering into a body that's no longer
+       showing — every other modal is stateless content, this is the
+       one with something live to stop doing */
+    if (MM.tradeUI) MM.tradeUI.isOpen = false;
+  },
 
   /* the plain-language answer to "what works, what's coming" */
   statusModal() {

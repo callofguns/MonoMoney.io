@@ -1404,16 +1404,13 @@ button, .tab, .partner-chip, .switch, .mini-btn, [role="tab"] {
           <div class="tabs" role="tablist">
             <button class="tab is-active" data-tab="market" role="tab">Market</button>
             <button class="tab" data-tab="props" role="tab">My properties</button>
-            <button class="tab" data-tab="trades" role="tab">Trades</button>
+            <button class="tab" data-action="open-trades">Trades</button>
           </div>
           <div class="tab-panel is-active" data-panel="market">
             <div id="market-panel"></div>
           </div>
           <div class="tab-panel" data-panel="props">
             <div class="prop-list" id="prop-list"></div>
-          </div>
-          <div class="tab-panel" data-panel="trades">
-            <div id="trades-panel"></div>
           </div>
         </div>
       </div>
@@ -5252,17 +5249,24 @@ MM.marketUI = {
 
 /* ── src/ui/trade-ui.js ── */
 /* ═══════════════════════════════════════════
-   The Trades tab: pick a partner — bot or another
-   live player — build both sides of the table,
-   propose. A bot decides for itself on the spot;
-   a person gets asked, on their own screen, and
-   the outcome lands in the log — see core/trades.js.
-   This file only composes the bundles and shows
-   what happened.
+   Trades: pick a partner — bot or another live
+   player — build both sides of the table, propose.
+   A bot decides for itself on the spot; a person
+   gets asked, on their own screen, and the outcome
+   lands in the log — see core/trades.js. This file
+   only composes the bundles and shows what happened.
+
+   Lives as a popup (the board-wide modal) rather
+   than a fixed tab-panel — open() renders it into
+   #modal-body on demand instead of a panel that's
+   always in the DOM, since a bundle you're mid-way
+   through building is cheap to just discard rather
+   than keep alive off-screen.
    ═══════════════════════════════════════════ */
 window.MM = window.MM || {};
 
 MM.tradeUI = {
+  isOpen: false,
   partnerId: null,
   give: null,
   take: null,
@@ -5272,6 +5276,14 @@ MM.tradeUI = {
     this.el = el;
   },
 
+  open() {
+    MM.screens.modal("Trades", ""); /* resets isOpen false as a side effect — set true after */
+    this.isOpen = true;
+    this.flash = null;
+    this.mount(document.getElementById("modal-body"));
+    this.render();
+  },
+
   reset(keepPartner) {
     this.give = MM.trades.emptyBundle();
     this.take = MM.trades.emptyBundle();
@@ -5279,6 +5291,7 @@ MM.tradeUI = {
   },
 
   render() {
+    if (!this.isOpen) return; /* nothing showing — no point building the HTML */
     const s = MM.state;
     if (!s || !this.el) return;
     if (!this.give) this.reset();
@@ -5576,7 +5589,6 @@ MM.panels = {
       rules: el("#rules-list"),
       market: el("#market-panel"),
       props: el("#prop-list"),
-      trades: el("#trades-panel"),
       status: el("#status-card"),
       ticker: el("#ticker-track"),
       log: el("#log-feed"),
@@ -5592,7 +5604,8 @@ MM.panels = {
     MM.bus.on("cash", (e) => this.cashPop(e));
     MM.net.onRoster(() => { this.renderBots(); this.renderPlayers(); MM.app.renderWaitRoom && MM.app.renderWaitRoom(); });
     MM.marketUI.mount(this.refs.market);
-    MM.tradeUI.mount(this.refs.trades);
+    /* MM.tradeUI mounts itself into #modal-body when it opens — see
+       MM.tradeUI.open() — there's no persistent panel for it anymore */
   },
 
   renderAll() {
@@ -5924,9 +5937,19 @@ MM.screens = {
     this.modalBody.innerHTML = html;
     this.modalEl.classList.remove("modal--single-action");
     this.modalEl.hidden = false;
+    /* anything else taking over the shared modal (game-over showing up
+       mid-trade, say) preempts a live trades popup — tradeUI.open()
+       re-sets this true right after calling modal() for its own case */
+    if (MM.tradeUI) MM.tradeUI.isOpen = false;
   },
 
-  closeModal() { this.modalEl.hidden = true; },
+  closeModal() {
+    this.modalEl.hidden = true;
+    /* the trades popup stops rendering into a body that's no longer
+       showing — every other modal is stateless content, this is the
+       one with something live to stop doing */
+    if (MM.tradeUI) MM.tradeUI.isOpen = false;
+  },
 
   /* the plain-language answer to "what works, what's coming" */
   statusModal() {
@@ -6343,13 +6366,17 @@ MM.app = {
       }
     });
 
-    document.querySelectorAll(".tab").forEach((tab) => {
+    /* Trades isn't a tab-panel anymore — it opens as its own popup — so
+       only the two real tabs take part in the switching logic here */
+    document.querySelectorAll(".tab[data-tab]").forEach((tab) => {
       tab.addEventListener("click", () => {
-        document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("is-active", t === tab));
+        document.querySelectorAll(".tab[data-tab]").forEach((t) => t.classList.toggle("is-active", t === tab));
         document.querySelectorAll(".tab-panel").forEach((p) =>
           p.classList.toggle("is-active", p.dataset.panel === tab.dataset.tab));
       });
     });
+
+    document.querySelector('[data-action="open-trades"]').addEventListener("click", () => MM.tradeUI.open());
 
     document.getElementById("chat-form").addEventListener("submit", (e) => {
       e.preventDefault();
