@@ -133,8 +133,8 @@
 
     <!-- ── center ── -->
     <main class="table-main">
-      <div class="ticker" id="ticker" aria-label="Market ticker">
-        <div class="ticker-track" id="ticker-track"></div>
+      <div class="ticker" id="ticker" aria-label="Market prices">
+        <div class="ticker-bar" id="ticker-bar"></div>
         <div class="market-flash" id="market-flash" role="status"></div>
       </div>
 
@@ -150,8 +150,6 @@
           <button class="btn btn--primary btn--action" id="primary-action">Start Game</button>
 
           <div class="deal" id="deal" hidden></div>
-
-          <div class="log-feed" id="log-feed" role="log" aria-live="polite"></div>
         </div>
       </div>
     </main>
@@ -253,14 +251,11 @@
 
         <div class="card card--tabs">
           <div class="tabs" role="tablist">
-            <button class="tab is-active" data-tab="market" role="tab">Market</button>
-            <button class="tab" data-tab="props" role="tab">My properties</button>
+            <button class="tab" data-action="open-market">Market</button>
+            <button class="tab is-active" data-tab="props" role="tab">My properties</button>
             <button class="tab" data-action="open-trades">Trades</button>
           </div>
-          <div class="tab-panel is-active" data-panel="market">
-            <div id="market-panel"></div>
-          </div>
-          <div class="tab-panel" data-panel="props">
+          <div class="tab-panel is-active" data-panel="props">
             <div class="prop-list" id="prop-list"></div>
           </div>
         </div>

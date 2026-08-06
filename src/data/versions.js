@@ -9,7 +9,7 @@
    ═══════════════════════════════════════════ */
 window.MM = window.MM || {};
 
-MM.VERSION = "V4.1";
+MM.VERSION = "V4.2";
 
 MM.RELEASES = [
   {
@@ -148,6 +148,15 @@ MM.RELEASES = [
       "Connection hiccups from the last update carry over here too — an offer sent while someone's briefly disconnected is held and delivered the moment they're back, not lost",
       "A more reliable reconnect after a dropped connection, and messages sent while someone was briefly offline now arrive once they're back instead of vanishing",
       "The Bankrupt button is smaller and asks you to confirm — resigning is permanent, so it's no longer one accidental tap away"
+    ]
+  },
+  {
+    v: "V4.2", name: "A cleaner market", status: "shipped",
+    items: [
+      "Fixed Max sometimes leaving Buy or Sell greyed out, or trading the wrong amount — the two buttons now have their own Max, one next to Buy for the most you can afford and one next to Sell for everything you hold",
+      "The Market tab is now the same board-centred popup as Trades, with a button in its old spot to open it",
+      "The scrolling ticker across the top no longer auto-plays a tape — it's a static bar with all five listings, each with its own small line chart, in the same place all game",
+      "The event log is gone from the game screen — the board reads cleaner, and chat, dice and prices still update live"
     ]
   }
 ];

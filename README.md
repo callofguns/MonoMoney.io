@@ -20,7 +20,7 @@ To produce the single-file shareable build:
 node tools/build-artifact.mjs   # → dist/monomoney.html
 ```
 
-## What works today (V4.1)
+## What works today (V4.2)
 
 - **40-tile board** rendered on canvas: 8 colour groups, 4 airports, 2 utilities,
   2 taxes, Surprise and Treasure tiles, and the four corners (START, In Prison,
@@ -42,20 +42,21 @@ node tools/build-artifact.mjs   # → dist/monomoney.html
 - **Bankruptcy** — a player who's short sells buildings and mortgages deeds first;
   if that isn't enough their whole estate passes to whoever broke them.
 - **The exchange** — buy and sell shares in five listed companies from the Market
-  tab, each with a sparkline and a full price chart. Dividends pay out every lap
+  popup, each with a sparkline and a full price chart. Dividends pay out every lap
   past START.
 - **Prices that mean something** — twelve headlines move a company or the whole
   tape, four insider cards sit in the decks, and fundamentals pull prices toward
   what's actually happened on the board: airports lift SKY, utilities lift VLT,
   houses lift BRK, cash in play lifts AUR. Your own orders nudge the price too.
 - **Table UI** — blue trading-floor palette, player rail with balances and holdings,
-  a property manager for building and mortgaging, event log, chat, and the market tape.
+  a property manager for building and mortgaging, chat, and a static market bar with
+  a line chart per listing.
 
 - **Four bot brains** — every decision (buy, bid, build, trade) reads the
   personality's weights, so the Tycoon builds while the Banker compounds and the
   Shark pays over the odds to deny you a set. Bot skill scales their cushion and
   their conviction.
-- **Trades** — build a bundle of cash, deeds and shares from the Trades tab and put
+- **Trades** — build a bundle of cash, deeds and shares from the Trades popup and put
   it to any bot. Every bot values the offer through its own personality: the Banker
   overpays for yield, the Shark won't hand over a set-completing tile for less than
   triple its price. Bots occasionally offer to buy a property from you too, priced
@@ -70,7 +71,7 @@ node tools/build-artifact.mjs   # → dist/monomoney.html
 - **Built for phones** — the board fills the screen width and stays pinned to the
   top as you scroll, instead of being capped at a fixed 320px square. Tapping a
   tile shows the same price/rent card hover does on desktop. Player list and the
-  Market/Properties/Trades tabs sit right below the board; chat moved down. Every
+  My properties tab sit right below the board; chat moved down. Every
   button, tab and toggle sizes up to a real touch target on a touchscreen, and
   text inputs no longer trigger iOS's zoom-on-focus.
 - **Know your stock** — an ⓘ next to every listing (and another in its trade
@@ -89,6 +90,13 @@ node tools/build-artifact.mjs   # → dist/monomoney.html
   bots. A person gets asked on their own screen, the same accept/decline card a
   bot's own offers use; proposing shows an immediate "offer sent" note and the
   eventual answer lands in the event log.
+- **A cleaner market** — Max next to Buy and Max next to Sell are now two
+  separate buttons, so Max reliably buys the most you can afford or sells
+  everything you hold instead of sometimes computing the wrong one. The Market
+  tab is now a popup in the middle of the board, the same style as Trades. The
+  scrolling ticker is gone — a static bar across the top shows all five listings
+  at once, each with its own small line chart. The event log has been removed
+  from the game screen.
 
 The full working / coming list lives in `src/data/versions.js` and is rendered
 in-game: **Build status** in the lobby rail, or *See what works today* on the
@@ -113,6 +121,7 @@ queued, as it is right now).
 | V3.2 | Know your stock — an info icon explaining what moves each price | ✅ Working |
 | V4 | Play with friends — real rooms, real people in the seats bots used to fill | ✅ Working |
 | V4.1 | Trade with anyone, a sturdier reconnect, a confirmed Bankrupt button | ✅ Working |
+| V4.2 | Fixed Max buy/sell, Market as a popup, a static line-chart ticker, log removed | ✅ Working |
 
 ## Layout
 
@@ -146,10 +155,10 @@ src/
   render/board-renderer.js  canvas painting, token movement, tooltips
   ui/dice-ui.js         the pair of dice
   ui/deal.js            deed offers, card faces, auction and trade prompts
-  ui/market-ui.js       the Market tab: listings, charts and the trade panel
-  ui/trade-ui.js        the Trades tab: partner picker and bundle composer
+  ui/market-ui.js       the Market popup: listings, charts and the trade panel
+  ui/trade-ui.js        the Trades popup: partner picker and bundle composer
   ui/dashboard-ui.js    net-worth chart and breakdown, shared with game-over
-  ui/panels.js          rails, log, chat, market tape
+  ui/panels.js          rails, chat, static market ticker
   ui/screens.js         screen switching and modals
   main.js               bootstrap and wiring
 tools/build-artifact.mjs  bundles everything into one HTML file
@@ -297,8 +306,9 @@ A seat's identity colour and avatar come from its position, not from whether
 a bot or a person is sitting in it (`MM.SEAT_META` in `core/state.js`) — a
 human taking over the seat the Banker would have filled shows up in the
 Banker's teal, not a freshly invented colour, so "seat 2 is teal" stays true
-all game. Not yet built: trading directly with another connected person (the
-Trades tab still only offers a bundle to a bot), and a seat that goes quiet
+all game. Trading directly with another connected person works the same way
+a bot trade does, just routed through `MM.net.ask()` to their own screen
+instead of a personality's value math. Not yet built: a seat that goes quiet
 doesn't hand itself to a bot — the table just waits for it to come back,
 which it can, with the same room code and a persisted client id reclaiming
 the same seat.

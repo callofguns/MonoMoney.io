@@ -1,4 +1,4 @@
-/* ═══ side rails, log, chat and the market tape ═══ */
+/* ═══ side rails, chat and the market bar ═══ */
 window.MM = window.MM || {};
 
 const el = (sel) => document.querySelector(sel);
@@ -10,11 +10,9 @@ MM.panels = {
       host: el("#host-card"),
       bots: el("#bot-list"),
       rules: el("#rules-list"),
-      market: el("#market-panel"),
       props: el("#prop-list"),
       status: el("#status-card"),
-      ticker: el("#ticker-track"),
-      log: el("#log-feed"),
+      ticker: el("#ticker-bar"),
       chat: el("#chat-feed"),
       room: el("#room-link")
     };
@@ -22,13 +20,12 @@ MM.panels = {
     MM.bus.on("state", () => this.renderAll());
     MM.bus.on("turn", () => this.renderPlayers());
     MM.bus.on("market", () => { this.renderMarket(); this.renderTicker(); });
-    MM.bus.on("log", (e) => this.pushLog(e));
     MM.bus.on("chat", (e) => this.pushChat(e));
     MM.bus.on("cash", (e) => this.cashPop(e));
     MM.net.onRoster(() => { this.renderBots(); this.renderPlayers(); MM.app.renderWaitRoom && MM.app.renderWaitRoom(); });
-    MM.marketUI.mount(this.refs.market);
-    /* MM.tradeUI mounts itself into #modal-body when it opens — see
-       MM.tradeUI.open() — there's no persistent panel for it anymore */
+    /* MM.marketUI and MM.tradeUI mount themselves into #modal-body when
+       they open — see their own openPopup()/open() — neither has a
+       persistent panel anymore */
   },
 
   renderAll() {
@@ -170,19 +167,24 @@ MM.panels = {
   renderMarket() { MM.marketUI.render(); },
   renderTrades() { MM.tradeUI.render(); },
 
+  /* a static bar, not a scrolling tape — every listing sits in its own
+     spot the whole game, each with a small live line chart rather than
+     just a number, using the exact same spark() the Market popup does
+     so the two never draw the trend differently */
   renderTicker() {
     const s = MM.state;
     if (!s || !this.refs.ticker) return;
-    const loop = s.stocks.concat(s.stocks, s.stocks, s.stocks);
-    const items = loop.map((st) => {
+    this.refs.ticker.innerHTML = s.stocks.map((st) => {
       const chg = ((st.price - st.open) / st.open) * 100;
-      return `<span class="tape-item">
-        <span class="sym">${st.sym}</span>
-        <span class="px">$${st.price.toFixed(2)}</span>
-        <span class="chg ${chg >= 0 ? "up" : "down"}">${chg >= 0 ? "+" : ""}${chg.toFixed(2)}%</span>
-      </span>`;
+      const dir = chg >= 0 ? "up" : "down";
+      return `
+        <div class="ticker-stock" style="--scolor:${st.color}">
+          <span class="ticker-sym">${st.sym}</span>
+          <span class="ticker-px">$${st.price.toFixed(2)}</span>
+          ${MM.marketUI.spark(st, 40, 18)}
+          <span class="ticker-chg ${dir}">${chg >= 0 ? "▲" : "▼"} ${Math.abs(chg).toFixed(1)}%</span>
+        </div>`;
     }).join("");
-    this.refs.ticker.innerHTML = items;
   },
 
   /* your deeds, with the controls to develop them */
@@ -257,17 +259,9 @@ MM.panels = {
   },
 
   /* ── feeds ──────────────────────────────── */
-  pushLog(entry) {
-    const box = this.refs.log;
-    if (!box) return;
-    const line = document.createElement("div");
-    line.className = "log-line";
-    if (entry.hex) line.style.setProperty("--pcolor", entry.hex);
-    else line.classList.add("log-line--sys");
-    line.innerHTML = entry.html;
-    box.prepend(line);
-    while (box.children.length > 14) box.lastChild.remove();
-  },
+  /* the on-board event log is gone — MM.log()/s.log still record every
+     event (bots, tests and anything else that reads game history still
+     see it), there's just nothing rendering it on the table anymore */
 
   pushChat(entry) {
     const box = this.refs.chat;

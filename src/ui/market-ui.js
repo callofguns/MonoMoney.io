@@ -1,14 +1,18 @@
 /* ═══════════════════════════════════════════
-   The Market tab: a list of listings, and a
-   trade panel for whichever one you open.
-   Charts are inline SVG — one series each, so the
-   line carries direction and the label carries the
+   The Market: a list of listings, and a trade
+   panel for whichever one you open. Charts are
+   inline SVG — one series each, so the line
+   carries direction and the label carries the
    number; never colour alone.
+
+   Lives as a popup rather than a fixed tab-panel
+   — see MM.tradeUI for the same pattern and why.
    ═══════════════════════════════════════════ */
 window.MM = window.MM || {};
 
 MM.marketUI = {
-  open: null,      /* symbol currently expanded */
+  isOpen: false,
+  open: null,      /* symbol currently expanded — unrelated to isOpen */
   qty: 1,
 
   mount(el) {
@@ -16,7 +20,16 @@ MM.marketUI = {
     MM.bus.on("headline", (h) => this.flash(h));
   },
 
+  openPopup() {
+    MM.screens.modal("Market", "");
+    this.isOpen = true;
+    this.qty = 1;
+    this.mount(document.getElementById("modal-body"));
+    this.render();
+  },
+
   render() {
+    if (!this.isOpen) return; /* nothing showing — no point building the HTML */
     const s = MM.state;
     if (!s || !this.el) return;
     this.el.innerHTML = this.open ? this.tradePanel(s, this.open) : this.list(s);
@@ -105,12 +118,17 @@ MM.marketUI = {
         <span class="qty-value">${qty}</span>
         <button class="mini-btn" data-qty="1">＋</button>
         <button class="chip-btn" data-qty="5">+5</button>
-        <button class="chip-btn" data-qty="max">Max</button>
       </div>
 
       <div class="trade-actions">
-        <button class="btn btn--primary btn--sm" data-trade="buy" ${canBuy ? "" : "disabled"}>Buy · ${MM.money(cost)}</button>
-        <button class="btn btn--muted btn--sm" data-trade="sell" ${canSell ? "" : "disabled"}>Sell · ${MM.money(cost)}</button>
+        <div class="trade-action-row">
+          <button class="btn btn--primary btn--sm" data-trade="buy" ${canBuy ? "" : "disabled"}>Buy · ${MM.money(cost)}</button>
+          <button class="chip-btn" data-qty="maxbuy" title="The most you can afford">Max</button>
+        </div>
+        <div class="trade-action-row">
+          <button class="btn btn--muted btn--sm" data-trade="sell" ${canSell ? "" : "disabled"}>Sell · ${MM.money(cost)}</button>
+          <button class="chip-btn" data-qty="maxsell" title="Everything you hold">Max</button>
+        </div>
       </div>`;
   },
 
@@ -242,10 +260,16 @@ MM.marketUI = {
     const back = this.el.querySelector("[data-back]");
     if (back) back.addEventListener("click", () => { this.open = null; this.render(); });
 
+    /* "Max" used to be one button shared between Buy and Sell, set from
+       maxBuy() alone — fine for buying, but it meant Max could hand you
+       a quantity bigger than what you actually hold, silently disabling
+       Sell instead of selling everything. Buy and Sell each get their
+       own Max now, tied to what that specific action can actually do. */
     this.el.querySelectorAll("[data-qty]").forEach((b) =>
       b.addEventListener("click", () => {
         const v = b.dataset.qty;
-        if (v === "max") this.qty = Math.max(1, MM.market.maxBuy(s, you, this.open));
+        if (v === "maxbuy") this.qty = Math.max(1, MM.market.maxBuy(s, you, this.open));
+        else if (v === "maxsell") this.qty = Math.max(1, MM.market.held(you, this.open));
         else this.qty = Math.max(1, this.qty + (+v));
         this.render();
       }));
