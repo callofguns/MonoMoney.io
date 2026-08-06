@@ -42,6 +42,7 @@ MM.createGame = function (opts) {
 
   const humans = (opts && opts.humans) || [{ seat: 0, name: (opts && opts.nickname) || "You" }];
   const humanBySeat = new Map(humans.map((h) => [h.seat, h]));
+  const usedBotNames = new Set();
 
   for (let n = 0; n < settings.players; n++) {
     const meta = MM.SEAT_META[n] || MM.SEAT_META[MM.SEAT_META.length - 1];
@@ -55,7 +56,13 @@ MM.createGame = function (opts) {
       players.push(Object.assign(base, { name: human.name, avatar: meta.avatar, bot: false, personality: null }));
     } else {
       const brain = MM.PERSONALITIES.find((p) => p.id === meta.personality) || MM.PERSONALITIES[0];
-      players.push(Object.assign(base, { name: brain.name, avatar: brain.avatar, bot: true, personality: brain.id, tradeCooldown: 0 }));
+      /* the seat's real personality (weights, trading style) is what it
+         always was — only the name shown at the table is random, so
+         nobody can read "The Shark" off the roster and know to expect
+         a lowball offer for their last tile */
+      const botName = MM.goofyName(rng, usedBotNames);
+      usedBotNames.add(botName);
+      players.push(Object.assign(base, { name: botName, avatar: brain.avatar, bot: true, personality: brain.id, tradeCooldown: 0 }));
     }
   }
 

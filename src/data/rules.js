@@ -106,3 +106,27 @@ MM.BOT_LINES = {
   passGo:   ["dividend day", "salary secured", "another lap, another payout"],
   bigMoney: ["cash is king", "I'll take it", "noted."]
 };
+
+/* A bot's actual strategy (weights, style) stays tied to `personality`
+   forever — only the NAME it plays under is random, so "The Shark" never
+   shows up at the table and gives its own game away by title alone. Two
+   word lists, combined fresh each game. */
+MM.GOOFY_NAME_PARTS = {
+  first: ["Big", "Sir", "Lady", "Count", "Duke", "Baron", "Professor", "Captain",
+          "Chief", "Mayor", "Doctor", "Agent", "Colonel", "Uncle", "Auntie", "Reverend"],
+  last:  ["Waffles", "Pickles", "Biscuit", "Noodles", "Sprinkles", "Gravy", "Muffin",
+          "Doodle", "Wobble", "Nugget", "Snacks", "Pretzel", "Trombone", "Cheddar", "Marbles", "Gumbo"]
+};
+
+/* `rng` is optional — pass the game's seeded one so a bot's name is part
+   of the same replayable game, or omit it for a one-off cosmetic pick
+   (the lobby's seat preview, before any game/seed exists yet). `used`
+   avoids two bots at the same table sharing a name. */
+MM.goofyName = function (rng, used) {
+  const pick = rng ? (arr) => rng.pick(arr) : (arr) => arr[Math.floor(Math.random() * arr.length)];
+  let name, guard = 20;
+  do {
+    name = pick(MM.GOOFY_NAME_PARTS.first) + " " + pick(MM.GOOFY_NAME_PARTS.last);
+  } while (used && used.has(name) && guard-- > 0);
+  return name;
+};

@@ -9,7 +9,7 @@
    ═══════════════════════════════════════════ */
 window.MM = window.MM || {};
 
-MM.VERSION = "V4.2";
+MM.VERSION = "V4.3";
 
 MM.RELEASES = [
   {
@@ -157,6 +157,15 @@ MM.RELEASES = [
       "The Market tab is now the same board-centred popup as Trades, with a button in its old spot to open it",
       "The scrolling ticker across the top no longer auto-plays a tape — it's a static bar with all five listings, each with its own small line chart, in the same place all game",
       "The event log is gone from the game screen — the board reads cleaner, and chat, dice and prices still update live"
+    ]
+  },
+  {
+    v: "V4.3", name: "End turns, mystery bots, a real pause", status: "shipped",
+    items: [
+      "An End Turn button next to Roll — on your own turn, before you've rolled, you can hop it and pass play on instead",
+      "Bots no longer play under their strategy's own name — every game deals them a fresh, random goofy name instead, so the roster doesn't hand you a cheat sheet on how they'll trade or bid",
+      "Solo games now actually pause the moment you open Market, Trades, or any other popup — a bot mid-turn holds exactly where it was and picks back up the instant you close it, instead of quietly playing itself out while you're looking elsewhere",
+      "Play with friends never pauses this way — other people at the table are relying on the game moving whether or not you have a menu open"
     ]
   }
 ];

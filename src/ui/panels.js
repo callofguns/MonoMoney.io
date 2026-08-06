@@ -110,9 +110,15 @@ MM.panels = {
           <div><b>${human.name}</b><i>${human.connected ? "Joined" : "Reconnecting…"}</i></div>
         </div>`;
       }
+      /* the bot's real name (from MM.PERSONALITIES) never shows up in
+         the UI — a seated bot already has its randomised table name
+         sitting in the game object; an unseated one has no player
+         object yet, so it just reads as an empty seat */
+      const seatedPlayer = seated ? s.players[seat] : null;
+      const shownName = seatedPlayer ? seatedPlayer.name : `Seat ${seat + 1}`;
       return `<div class="bot-row" style="${seated ? "" : "opacity:.4"}">
         <div class="avatar" style="--pcolor:${b.color}">${b.avatar}</div>
-        <div><b>${b.name}</b><i>${!seated ? "Not seated this game" : MM.net.enabled ? "Open — will play as a bot" : b.blurb}</i></div>
+        <div><b>${shownName}</b><i>${!seated ? "Not seated this game" : MM.net.enabled ? "Open — will play as a bot" : b.blurb}</i></div>
       </div>`;
     }).join("");
   },
