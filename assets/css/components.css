@@ -210,12 +210,14 @@
 }
 .player-row.is-turn { background: var(--accent-haze); border-left-color: var(--pcolor); }
 .player-row.is-out { opacity: .42; }
+.player-row.is-offline { opacity: .6; }
 .player-name { font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 6px; }
 .player-tag {
   font-size: 10px; letter-spacing: .08em; text-transform: uppercase;
   color: var(--text-mut); background: var(--ink-500);
   padding: 2px 6px; border-radius: 99px;
 }
+.player-tag--offline { color: #1a1206; background: var(--warn); animation: net-status-pulse 1.6s ease-in-out infinite; }
 .player-sub { font-size: 11.5px; color: var(--text-mut); }
 .player-cash { text-align: right; }
 .player-cash b { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 15px; }

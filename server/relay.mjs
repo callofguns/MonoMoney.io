@@ -26,7 +26,27 @@ const MAX_SEATS = 4;
 const ROOM_TTL_MS = 30 * 60 * 1000; /* garbage-collect an empty/abandoned room after 30 min */
 const CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; /* no 0/O/1/I — easier to read aloud */
 
-const rooms = new Map(); /* code -> { seats: Map<seatId, {ws, name, clientId, connected}>, locked, lastSeen } */
+const rooms = new Map(); /* code -> { seats: Map<seatId, {ws, name, clientId, connected, queue}>, locked, lastSeen } */
+const MAX_QUEUE = 100; /* per-seat cap on messages held for a disconnected player */
+
+/* a targeted message (a roll, a chat line, a buy decision) sent while
+   its recipient is mid-reconnect — most likely a phone browser that
+   just got backgrounded — used to simply vanish. Queueing it here and
+   flushing on reconnect is what turns "briefly unresponsive" back
+   into "just a couple seconds behind" instead of a stuck game. */
+function enqueue(m, msg) {
+  (m.queue = m.queue || []).push(msg);
+  if (m.queue.length > MAX_QUEUE) m.queue.shift();
+}
+
+function flushQueue(m) {
+  if (!m.queue || !m.queue.length) return;
+  const pending = m.queue;
+  m.queue = [];
+  for (const msg of pending) {
+    try { m.ws.send(JSON.stringify(msg)); } catch { /* dropped again, close handler will catch it */ }
+  }
+}
 
 function makeCode() {
   let code;
@@ -88,6 +108,7 @@ wss.on("connection", (ws) => {
               m.ws = ws; m.connected = true; m.name = msg.name || m.name;
               room = existingRoom; seat = 0;
               ws.send(JSON.stringify({ type: "hello-ack", room: existingCode, seat: 0, roster: roster(existingRoom), rejoin: true }));
+              flushQueue(m);
               broadcast(existingRoom, { type: "roster", roster: roster(existingRoom) }, 0);
               return;
             }
@@ -114,6 +135,7 @@ wss.on("connection", (ws) => {
         m.ws = ws; m.connected = true; m.name = msg.name || m.name;
         room = target; seat = existingSeat;
         ws.send(JSON.stringify({ type: "hello-ack", room: code, seat: existingSeat, roster: roster(target), rejoin: true }));
+        flushQueue(m);
         broadcast(target, { type: "roster", roster: roster(target) }, existingSeat);
         return;
       }
@@ -141,7 +163,9 @@ wss.on("connection", (ws) => {
     const out = { ...msg, from: seat };
     if (msg.to !== undefined) {
       const m = room.seats.get(msg.to);
-      if (m && m.connected) { try { m.ws.send(JSON.stringify(out)); } catch { /* ignore */ } }
+      if (!m) return;
+      if (m.connected) { try { m.ws.send(JSON.stringify(out)); } catch { /* ignore */ } }
+      else enqueue(m, out);
     } else {
       broadcast(room, out, seat);
     }

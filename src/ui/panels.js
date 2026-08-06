@@ -26,7 +26,7 @@ MM.panels = {
     MM.bus.on("log", (e) => this.pushLog(e));
     MM.bus.on("chat", (e) => this.pushChat(e));
     MM.bus.on("cash", (e) => this.cashPop(e));
-    MM.net.onRoster(() => { this.renderBots(); MM.app.renderWaitRoom && MM.app.renderWaitRoom(); });
+    MM.net.onRoster(() => { this.renderBots(); this.renderPlayers(); MM.app.renderWaitRoom && MM.app.renderWaitRoom(); });
     MM.marketUI.mount(this.refs.market);
     MM.tradeUI.mount(this.refs.trades);
   },
@@ -57,16 +57,23 @@ MM.panels = {
            shares ? `${shares} share${shares > 1 ? "s" : ""}` : null].filter(Boolean).join(" · ")
         : null;
 
+      /* a disconnected human seat isn't ignoring their turn — their
+         browser just isn't reachable right now (a backgrounded phone
+         tab is the common case) — say so instead of just going quiet */
+      const netRow = MM.net.enabled && !p.bot ? MM.net.roster.find((r) => r.seat === p.id) : null;
+      const offline = !!netRow && !netRow.connected;
+
       const sub = !p.alive ? "Bankrupt"
+        : offline ? "Reconnecting…"
         : p.jailed ? "In prison"
         : holdings ? holdings
         : p.bot ? MM.PERSONALITIES.find((x) => x.id === p.personality).tag
         : MM.net.isMine(p) ? "That's you"
         : "A player";
-      return `<div class="player-row ${turn ? "is-turn" : ""} ${p.alive ? "" : "is-out"}" style="--pcolor:${p.hex}">
+      return `<div class="player-row ${turn ? "is-turn" : ""} ${p.alive ? "" : "is-out"} ${offline ? "is-offline" : ""}" style="--pcolor:${p.hex}">
         <div class="avatar" style="--pcolor:${p.hex}">${p.avatar}</div>
         <div>
-          <div class="player-name">${p.name}${p.jailed ? ' <span class="player-tag">jail</span>' : ""}</div>
+          <div class="player-name">${p.name}${p.jailed ? ' <span class="player-tag">jail</span>' : ""}${offline ? ' <span class="player-tag player-tag--offline">offline</span>' : ""}</div>
           <div class="player-sub">${sub}</div>
         </div>
         <div class="player-cash"><b>${MM.money(p.cash)}</b>${delta}</div>
