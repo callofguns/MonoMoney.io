@@ -9,7 +9,7 @@
    ═══════════════════════════════════════════ */
 window.MM = window.MM || {};
 
-MM.VERSION = "V4";
+MM.VERSION = "V4.1";
 
 MM.RELEASES = [
   {
@@ -135,8 +135,19 @@ MM.RELEASES = [
       "A seat's colour is fixed whether a person or a bot ends up sitting in it, so a human taking over the Banker's seat doesn't reshuffle anyone else's identity",
       "Chat, the event log, dice and prices all stay in sync across every connected screen",
       "A dropped connection can rejoin the same room and seat with the same code — the game picks up where it left off",
-      "Not yet: trading directly with another person (only with a bot, for now), and a seat that goes quiet doesn't hand itself to a bot — the table just waits",
+      "Not yet: a seat that goes quiet doesn't hand itself to a bot — the table just waits",
       "Needs a small relay server of your own to actually connect two devices — one's included in <code>server/</code> with instructions to run or deploy it; it can't work through a sandboxed preview link"
+    ]
+  },
+  {
+    v: "V4.1", name: "Trade with anyone", status: "shipped",
+    items: [
+      "The Trades tab now lists every live player, not just the bots — pick another person at the table and put a deal to them the same way you would a bot",
+      "A person actually gets asked, on their own screen — the exact same accept/decline card a bot's own offers already use — instead of a bot's instant, personality-driven yes or no",
+      "Proposing shows an immediate \"offer sent\" note since a person's answer isn't instant; the eventual shake-on-it or turn-down lands in the event log for the whole table to see",
+      "Connection hiccups from the last update carry over here too — an offer sent while someone's briefly disconnected is held and delivered the moment they're back, not lost",
+      "A more reliable reconnect after a dropped connection, and messages sent while someone was briefly offline now arrive once they're back instead of vanishing",
+      "The Bankrupt button is smaller and asks you to confirm — resigning is permanent, so it's no longer one accidental tap away"
     ]
   }
 ];

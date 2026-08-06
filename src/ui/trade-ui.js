@@ -1,8 +1,11 @@
 /* ═══════════════════════════════════════════
-   The Trades tab: pick a bot, build both sides
-   of the table, propose. The bot decides for
-   itself — see core/trades.js — this file only
-   composes the bundles and shows the result.
+   The Trades tab: pick a partner — bot or another
+   live player — build both sides of the table,
+   propose. A bot decides for itself on the spot;
+   a person gets asked, on their own screen, and
+   the outcome lands in the log — see core/trades.js.
+   This file only composes the bundles and shows
+   what happened.
    ═══════════════════════════════════════════ */
 window.MM = window.MM || {};
 
@@ -28,21 +31,23 @@ MM.tradeUI = {
     if (!this.give) this.reset();
 
     const you = MM.net.myPlayer(s);
-    const bots = MM.livePlayers(s).filter((p) => p.bot);
+    /* every other live player is a partner now — a human seat included,
+       not just the bots this tab started out only trading with */
+    const partners = MM.livePlayers(s).filter((p) => p !== you);
 
     if (!you.alive) {
       this.el.innerHTML = `<p class="empty-note">You're out of the game.</p>`;
       return;
     }
-    if (!bots.length) {
+    if (!partners.length) {
       this.el.innerHTML = `<p class="empty-note">No one left to trade with.</p>`;
       return;
     }
 
-    if (this.partnerId != null && !bots.some((p) => p.id === this.partnerId)) this.reset();
+    if (this.partnerId != null && !partners.some((p) => p.id === this.partnerId)) this.reset();
     const partner = this.partnerId != null ? MM.playerById(s, this.partnerId) : null;
 
-    const chips = bots.map((p) => `
+    const chips = partners.map((p) => `
       <button class="partner-chip ${p.id === this.partnerId ? "is-active" : ""}" data-partner="${p.id}" style="--pcolor:${p.hex}">
         <span class="avatar" style="--pcolor:${p.hex}">${p.avatar}</span>${p.name}
       </button>`).join("");
@@ -68,7 +73,7 @@ MM.tradeUI = {
         ${!yourTurn ? `<p class="panel-note">Propose trades on your own turn, before you roll.</p>` : ""}
         ${this.flash ? `<p class="trade-result ${this.flash.ok ? "up" : "down"}">${this.flash.text}</p>` : ""}`;
     } else {
-      body = `<p class="panel-note">Pick a bot to trade with. Only bare tiles — nothing with houses on it — can go on the table.</p>`;
+      body = `<p class="panel-note">Pick someone to trade with. Only bare tiles — nothing with houses on it — can go on the table.</p>`;
     }
 
     this.el.innerHTML = `<div class="partner-row">${chips}</div>${body}`;
@@ -176,9 +181,16 @@ MM.tradeUI = {
     const propose = this.el.querySelector('[data-trade-action="propose"]');
     if (propose) propose.addEventListener("click", () => {
       const result = MM.net.act("proposeTrade", { partnerId: partner.id, give: this.give, take: this.take });
-      /* networked and not the host: the result comes back through the
-         log a moment later instead of landing here synchronously */
-      if (result) this.flash = { ok: result.accept, text: result.accept ? "Deal! The trade went through." : `Declined — ${result.reason}` };
+      if (partner.bot) {
+        /* a bot decides on the spot — networked and not the host, the
+           result comes back through the log instead of landing here */
+        if (result) this.flash = { ok: result.accept, text: result.accept ? "Deal! The trade went through." : `Declined — ${result.reason}` };
+      } else {
+        /* a person has to actually be asked — there's nothing to report
+           yet, just confirmation the offer went out; the log carries
+           whatever they decide, whenever they decide it */
+        this.flash = { ok: true, text: `Offer sent to ${partner.name} — waiting for a response.` };
+      }
       this.reset(true);
       this.render();
     });
