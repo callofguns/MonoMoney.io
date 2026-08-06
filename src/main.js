@@ -322,13 +322,17 @@ MM.app = {
       }
     });
 
-    document.querySelectorAll(".tab").forEach((tab) => {
+    /* Trades isn't a tab-panel anymore — it opens as its own popup — so
+       only the two real tabs take part in the switching logic here */
+    document.querySelectorAll(".tab[data-tab]").forEach((tab) => {
       tab.addEventListener("click", () => {
-        document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("is-active", t === tab));
+        document.querySelectorAll(".tab[data-tab]").forEach((t) => t.classList.toggle("is-active", t === tab));
         document.querySelectorAll(".tab-panel").forEach((p) =>
           p.classList.toggle("is-active", p.dataset.panel === tab.dataset.tab));
       });
     });
+
+    document.querySelector('[data-action="open-trades"]').addEventListener("click", () => MM.tradeUI.open());
 
     document.getElementById("chat-form").addEventListener("submit", (e) => {
       e.preventDefault();

@@ -12,7 +12,6 @@ MM.panels = {
       rules: el("#rules-list"),
       market: el("#market-panel"),
       props: el("#prop-list"),
-      trades: el("#trades-panel"),
       status: el("#status-card"),
       ticker: el("#ticker-track"),
       log: el("#log-feed"),
@@ -28,7 +27,8 @@ MM.panels = {
     MM.bus.on("cash", (e) => this.cashPop(e));
     MM.net.onRoster(() => { this.renderBots(); this.renderPlayers(); MM.app.renderWaitRoom && MM.app.renderWaitRoom(); });
     MM.marketUI.mount(this.refs.market);
-    MM.tradeUI.mount(this.refs.trades);
+    /* MM.tradeUI mounts itself into #modal-body when it opens — see
+       MM.tradeUI.open() — there's no persistent panel for it anymore */
   },
 
   renderAll() {

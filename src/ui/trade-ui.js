@@ -1,15 +1,22 @@
 /* ═══════════════════════════════════════════
-   The Trades tab: pick a partner — bot or another
-   live player — build both sides of the table,
-   propose. A bot decides for itself on the spot;
-   a person gets asked, on their own screen, and
-   the outcome lands in the log — see core/trades.js.
-   This file only composes the bundles and shows
-   what happened.
+   Trades: pick a partner — bot or another live
+   player — build both sides of the table, propose.
+   A bot decides for itself on the spot; a person
+   gets asked, on their own screen, and the outcome
+   lands in the log — see core/trades.js. This file
+   only composes the bundles and shows what happened.
+
+   Lives as a popup (the board-wide modal) rather
+   than a fixed tab-panel — open() renders it into
+   #modal-body on demand instead of a panel that's
+   always in the DOM, since a bundle you're mid-way
+   through building is cheap to just discard rather
+   than keep alive off-screen.
    ═══════════════════════════════════════════ */
 window.MM = window.MM || {};
 
 MM.tradeUI = {
+  isOpen: false,
   partnerId: null,
   give: null,
   take: null,
@@ -19,6 +26,14 @@ MM.tradeUI = {
     this.el = el;
   },
 
+  open() {
+    MM.screens.modal("Trades", ""); /* resets isOpen false as a side effect — set true after */
+    this.isOpen = true;
+    this.flash = null;
+    this.mount(document.getElementById("modal-body"));
+    this.render();
+  },
+
   reset(keepPartner) {
     this.give = MM.trades.emptyBundle();
     this.take = MM.trades.emptyBundle();
@@ -26,6 +41,7 @@ MM.tradeUI = {
   },
 
   render() {
+    if (!this.isOpen) return; /* nothing showing — no point building the HTML */
     const s = MM.state;
     if (!s || !this.el) return;
     if (!this.give) this.reset();
