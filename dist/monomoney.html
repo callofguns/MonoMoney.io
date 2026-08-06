@@ -294,6 +294,11 @@ button, .tab, .partner-chip, .switch, .mini-btn, [role="tab"] {
 .rail-actions-row { display: flex; gap: 8px; }
 .rail-actions-row .btn { flex: 1; min-width: 0; padding-left: 8px; padding-right: 8px; }
 
+/* deliberately small and off to the side — resigning is rare and
+   destructive, not something that should read as a primary action
+   sitting at full width under the player list */
+.bankrupt-btn { align-self: flex-end; padding-left: 14px; padding-right: 14px; }
+
 .table-main {
   display: flex; flex-direction: column; gap: 10px;
   min-width: 0; min-height: 0;
@@ -1385,7 +1390,7 @@ button, .tab, .partner-chip, .switch, .mini-btn, [role="tab"] {
             <button class="btn btn--muted btn--sm" data-action="show-status"><span class="ver-chip">V1.1</span> What works</button>
             <button class="btn btn--muted btn--sm" data-action="show-dashboard">Dashboard</button>
           </div>
-          <button class="btn btn--danger btn--sm btn--block" data-action="bankrupt">Bankrupt</button>
+          <button class="btn btn--danger btn--sm bankrupt-btn" data-action="bankrupt">Bankrupt</button>
         </div>
 
         <div class="card card--tabs">
@@ -5866,6 +5871,19 @@ MM.screens = {
       ${MM.dashboardUI.chart(s)}
       <button class="btn btn--primary" data-action="rematch">Play again</button>`);
     this.modalEl.classList.add("modal--single-action");
+  },
+
+  /* resigning is permanent — a stray tap shouldn't be able to do it */
+  bankruptModal() {
+    this.modal("Resign from the game?", `
+      <p>Your deeds return to the bank, your cash and shares are gone, and
+      you're out for the rest of the game — there's no undoing it once you
+      confirm.</p>
+      <div class="deal-actions">
+        <button class="btn btn--muted" data-action="close-modal">Cancel</button>
+        <button class="btn btn--danger" data-action="confirm-bankrupt">Yes, resign</button>
+      </div>`);
+    this.modalEl.classList.add("modal--single-action");
   }
 };
 
@@ -6176,16 +6194,21 @@ MM.app = {
 
     document.querySelector('[data-action="bankrupt"]').addEventListener("click", () => {
       if (MM.state.phase === MM.PHASES.LOBBY) return;
-      MM.net.act("resign");
+      MM.screens.bankruptModal();
     });
 
     document.querySelector('[data-action="show-dashboard"]').addEventListener("click", () => MM.dashboardUI.open());
 
-    /* the game-over modal's own button is content, not a fixed control —
-       catch it by delegation since the modal body is rebuilt each time */
+    /* the game-over and bankrupt-confirm modals' own buttons are content,
+       not fixed controls — catch them by delegation since the modal body
+       is rebuilt each time */
     document.addEventListener("click", (e) => {
       if (e.target.closest('[data-action="rematch"]')) {
         this.rematch();
+        MM.screens.closeModal();
+      }
+      if (e.target.closest('[data-action="confirm-bankrupt"]')) {
+        MM.net.act("resign");
         MM.screens.closeModal();
       }
     });

@@ -126,5 +126,18 @@ MM.screens = {
       ${MM.dashboardUI.chart(s)}
       <button class="btn btn--primary" data-action="rematch">Play again</button>`);
     this.modalEl.classList.add("modal--single-action");
+  },
+
+  /* resigning is permanent — a stray tap shouldn't be able to do it */
+  bankruptModal() {
+    this.modal("Resign from the game?", `
+      <p>Your deeds return to the bank, your cash and shares are gone, and
+      you're out for the rest of the game — there's no undoing it once you
+      confirm.</p>
+      <div class="deal-actions">
+        <button class="btn btn--muted" data-action="close-modal">Cancel</button>
+        <button class="btn btn--danger" data-action="confirm-bankrupt">Yes, resign</button>
+      </div>`);
+    this.modalEl.classList.add("modal--single-action");
   }
 };

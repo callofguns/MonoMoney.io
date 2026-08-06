@@ -139,6 +139,11 @@
 .rail-actions-row { display: flex; gap: 8px; }
 .rail-actions-row .btn { flex: 1; min-width: 0; padding-left: 8px; padding-right: 8px; }
 
+/* deliberately small and off to the side — resigning is rare and
+   destructive, not something that should read as a primary action
+   sitting at full width under the player list */
+.bankrupt-btn { align-self: flex-end; padding-left: 14px; padding-right: 14px; }
+
 .table-main {
   display: flex; flex-direction: column; gap: 10px;
   min-width: 0; min-height: 0;
