@@ -303,16 +303,21 @@ MM.app = {
 
     document.querySelector('[data-action="bankrupt"]').addEventListener("click", () => {
       if (MM.state.phase === MM.PHASES.LOBBY) return;
-      MM.net.act("resign");
+      MM.screens.bankruptModal();
     });
 
     document.querySelector('[data-action="show-dashboard"]').addEventListener("click", () => MM.dashboardUI.open());
 
-    /* the game-over modal's own button is content, not a fixed control —
-       catch it by delegation since the modal body is rebuilt each time */
+    /* the game-over and bankrupt-confirm modals' own buttons are content,
+       not fixed controls — catch them by delegation since the modal body
+       is rebuilt each time */
     document.addEventListener("click", (e) => {
       if (e.target.closest('[data-action="rematch"]')) {
         this.rematch();
+        MM.screens.closeModal();
+      }
+      if (e.target.closest('[data-action="confirm-bankrupt"]')) {
+        MM.net.act("resign");
         MM.screens.closeModal();
       }
     });
