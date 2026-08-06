@@ -1081,10 +1081,12 @@ button, .tab, .partner-chip, .switch, .mini-btn, [role="tab"] {
 }
 
 .btn--action { min-width: 176px; font-size: 16px; padding: 13px 22px; }
+#end-turn-action { min-width: 176px; }
 
 /* ── deal panel: deeds, cards, auctions ──── */
 .board-center.is-prompting .dice-tray,
-.board-center.is-prompting #primary-action { display: none; }
+.board-center.is-prompting #primary-action,
+.board-center.is-prompting #end-turn-action { display: none; }
 
 .deal {
   display: flex; flex-direction: column; align-items: center; gap: 14px;
@@ -1296,6 +1298,7 @@ button, .tab, .partner-chip, .switch, .mini-btn, [role="tab"] {
           </div>
 
           <button class="btn btn--primary btn--action" id="primary-action">Start Game</button>
+          <button class="btn btn--muted btn--sm" id="end-turn-action" hidden>End Turn</button>
 
           <div class="deal" id="deal" hidden></div>
         </div>
@@ -1434,7 +1437,7 @@ button, .tab, .partner-chip, .switch, .mini-btn, [role="tab"] {
    ═══════════════════════════════════════════ */
 window.MM = window.MM || {};
 
-MM.VERSION = "V4.2";
+MM.VERSION = "V4.3";
 
 MM.RELEASES = [
   {
@@ -1582,6 +1585,15 @@ MM.RELEASES = [
       "The Market tab is now the same board-centred popup as Trades, with a button in its old spot to open it",
       "The scrolling ticker across the top no longer auto-plays a tape — it's a static bar with all five listings, each with its own small line chart, in the same place all game",
       "The event log is gone from the game screen — the board reads cleaner, and chat, dice and prices still update live"
+    ]
+  },
+  {
+    v: "V4.3", name: "End turns, mystery bots, a real pause", status: "shipped",
+    items: [
+      "An End Turn button next to Roll — on your own turn, before you've rolled, you can hop it and pass play on instead",
+      "Bots no longer play under their strategy's own name — every game deals them a fresh, random goofy name instead, so the roster doesn't hand you a cheat sheet on how they'll trade or bid",
+      "Solo games now actually pause the moment you open Market, Trades, or any other popup — a bot mid-turn holds exactly where it was and picks back up the instant you close it, instead of quietly playing itself out while you're looking elsewhere",
+      "Play with friends never pauses this way — other people at the table are relying on the game moving whether or not you have a menu open"
     ]
   }
 ];
@@ -1800,6 +1812,30 @@ MM.BOT_LINES = {
   bigMoney: ["cash is king", "I'll take it", "noted."]
 };
 
+/* A bot's actual strategy (weights, style) stays tied to `personality`
+   forever — only the NAME it plays under is random, so "The Shark" never
+   shows up at the table and gives its own game away by title alone. Two
+   word lists, combined fresh each game. */
+MM.GOOFY_NAME_PARTS = {
+  first: ["Big", "Sir", "Lady", "Count", "Duke", "Baron", "Professor", "Captain",
+          "Chief", "Mayor", "Doctor", "Agent", "Colonel", "Uncle", "Auntie", "Reverend"],
+  last:  ["Waffles", "Pickles", "Biscuit", "Noodles", "Sprinkles", "Gravy", "Muffin",
+          "Doodle", "Wobble", "Nugget", "Snacks", "Pretzel", "Trombone", "Cheddar", "Marbles", "Gumbo"]
+};
+
+/* `rng` is optional — pass the game's seeded one so a bot's name is part
+   of the same replayable game, or omit it for a one-off cosmetic pick
+   (the lobby's seat preview, before any game/seed exists yet). `used`
+   avoids two bots at the same table sharing a name. */
+MM.goofyName = function (rng, used) {
+  const pick = rng ? (arr) => rng.pick(arr) : (arr) => arr[Math.floor(Math.random() * arr.length)];
+  let name, guard = 20;
+  do {
+    name = pick(MM.GOOFY_NAME_PARTS.first) + " " + pick(MM.GOOFY_NAME_PARTS.last);
+  } while (used && used.has(name) && guard-- > 0);
+  return name;
+};
+
 
 /* ── src/data/market-events.js ── */
 /* ═══ headlines that move the tape ═══
@@ -1983,6 +2019,7 @@ MM.createGame = function (opts) {
 
   const humans = (opts && opts.humans) || [{ seat: 0, name: (opts && opts.nickname) || "You" }];
   const humanBySeat = new Map(humans.map((h) => [h.seat, h]));
+  const usedBotNames = new Set();
 
   for (let n = 0; n < settings.players; n++) {
     const meta = MM.SEAT_META[n] || MM.SEAT_META[MM.SEAT_META.length - 1];
@@ -1996,7 +2033,13 @@ MM.createGame = function (opts) {
       players.push(Object.assign(base, { name: human.name, avatar: meta.avatar, bot: false, personality: null }));
     } else {
       const brain = MM.PERSONALITIES.find((p) => p.id === meta.personality) || MM.PERSONALITIES[0];
-      players.push(Object.assign(base, { name: brain.name, avatar: brain.avatar, bot: true, personality: brain.id, tradeCooldown: 0 }));
+      /* the seat's real personality (weights, trading style) is what it
+         always was — only the name shown at the table is random, so
+         nobody can read "The Shark" off the roster and know to expect
+         a lowball offer for their last tile */
+      const botName = MM.goofyName(rng, usedBotNames);
+      usedBotNames.add(botName);
+      players.push(Object.assign(base, { name: botName, avatar: brain.avatar, bot: true, personality: brain.id, tradeCooldown: 0 }));
     }
   }
 
@@ -2462,6 +2505,7 @@ MM.net = {
      had to learn a seat might not be sitting at this keyboard */
   HANDLERS: {
     roll: (s, p) => { if (MM.currentPlayer(s) === p && s.phase === MM.PHASES.AWAIT_ROLL) MM.turn.roll(s); },
+    skipTurn: (s, p) => { if (MM.currentPlayer(s) === p && s.phase === MM.PHASES.AWAIT_ROLL) MM.turn.skipTurn(s); },
     chat: (s, p, { text } = {}) => { if (text) MM.chat(s, p.name, String(text).slice(0, 120), p.hex); },
     resign: (s, p) => { if (s.phase !== MM.PHASES.LOBBY) MM.bankrupt(s, p, null, "resigned"); },
     build: (s, p, { i } = {}) => MM.prop.build(s, p, MM.BOARD[i]),
@@ -3301,7 +3345,9 @@ MM.bots = {
    ═══════════════════════════════════════════ */
 window.MM = window.MM || {};
 
-const pause = (ms) => new Promise((r) => setTimeout(r, ms));
+/* routed through the same solo-pause gate turn.js's own wait() uses —
+   a bot mid-bidding-war shouldn't keep raising while a popup's open */
+const pause = (ms) => MM.turn.wait(ms);
 
 MM.auction = {
   async run(s, tile) {
@@ -3612,7 +3658,14 @@ MM.trades = {
    ═══════════════════════════════════════════ */
 window.MM = window.MM || {};
 
-const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+/* Every pace delay in this file funnels through here, which makes it
+   the one choke point a solo-game pause needs — see MM.turn.pause()
+   below and screens.js's modal()/closeModal(). The setTimeout itself
+   still runs to completion (nothing here freezes a clock mid-flight),
+   but nothing downstream of a `wait()` proceeds until the game is
+   unpaused, so a bot's turn stalls at whichever pace beat it was on
+   the moment a popup opened, and quietly picks back up when it closes. */
+const wait = (ms) => new Promise((r) => setTimeout(r, ms)).then(() => MM.turn._gate());
 
 /* Named pauses so the table reads at a watchable pace rather than a
    flicker — every one of these is a moment where something just
@@ -3627,6 +3680,38 @@ const PACE = {
 
 MM.turn = {
   busy: false,
+
+  /* ── solo-only pause ──────────────────────
+     A networked game never pauses — other real people are relying on
+     it moving without you. Solo play pauses the instant a popup opens
+     (Market, Trades, Rules, the bankrupt confirm, all of it) and picks
+     back up the instant it closes — see screens.js. */
+  paused: false,
+  _resumeQueue: [],
+  pause() { if (!MM.net.enabled) this.paused = true; },
+  resume() {
+    this.paused = false;
+    const q = this._resumeQueue;
+    this._resumeQueue = [];
+    q.forEach((fn) => fn());
+  },
+  _gate() {
+    return this.paused ? new Promise((resolve) => this._resumeQueue.push(resolve)) : Promise.resolve();
+  },
+  wait,
+
+  /* a player who'd rather not roll this turn — build/mortgage already
+     happens before this, same as before a real roll — passes play on
+     without moving. Only meaningful before the dice are actually down;
+     once they're rolled there's nothing left to skip. */
+  skipTurn(s) {
+    if (this.busy || s.phase !== MM.PHASES.AWAIT_ROLL) return;
+    this.busy = true;
+    const p = MM.currentPlayer(s);
+    MM.log(s, `<b>${p.name}</b> ended their turn without rolling`, p);
+    MM.bus.emit("state", s);
+    this.finishTurn(s, false);
+  },
 
   /* ── kick off ─────────────────────────── */
   begin(s) {
@@ -3894,12 +3979,12 @@ MM.turn = {
     if (rollAgain && p.alive && !p.jailed) {
       MM.setPhase(s, MM.PHASES.AWAIT_ROLL);
       MM.bus.emit("turn", p);
-      if (p.bot) setTimeout(() => this.roll(s), s.settings.botDelay);
+      if (p.bot) wait(s.settings.botDelay).then(() => this.roll(s));
       return;
     }
 
     MM.setPhase(s, MM.PHASES.TURN_END);
-    setTimeout(() => this.nextPlayer(s), PACE.NEXT_PLAYER);
+    wait(PACE.NEXT_PLAYER).then(() => this.nextPlayer(s));
   },
 
   nextPlayer(s) {
@@ -4870,8 +4955,12 @@ MM.deal = {
         ${player.bot ? `<p class="deal-note">${player.name} drew this</p>`
                      : `<button class="btn btn--primary" data-deal="ok">Continue</button>`}`);
 
-      const done = () => { clearTimeout(timer); this.hide(); resolve(); };
-      const timer = setTimeout(done, player.bot ? 2200 : 6000);
+      /* gated the same way turn.js's own pacing is — a card that auto-
+         dismisses shouldn't do it while a solo player has a popup open
+         and isn't watching */
+      let dismissed = false;
+      const done = () => { dismissed = true; this.hide(); resolve(); };
+      MM.turn.wait(player.bot ? 2200 : 6000).then(() => { if (!dismissed) done(); });
       const ok = this.el.querySelector('[data-deal="ok"]');
       if (ok) ok.addEventListener("click", done);
     });
@@ -5725,9 +5814,15 @@ MM.panels = {
           <div><b>${human.name}</b><i>${human.connected ? "Joined" : "Reconnecting…"}</i></div>
         </div>`;
       }
+      /* the bot's real name (from MM.PERSONALITIES) never shows up in
+         the UI — a seated bot already has its randomised table name
+         sitting in the game object; an unseated one has no player
+         object yet, so it just reads as an empty seat */
+      const seatedPlayer = seated ? s.players[seat] : null;
+      const shownName = seatedPlayer ? seatedPlayer.name : `Seat ${seat + 1}`;
       return `<div class="bot-row" style="${seated ? "" : "opacity:.4"}">
         <div class="avatar" style="--pcolor:${b.color}">${b.avatar}</div>
-        <div><b>${b.name}</b><i>${!seated ? "Not seated this game" : MM.net.enabled ? "Open — will play as a bot" : b.blurb}</i></div>
+        <div><b>${shownName}</b><i>${!seated ? "Not seated this game" : MM.net.enabled ? "Open — will play as a bot" : b.blurb}</i></div>
       </div>`;
     }).join("");
   },
@@ -5975,6 +6070,9 @@ MM.screens = {
        re-set this true right after calling modal() for their own case */
     if (MM.tradeUI) MM.tradeUI.isOpen = false;
     if (MM.marketUI) MM.marketUI.isOpen = false;
+    /* solo play only (see MM.turn.pause) — any popup, this one included,
+       stalls the bots/auctions/etc. right where they were */
+    if (MM.turn) MM.turn.pause();
   },
 
   closeModal() {
@@ -5983,6 +6081,7 @@ MM.screens = {
        showing — every other modal is stateless content, this is the
        one with something live to stop doing */
     if (MM.tradeUI) MM.tradeUI.isOpen = false;
+    if (MM.turn) MM.turn.resume();
   },
 
   /* the plain-language answer to "what works, what's coming" */
@@ -6124,6 +6223,7 @@ MM.app = {
     );
 
     this.action = document.getElementById("primary-action");
+    this.endTurnBtn = document.getElementById("end-turn-action");
     document.querySelectorAll(".ver-chip").forEach((c) => (c.textContent = MM.VERSION));
     this.bindHome();
     this.bindTable();
@@ -6361,6 +6461,7 @@ MM.app = {
     });
 
     this.action.addEventListener("click", () => this.primary());
+    this.endTurnBtn.addEventListener("click", () => MM.net.act("skipTurn"));
 
     document.addEventListener("keydown", (e) => {
       if (e.target.matches("input, select, textarea")) return;
@@ -6459,16 +6560,19 @@ MM.app = {
   syncAction() {
     const s = MM.state;
     const btn = this.action;
+    const endBtn = this.endTurnBtn;
     const waitingForHost = MM.net.enabled && !MM.net.isHost;
 
     if (!s || s.phase === MM.PHASES.LOBBY) {
       btn.textContent = waitingForHost ? "Waiting for host to start…" : "Start Game";
       btn.disabled = waitingForHost;
+      endBtn.hidden = true;
       return;
     }
     if (s.phase === MM.PHASES.GAME_OVER) {
       btn.textContent = waitingForHost ? "Waiting for host…" : "Play again";
       btn.disabled = waitingForHost;
+      endBtn.hidden = true;
       return;
     }
     const p = MM.currentPlayer(s);
@@ -6476,12 +6580,16 @@ MM.app = {
       const mine = MM.net.isMine(p);
       btn.textContent = p.bot ? `${p.name} is thinking…` : mine ? (p.jailed ? "Roll for doubles" : "Roll the dice") : `Waiting for ${p.name}…`;
       btn.disabled = !mine;
+      /* only the human whose turn it actually is can hop it, and only
+         before the dice are down — a bot never needs the option */
+      endBtn.hidden = p.bot || !mine;
     } else {
       btn.textContent = s.phase === MM.PHASES.ROLLING ? "Rolling…"
         : s.phase === MM.PHASES.MOVING ? "Moving…"
         : s.phase === MM.PHASES.DECIDING ? "Your move…"
         : "…";
       btn.disabled = true;
+      endBtn.hidden = true;
     }
   },
 

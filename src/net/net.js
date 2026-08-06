@@ -311,6 +311,7 @@ MM.net = {
      had to learn a seat might not be sitting at this keyboard */
   HANDLERS: {
     roll: (s, p) => { if (MM.currentPlayer(s) === p && s.phase === MM.PHASES.AWAIT_ROLL) MM.turn.roll(s); },
+    skipTurn: (s, p) => { if (MM.currentPlayer(s) === p && s.phase === MM.PHASES.AWAIT_ROLL) MM.turn.skipTurn(s); },
     chat: (s, p, { text } = {}) => { if (text) MM.chat(s, p.name, String(text).slice(0, 120), p.hex); },
     resign: (s, p) => { if (s.phase !== MM.PHASES.LOBBY) MM.bankrupt(s, p, null, "resigned"); },
     build: (s, p, { i } = {}) => MM.prop.build(s, p, MM.BOARD[i]),

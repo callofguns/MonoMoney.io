@@ -46,6 +46,7 @@ MM.app = {
     );
 
     this.action = document.getElementById("primary-action");
+    this.endTurnBtn = document.getElementById("end-turn-action");
     document.querySelectorAll(".ver-chip").forEach((c) => (c.textContent = MM.VERSION));
     this.bindHome();
     this.bindTable();
@@ -283,6 +284,7 @@ MM.app = {
     });
 
     this.action.addEventListener("click", () => this.primary());
+    this.endTurnBtn.addEventListener("click", () => MM.net.act("skipTurn"));
 
     document.addEventListener("keydown", (e) => {
       if (e.target.matches("input, select, textarea")) return;
@@ -381,16 +383,19 @@ MM.app = {
   syncAction() {
     const s = MM.state;
     const btn = this.action;
+    const endBtn = this.endTurnBtn;
     const waitingForHost = MM.net.enabled && !MM.net.isHost;
 
     if (!s || s.phase === MM.PHASES.LOBBY) {
       btn.textContent = waitingForHost ? "Waiting for host to start…" : "Start Game";
       btn.disabled = waitingForHost;
+      endBtn.hidden = true;
       return;
     }
     if (s.phase === MM.PHASES.GAME_OVER) {
       btn.textContent = waitingForHost ? "Waiting for host…" : "Play again";
       btn.disabled = waitingForHost;
+      endBtn.hidden = true;
       return;
     }
     const p = MM.currentPlayer(s);
@@ -398,12 +403,16 @@ MM.app = {
       const mine = MM.net.isMine(p);
       btn.textContent = p.bot ? `${p.name} is thinking…` : mine ? (p.jailed ? "Roll for doubles" : "Roll the dice") : `Waiting for ${p.name}…`;
       btn.disabled = !mine;
+      /* only the human whose turn it actually is can hop it, and only
+         before the dice are down — a bot never needs the option */
+      endBtn.hidden = p.bot || !mine;
     } else {
       btn.textContent = s.phase === MM.PHASES.ROLLING ? "Rolling…"
         : s.phase === MM.PHASES.MOVING ? "Moving…"
         : s.phase === MM.PHASES.DECIDING ? "Your move…"
         : "…";
       btn.disabled = true;
+      endBtn.hidden = true;
     }
   },
 

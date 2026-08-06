@@ -5,7 +5,9 @@
    ═══════════════════════════════════════════ */
 window.MM = window.MM || {};
 
-const pause = (ms) => new Promise((r) => setTimeout(r, ms));
+/* routed through the same solo-pause gate turn.js's own wait() uses —
+   a bot mid-bidding-war shouldn't keep raising while a popup's open */
+const pause = (ms) => MM.turn.wait(ms);
 
 MM.auction = {
   async run(s, tile) {

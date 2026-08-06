@@ -5,7 +5,14 @@
    ═══════════════════════════════════════════ */
 window.MM = window.MM || {};
 
-const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+/* Every pace delay in this file funnels through here, which makes it
+   the one choke point a solo-game pause needs — see MM.turn.pause()
+   below and screens.js's modal()/closeModal(). The setTimeout itself
+   still runs to completion (nothing here freezes a clock mid-flight),
+   but nothing downstream of a `wait()` proceeds until the game is
+   unpaused, so a bot's turn stalls at whichever pace beat it was on
+   the moment a popup opened, and quietly picks back up when it closes. */
+const wait = (ms) => new Promise((r) => setTimeout(r, ms)).then(() => MM.turn._gate());
 
 /* Named pauses so the table reads at a watchable pace rather than a
    flicker — every one of these is a moment where something just
@@ -20,6 +27,38 @@ const PACE = {
 
 MM.turn = {
   busy: false,
+
+  /* ── solo-only pause ──────────────────────
+     A networked game never pauses — other real people are relying on
+     it moving without you. Solo play pauses the instant a popup opens
+     (Market, Trades, Rules, the bankrupt confirm, all of it) and picks
+     back up the instant it closes — see screens.js. */
+  paused: false,
+  _resumeQueue: [],
+  pause() { if (!MM.net.enabled) this.paused = true; },
+  resume() {
+    this.paused = false;
+    const q = this._resumeQueue;
+    this._resumeQueue = [];
+    q.forEach((fn) => fn());
+  },
+  _gate() {
+    return this.paused ? new Promise((resolve) => this._resumeQueue.push(resolve)) : Promise.resolve();
+  },
+  wait,
+
+  /* a player who'd rather not roll this turn — build/mortgage already
+     happens before this, same as before a real roll — passes play on
+     without moving. Only meaningful before the dice are actually down;
+     once they're rolled there's nothing left to skip. */
+  skipTurn(s) {
+    if (this.busy || s.phase !== MM.PHASES.AWAIT_ROLL) return;
+    this.busy = true;
+    const p = MM.currentPlayer(s);
+    MM.log(s, `<b>${p.name}</b> ended their turn without rolling`, p);
+    MM.bus.emit("state", s);
+    this.finishTurn(s, false);
+  },
 
   /* ── kick off ─────────────────────────── */
   begin(s) {
@@ -287,12 +326,12 @@ MM.turn = {
     if (rollAgain && p.alive && !p.jailed) {
       MM.setPhase(s, MM.PHASES.AWAIT_ROLL);
       MM.bus.emit("turn", p);
-      if (p.bot) setTimeout(() => this.roll(s), s.settings.botDelay);
+      if (p.bot) wait(s.settings.botDelay).then(() => this.roll(s));
       return;
     }
 
     MM.setPhase(s, MM.PHASES.TURN_END);
-    setTimeout(() => this.nextPlayer(s), PACE.NEXT_PLAYER);
+    wait(PACE.NEXT_PLAYER).then(() => this.nextPlayer(s));
   },
 
   nextPlayer(s) {

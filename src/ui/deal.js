@@ -87,8 +87,12 @@ MM.deal = {
         ${player.bot ? `<p class="deal-note">${player.name} drew this</p>`
                      : `<button class="btn btn--primary" data-deal="ok">Continue</button>`}`);
 
-      const done = () => { clearTimeout(timer); this.hide(); resolve(); };
-      const timer = setTimeout(done, player.bot ? 2200 : 6000);
+      /* gated the same way turn.js's own pacing is — a card that auto-
+         dismisses shouldn't do it while a solo player has a popup open
+         and isn't watching */
+      let dismissed = false;
+      const done = () => { dismissed = true; this.hide(); resolve(); };
+      MM.turn.wait(player.bot ? 2200 : 6000).then(() => { if (!dismissed) done(); });
       const ok = this.el.querySelector('[data-deal="ok"]');
       if (ok) ok.addEventListener("click", done);
     });

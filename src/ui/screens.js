@@ -55,6 +55,9 @@ MM.screens = {
        re-set this true right after calling modal() for their own case */
     if (MM.tradeUI) MM.tradeUI.isOpen = false;
     if (MM.marketUI) MM.marketUI.isOpen = false;
+    /* solo play only (see MM.turn.pause) — any popup, this one included,
+       stalls the bots/auctions/etc. right where they were */
+    if (MM.turn) MM.turn.pause();
   },
 
   closeModal() {
@@ -63,6 +66,7 @@ MM.screens = {
        showing — every other modal is stateless content, this is the
        one with something live to stop doing */
     if (MM.tradeUI) MM.tradeUI.isOpen = false;
+    if (MM.turn) MM.turn.resume();
   },
 
   /* the plain-language answer to "what works, what's coming" */

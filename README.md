@@ -20,7 +20,7 @@ To produce the single-file shareable build:
 node tools/build-artifact.mjs   # → dist/monomoney.html
 ```
 
-## What works today (V4.2)
+## What works today (V4.3)
 
 - **40-tile board** rendered on canvas: 8 colour groups, 4 airports, 2 utilities,
   2 taxes, Surprise and Treasure tiles, and the four corners (START, In Prison,
@@ -97,6 +97,15 @@ node tools/build-artifact.mjs   # → dist/monomoney.html
   scrolling ticker is gone — a static bar across the top shows all five listings
   at once, each with its own small line chart. The event log has been removed
   from the game screen.
+- **End turns, mystery bots, a real pause** — an End Turn button sits next to
+  Roll: on your own turn, before you've rolled, hop it and pass play on
+  instead. Bots no longer play under a name that gives their strategy away —
+  every game hands each one a fresh random goofy name instead, while what
+  actually drives its buying and trading is untouched. Solo games now really
+  pause the instant you open Market, Trades, or any other popup — a bot
+  mid-turn holds exactly where it was and picks back up the moment you close
+  it. Play with friends never pauses this way, since a real person elsewhere
+  at the table is still relying on the game moving.
 
 The full working / coming list lives in `src/data/versions.js` and is rendered
 in-game: **Build status** in the lobby rail, or *See what works today* on the
@@ -122,6 +131,7 @@ queued, as it is right now).
 | V4 | Play with friends — real rooms, real people in the seats bots used to fill | ✅ Working |
 | V4.1 | Trade with anyone, a sturdier reconnect, a confirmed Bankrupt button | ✅ Working |
 | V4.2 | Fixed Max buy/sell, Market as a popup, a static line-chart ticker, log removed | ✅ Working |
+| V4.3 | An End Turn button, random goofy bot names, solo games pause on a popup | ✅ Working |
 
 ## Layout
 
@@ -173,7 +183,23 @@ neither reaches into the other. `core/turn.js` drives the game and `await`s the
 renderer for movement, so animation timing and game logic stay in step without
 either owning the other.
 
+Every pace delay in `turn.js` (and the bot-bidding delay in `auction.js`, and a
+bot's card-face auto-dismiss in `deal.js`) funnels through one gated `wait()`,
+which is the whole solo-pause mechanism: `MM.turn.pause()` flips a flag,
+and `wait()` won't resolve past it until `MM.turn.resume()` fires — so a
+bot's turn stalls at whichever pace beat it was on the moment a popup opened
+and quietly picks back up when it closes. `screens.js`'s `modal()`/
+`closeModal()` are the only two callers, and both no-op in a networked game
+(`MM.net.enabled`), since a real person elsewhere at the table can't have
+their game stall because you opened Market.
+
 ## Bot personalities
+
+These are the internal names — `src/data/rules.js`'s `id`/`name` fields, used
+in code and in this doc. Nobody at the table ever sees them: since V4.3 each
+bot plays under a random goofy name instead (`MM.goofyName()`), regenerated
+fresh every game, so the roster never hands you a cheat sheet on how a seat
+will trade or bid.
 
 | Bot | Plays like |
 | --- | ---------- |
