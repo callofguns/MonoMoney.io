@@ -20,7 +20,7 @@ To produce the single-file shareable build:
 node tools/build-artifact.mjs   # → dist/monomoney.html
 ```
 
-## What works today (V4)
+## What works today (V4.1)
 
 - **40-tile board** rendered on canvas: 8 colour groups, 4 airports, 2 utilities,
   2 taxes, Surprise and Treasure tiles, and the four corners (START, In Prison,
@@ -81,8 +81,14 @@ node tools/build-artifact.mjs   # → dist/monomoney.html
 - **Play with friends** — create a room from the home screen and get a code, or
   join one someone sent you. Up to three other people can take the seats bots
   used to fill, seeing the same board, dice, market and chat in real time, with
-  their own decisions showing up on their own screen. Needs a small relay
-  server to actually connect two devices — see `server/README.md`.
+  their own decisions showing up on their own screen. A dropped connection
+  reconnects on its own, and anything sent while briefly offline is delivered
+  once it's back rather than lost. Needs a small relay server to actually
+  connect two devices — see `server/README.md`.
+- **Trade with anyone** — the Trades tab lists every live player now, not just
+  bots. A person gets asked on their own screen, the same accept/decline card a
+  bot's own offers use; proposing shows an immediate "offer sent" note and the
+  eventual answer lands in the event log.
 
 The full working / coming list lives in `src/data/versions.js` and is rendered
 in-game: **Build status** in the lobby rail, or *See what works today* on the
@@ -106,6 +112,7 @@ queued, as it is right now).
 | V3.1 | Built for phones — a bigger board, real touch targets, tap-to-inspect | ✅ Working |
 | V3.2 | Know your stock — an info icon explaining what moves each price | ✅ Working |
 | V4 | Play with friends — real rooms, real people in the seats bots used to fill | ✅ Working |
+| V4.1 | Trade with anyone, a sturdier reconnect, a confirmed Bankrupt button | ✅ Working |
 
 ## Layout
 
@@ -207,6 +214,15 @@ Bots also initiate one canonical offer of their own: cash for the single tile th
 need to complete a set, if you own it. Frequency and premium both come from
 personality — the Shark asks often and pays well over price; the Banker rarely
 bothers.
+
+A live human partner skips the value math entirely — `core/trades.js`'s
+`proposeToHuman()` just asks them, through the exact same `MM.net.ask()` seat-
+routed prompt every other decision in the game already uses, and shows the
+answer in `MM.deal.humanTradeOffer()`, a read-only mirror of the composer's own
+bundle summary. Since a person's answer isn't instant the way a bot's is, the
+proposer's own screen shows an immediate "offer sent" note rather than a
+resolved result, and the eventual accept or decline surfaces through the event
+log instead — the same place a bot's answer already gets logged.
 
 ## Net worth
 

@@ -137,6 +137,37 @@ MM.trades = {
     return result;
   },
 
+  /* ── one live player proposing to another ── a bot decides for itself
+     the instant it's offered; a human needs to actually be asked, so
+     this is async where proposeToBot() above is not — the eventual
+     accept/decline shows up in the log for the whole table rather than
+     resolving back to the proposer on the spot */
+  async proposeToHuman(s, proposer, partner, give, take) {
+    if (!this.canOffer(s, proposer, give) || !this.canOffer(s, partner, take)) {
+      MM.log(s, `<b>${proposer.name}</b>'s offer to <b>${partner.name}</b> isn't valid anymore`, proposer);
+      return;
+    }
+    if (this.bundleIsEmpty(give) && this.bundleIsEmpty(take)) return;
+
+    MM.log(s, `<b>${proposer.name}</b> offers a trade to <b>${partner.name}</b>`, proposer);
+    const accepted = await MM.net.ask(partner, "humanTradeOffer", { proposerId: proposer.id, give, take },
+      () => MM.deal.humanTradeOffer(s, proposer, give, take));
+
+    /* the board doesn't pause while they decide — re-check that both
+       sides can still actually deliver what they promised */
+    if (!this.canOffer(s, proposer, give) || !this.canOffer(s, partner, take)) {
+      if (accepted) MM.log(s, `<b>${partner.name}</b> agreed, but the offer wasn't valid anymore by then`, partner);
+      return;
+    }
+
+    if (accepted) {
+      this.execute(s, proposer, partner, give, take);
+      MM.log(s, `<b>${proposer.name}</b> and <b>${partner.name}</b> shook on a trade`, partner);
+    } else {
+      MM.log(s, `<b>${partner.name}</b> turned down <b>${proposer.name}</b>'s trade`, partner);
+    }
+  },
+
   /* ── moving the goods: aGives runs a → b, aWants runs b → a ── */
   execute(s, a, b, aGives, aWants) {
     if (aGives.cash) { MM.debit(s, a, aGives.cash, "trade"); MM.credit(s, b, aGives.cash, "trade"); }

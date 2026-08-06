@@ -319,8 +319,17 @@ MM.net = {
     unmortgage: (s, p, { i } = {}) => MM.prop.unmortgage(s, p, MM.BOARD[i]),
     buyStock: (s, p, { sym, qty } = {}) => MM.market.buy(s, p, sym, qty),
     sellStock: (s, p, { sym, qty } = {}) => MM.market.sell(s, p, sym, qty),
-    proposeTrade: (s, p, { partnerId, give, take } = {}) =>
-      MM.trades.proposeToBot(s, p, MM.playerById(s, partnerId), give, take)
+    /* a bot decides on the spot (returns a result act() can hand straight
+       back to the composer); a human has to be asked, which takes a
+       moment — that leg runs in the background and the outcome shows up
+       in the log instead of resolving synchronously here */
+    proposeTrade: (s, p, { partnerId, give, take } = {}) => {
+      const partner = MM.playerById(s, partnerId);
+      if (!partner) return { accept: false, reason: "they're not at the table anymore" };
+      if (partner.bot) return MM.trades.proposeToBot(s, p, partner, give, take);
+      MM.trades.proposeToHuman(s, p, partner, give, take);
+      return undefined;
+    }
   },
 
   /* ── guest-side: recreate the exact modal the host would've shown,
@@ -330,7 +339,9 @@ MM.net = {
     auctionBid: (s, { tile, bid, leaderId }) =>
       MM.deal.auctionBid(s, MM.BOARD[tile], bid, leaderId != null ? MM.playerById(s, leaderId) : null),
     tradeOffer: (s, { botId, tile, cash }) =>
-      MM.deal.tradeOffer(s, MM.playerById(s, botId), MM.BOARD[tile], cash)
+      MM.deal.tradeOffer(s, MM.playerById(s, botId), MM.BOARD[tile], cash),
+    humanTradeOffer: (s, { proposerId, give, take }) =>
+      MM.deal.humanTradeOffer(s, MM.playerById(s, proposerId), give, take)
   },
 
   /* ── guest-side: cosmetic-only, nothing to send back ────────────── */

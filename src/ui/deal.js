@@ -143,5 +143,63 @@ MM.deal = {
       this.el.querySelector('[data-deal="accept"]').addEventListener("click", () => done(true));
       this.el.querySelector('[data-deal="decline"]').addEventListener("click", () => done(false));
     });
+  },
+
+  /* ── another player wants to trade ─────────
+     give/take are named from the PROPOSER's side (same as the Trades
+     tab composer) — so from here, the one deciding, give is what
+     they'd receive and take is what they'd have to hand over */
+  humanTradeOffer(s, proposer, give, take) {
+    const summarize = (bundle) => {
+      const rows = [];
+      if (bundle.cash) rows.push(`
+        <div class="trade-item trade-item--plain">
+          <span class="trade-item-name">💵 Cash</span>
+          <span class="trade-item-price">${MM.money(bundle.cash)}</span>
+        </div>`);
+      (bundle.tiles || []).forEach((i) => {
+        const t = MM.BOARD[i];
+        const color = t.group ? MM.GROUPS[t.group].color : "#2f7df6";
+        rows.push(`
+          <div class="trade-item trade-item--plain">
+            <span class="prop-swatch" style="background:${color}"></span>
+            <span class="trade-item-name">${t.name}</span>
+          </div>`);
+      });
+      Object.entries(bundle.shares || {}).forEach(([sym, qty]) => {
+        if (!qty) return;
+        const st = MM.market.stock(s, sym);
+        rows.push(`
+          <div class="trade-item trade-item--plain">
+            <span class="stock-sym" style="--scolor:${st.color}">${sym}</span>
+            <span class="trade-item-name">${qty} share${qty > 1 ? "s" : ""}</span>
+          </div>`);
+      });
+      return rows.length ? rows.join("") : `<p class="empty-note empty-note--tight">Nothing</p>`;
+    };
+
+    return new Promise((resolve) => {
+      this.open(`
+        <div class="trade-ask">
+          <div class="avatar" style="--pcolor:${proposer.hex}">${proposer.avatar}</div>
+          <p><b style="color:${proposer.hex}">${proposer.name}</b> wants to trade</p>
+        </div>
+        <div class="trade-section">
+          <h3 class="trade-section-title">You'd get</h3>
+          <div class="trade-list trade-list--static">${summarize(give)}</div>
+        </div>
+        <div class="trade-section">
+          <h3 class="trade-section-title">You'd give up</h3>
+          <div class="trade-list trade-list--static">${summarize(take)}</div>
+        </div>
+        <div class="deal-actions">
+          <button class="btn btn--primary" data-deal="accept">Accept</button>
+          <button class="btn btn--muted" data-deal="decline">Decline</button>
+        </div>`);
+
+      const done = (answer) => { this.hide(); resolve(answer); };
+      this.el.querySelector('[data-deal="accept"]').addEventListener("click", () => done(true));
+      this.el.querySelector('[data-deal="decline"]').addEventListener("click", () => done(false));
+    });
   }
 };
