@@ -703,7 +703,12 @@ button, .tab, .partner-chip, .switch, .mini-btn, [role="tab"] {
   font-size: 11.5px; font-weight: 600; cursor: pointer;
 }
 .chip-btn:hover { background: var(--accent); color: #fff; }
-.trade-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+/* Buy and Sell each get their own row with an adjacent Max, rather than
+   one ambiguous Max shared between both actions */
+.trade-actions { display: flex; flex-direction: column; gap: 8px; }
+.trade-action-row { display: flex; gap: 8px; }
+.trade-action-row .btn { flex: 1; min-width: 0; }
+.trade-action-row .chip-btn { flex: none; padding-left: 14px; padding-right: 14px; }
 
 .prop-list { display: flex; flex-direction: column; gap: 6px; }
 .prop-row {
@@ -924,34 +929,45 @@ button, .tab, .partner-chip, .switch, .mini-btn, [role="tab"] {
 /* ── assets/css/board.css ── */
 /* ═══ ticker · board · center console · dice ═══ */
 
-/* ── market ticker ───────────────────────── */
+/* ── market bar ─────────────────────────────
+   a static row, not a scrolling tape — every listing sits in the same
+   spot the whole game, each with a small live line chart rather than
+   just a number */
 .ticker {
   position: relative;
-  height: 34px; flex: none;
-  overflow: hidden;
+  height: 46px; flex: none;
   background: var(--ink-600);
   border: 1px solid var(--line);
   border-radius: var(--r-md);
-  mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
 }
-/* the tape is rendered four times over; sliding half the track loops seamlessly */
-.ticker-track {
-  display: flex; align-items: center; gap: 30px;
-  height: 100%; width: max-content;
-  padding-left: 30px;
-  animation: tape 48s linear infinite;
+.ticker-bar {
+  display: flex; align-items: center;
+  height: 100%; gap: clamp(8px, 2vw, 26px);
+  padding: 0 14px;
+  overflow-x: auto;
+  /* five items at a comfortable size don't always fit a narrow board
+     column — scrollable as a fallback, but nothing here auto-plays the
+     way the old tape did; it only moves if you actually drag it */
+  mask-image: linear-gradient(90deg, transparent, #000 3%, #000 97%, transparent);
 }
-.ticker:hover .ticker-track { animation-play-state: paused; }
-@keyframes tape { to { transform: translateX(-50%); } }
+.ticker-bar::-webkit-scrollbar { display: none; }
 
-.tape-item {
-  display: flex; align-items: baseline; gap: 8px;
-  font-family: var(--font-num); font-size: 12px; white-space: nowrap;
+.ticker-stock {
+  display: flex; align-items: center; gap: 5px;
+  flex: none;
+  font-family: var(--font-num); font-size: 11.5px; white-space: nowrap;
 }
-.tape-item .sym { color: var(--text); font-weight: 700; letter-spacing: .06em; }
-.tape-item .px { color: var(--text-dim); }
-.tape-item .chg.up { color: var(--up); }
-.tape-item .chg.down { color: var(--down); }
+.ticker-sym { color: var(--scolor, var(--text)); font-weight: 700; letter-spacing: .04em; }
+.ticker-px { color: var(--text-dim); }
+.ticker-stock .spark { flex: none; }
+.ticker-chg.up { color: var(--up); }
+.ticker-chg.down { color: var(--down); }
+
+@media (max-width: 900px) {
+  /* the $ price is redundant with the line right next to it once space
+     is tight — sym, chart and % change carry the same information */
+  .ticker-px { display: none; }
+}
 
 /* a headline takes the tape over for a few seconds */
 .market-flash {
@@ -1068,8 +1084,7 @@ button, .tab, .partner-chip, .switch, .mini-btn, [role="tab"] {
 
 /* ── deal panel: deeds, cards, auctions ──── */
 .board-center.is-prompting .dice-tray,
-.board-center.is-prompting #primary-action,
-.board-center.is-prompting .log-feed { display: none; }
+.board-center.is-prompting #primary-action { display: none; }
 
 .deal {
   display: flex; flex-direction: column; align-items: center; gap: 14px;
@@ -1125,22 +1140,6 @@ button, .tab, .partner-chip, .switch, .mini-btn, [role="tab"] {
   font-family: var(--font-display); font-size: 96px; font-weight: 800;
   opacity: .08; pointer-events: none;
 }
-
-/* ── event log ───────────────────────────── */
-.log-feed {
-  display: flex; flex-direction: column-reverse; gap: 5px;
-  width: min(430px, 82%);
-  max-height: 132px;
-  overflow: hidden;
-  font-size: 12.5px; color: var(--text-mut);
-  mask-image: linear-gradient(0deg, #000 55%, transparent);
-}
-.log-line { line-height: 1.4; animation: log-in .28s ease-out; }
-.log-line:first-child { color: var(--text-dim); }
-.log-line b { color: var(--pcolor, var(--text)); }
-.log-line .money { font-family: var(--font-num); color: var(--gold); }
-.log-line--sys { color: var(--text-mut); font-style: italic; }
-@keyframes log-in { from { opacity: 0; transform: translateY(6px); } }
 
 /* floating cash pop over the board */
 .cash-pop {
@@ -1282,8 +1281,8 @@ button, .tab, .partner-chip, .switch, .mini-btn, [role="tab"] {
 
     <!-- ── center ── -->
     <main class="table-main">
-      <div class="ticker" id="ticker" aria-label="Market ticker">
-        <div class="ticker-track" id="ticker-track"></div>
+      <div class="ticker" id="ticker" aria-label="Market prices">
+        <div class="ticker-bar" id="ticker-bar"></div>
         <div class="market-flash" id="market-flash" role="status"></div>
       </div>
 
@@ -1299,8 +1298,6 @@ button, .tab, .partner-chip, .switch, .mini-btn, [role="tab"] {
           <button class="btn btn--primary btn--action" id="primary-action">Start Game</button>
 
           <div class="deal" id="deal" hidden></div>
-
-          <div class="log-feed" id="log-feed" role="log" aria-live="polite"></div>
         </div>
       </div>
     </main>
@@ -1402,14 +1399,11 @@ button, .tab, .partner-chip, .switch, .mini-btn, [role="tab"] {
 
         <div class="card card--tabs">
           <div class="tabs" role="tablist">
-            <button class="tab is-active" data-tab="market" role="tab">Market</button>
-            <button class="tab" data-tab="props" role="tab">My properties</button>
+            <button class="tab" data-action="open-market">Market</button>
+            <button class="tab is-active" data-tab="props" role="tab">My properties</button>
             <button class="tab" data-action="open-trades">Trades</button>
           </div>
-          <div class="tab-panel is-active" data-panel="market">
-            <div id="market-panel"></div>
-          </div>
-          <div class="tab-panel" data-panel="props">
+          <div class="tab-panel is-active" data-panel="props">
             <div class="prop-list" id="prop-list"></div>
           </div>
         </div>
@@ -1440,7 +1434,7 @@ button, .tab, .partner-chip, .switch, .mini-btn, [role="tab"] {
    ═══════════════════════════════════════════ */
 window.MM = window.MM || {};
 
-MM.VERSION = "V4.1";
+MM.VERSION = "V4.2";
 
 MM.RELEASES = [
   {
@@ -1579,6 +1573,15 @@ MM.RELEASES = [
       "Connection hiccups from the last update carry over here too — an offer sent while someone's briefly disconnected is held and delivered the moment they're back, not lost",
       "A more reliable reconnect after a dropped connection, and messages sent while someone was briefly offline now arrive once they're back instead of vanishing",
       "The Bankrupt button is smaller and asks you to confirm — resigning is permanent, so it's no longer one accidental tap away"
+    ]
+  },
+  {
+    v: "V4.2", name: "A cleaner market", status: "shipped",
+    items: [
+      "Fixed Max sometimes leaving Buy or Sell greyed out, or trading the wrong amount — the two buttons now have their own Max, one next to Buy for the most you can afford and one next to Sell for everything you hold",
+      "The Market tab is now the same board-centred popup as Trades, with a button in its old spot to open it",
+      "The scrolling ticker across the top no longer auto-plays a tape — it's a static bar with all five listings, each with its own small line chart, in the same place all game",
+      "The event log is gone from the game screen — the board reads cleaner, and chat, dice and prices still update live"
     ]
   }
 ];
@@ -2657,7 +2660,18 @@ MM.market = {
   /* ── trading ────────────────────────────── */
   cost(s, sym, qty) { return Math.round(this.stock(s, sym).price * qty); },
 
-  maxBuy(s, player, sym) { return Math.floor(player.cash / this.stock(s, sym).price); },
+  /* the largest qty cost() will actually accept for this cash — walking
+     one step off the naive division catches the rare case where
+     floating-point division and cost()'s own Math.round land on
+     opposite sides of the affordability line from each other */
+  maxBuy(s, player, sym) {
+    const price = this.stock(s, sym).price;
+    if (!(price > 0)) return 0;
+    let qty = Math.max(0, Math.floor(player.cash / price));
+    while (qty > 0 && this.cost(s, sym, qty) > player.cash) qty -= 1;
+    while (this.cost(s, sym, qty + 1) <= player.cash) qty += 1;
+    return qty;
+  },
 
   buy(s, player, sym, qty) {
     const st = this.stock(s, sym);
@@ -4976,16 +4990,20 @@ MM.deal = {
 
 /* ── src/ui/market-ui.js ── */
 /* ═══════════════════════════════════════════
-   The Market tab: a list of listings, and a
-   trade panel for whichever one you open.
-   Charts are inline SVG — one series each, so the
-   line carries direction and the label carries the
+   The Market: a list of listings, and a trade
+   panel for whichever one you open. Charts are
+   inline SVG — one series each, so the line
+   carries direction and the label carries the
    number; never colour alone.
+
+   Lives as a popup rather than a fixed tab-panel
+   — see MM.tradeUI for the same pattern and why.
    ═══════════════════════════════════════════ */
 window.MM = window.MM || {};
 
 MM.marketUI = {
-  open: null,      /* symbol currently expanded */
+  isOpen: false,
+  open: null,      /* symbol currently expanded — unrelated to isOpen */
   qty: 1,
 
   mount(el) {
@@ -4993,7 +5011,16 @@ MM.marketUI = {
     MM.bus.on("headline", (h) => this.flash(h));
   },
 
+  openPopup() {
+    MM.screens.modal("Market", "");
+    this.isOpen = true;
+    this.qty = 1;
+    this.mount(document.getElementById("modal-body"));
+    this.render();
+  },
+
   render() {
+    if (!this.isOpen) return; /* nothing showing — no point building the HTML */
     const s = MM.state;
     if (!s || !this.el) return;
     this.el.innerHTML = this.open ? this.tradePanel(s, this.open) : this.list(s);
@@ -5082,12 +5109,17 @@ MM.marketUI = {
         <span class="qty-value">${qty}</span>
         <button class="mini-btn" data-qty="1">＋</button>
         <button class="chip-btn" data-qty="5">+5</button>
-        <button class="chip-btn" data-qty="max">Max</button>
       </div>
 
       <div class="trade-actions">
-        <button class="btn btn--primary btn--sm" data-trade="buy" ${canBuy ? "" : "disabled"}>Buy · ${MM.money(cost)}</button>
-        <button class="btn btn--muted btn--sm" data-trade="sell" ${canSell ? "" : "disabled"}>Sell · ${MM.money(cost)}</button>
+        <div class="trade-action-row">
+          <button class="btn btn--primary btn--sm" data-trade="buy" ${canBuy ? "" : "disabled"}>Buy · ${MM.money(cost)}</button>
+          <button class="chip-btn" data-qty="maxbuy" title="The most you can afford">Max</button>
+        </div>
+        <div class="trade-action-row">
+          <button class="btn btn--muted btn--sm" data-trade="sell" ${canSell ? "" : "disabled"}>Sell · ${MM.money(cost)}</button>
+          <button class="chip-btn" data-qty="maxsell" title="Everything you hold">Max</button>
+        </div>
       </div>`;
   },
 
@@ -5219,10 +5251,16 @@ MM.marketUI = {
     const back = this.el.querySelector("[data-back]");
     if (back) back.addEventListener("click", () => { this.open = null; this.render(); });
 
+    /* "Max" used to be one button shared between Buy and Sell, set from
+       maxBuy() alone — fine for buying, but it meant Max could hand you
+       a quantity bigger than what you actually hold, silently disabling
+       Sell instead of selling everything. Buy and Sell each get their
+       own Max now, tied to what that specific action can actually do. */
     this.el.querySelectorAll("[data-qty]").forEach((b) =>
       b.addEventListener("click", () => {
         const v = b.dataset.qty;
-        if (v === "max") this.qty = Math.max(1, MM.market.maxBuy(s, you, this.open));
+        if (v === "maxbuy") this.qty = Math.max(1, MM.market.maxBuy(s, you, this.open));
+        else if (v === "maxsell") this.qty = Math.max(1, MM.market.held(you, this.open));
         else this.qty = Math.max(1, this.qty + (+v));
         this.render();
       }));
@@ -5575,7 +5613,7 @@ MM.dashboardUI = {
 
 
 /* ── src/ui/panels.js ── */
-/* ═══ side rails, log, chat and the market tape ═══ */
+/* ═══ side rails, chat and the market bar ═══ */
 window.MM = window.MM || {};
 
 const el = (sel) => document.querySelector(sel);
@@ -5587,11 +5625,9 @@ MM.panels = {
       host: el("#host-card"),
       bots: el("#bot-list"),
       rules: el("#rules-list"),
-      market: el("#market-panel"),
       props: el("#prop-list"),
       status: el("#status-card"),
-      ticker: el("#ticker-track"),
-      log: el("#log-feed"),
+      ticker: el("#ticker-bar"),
       chat: el("#chat-feed"),
       room: el("#room-link")
     };
@@ -5599,13 +5635,12 @@ MM.panels = {
     MM.bus.on("state", () => this.renderAll());
     MM.bus.on("turn", () => this.renderPlayers());
     MM.bus.on("market", () => { this.renderMarket(); this.renderTicker(); });
-    MM.bus.on("log", (e) => this.pushLog(e));
     MM.bus.on("chat", (e) => this.pushChat(e));
     MM.bus.on("cash", (e) => this.cashPop(e));
     MM.net.onRoster(() => { this.renderBots(); this.renderPlayers(); MM.app.renderWaitRoom && MM.app.renderWaitRoom(); });
-    MM.marketUI.mount(this.refs.market);
-    /* MM.tradeUI mounts itself into #modal-body when it opens — see
-       MM.tradeUI.open() — there's no persistent panel for it anymore */
+    /* MM.marketUI and MM.tradeUI mount themselves into #modal-body when
+       they open — see their own openPopup()/open() — neither has a
+       persistent panel anymore */
   },
 
   renderAll() {
@@ -5747,19 +5782,24 @@ MM.panels = {
   renderMarket() { MM.marketUI.render(); },
   renderTrades() { MM.tradeUI.render(); },
 
+  /* a static bar, not a scrolling tape — every listing sits in its own
+     spot the whole game, each with a small live line chart rather than
+     just a number, using the exact same spark() the Market popup does
+     so the two never draw the trend differently */
   renderTicker() {
     const s = MM.state;
     if (!s || !this.refs.ticker) return;
-    const loop = s.stocks.concat(s.stocks, s.stocks, s.stocks);
-    const items = loop.map((st) => {
+    this.refs.ticker.innerHTML = s.stocks.map((st) => {
       const chg = ((st.price - st.open) / st.open) * 100;
-      return `<span class="tape-item">
-        <span class="sym">${st.sym}</span>
-        <span class="px">$${st.price.toFixed(2)}</span>
-        <span class="chg ${chg >= 0 ? "up" : "down"}">${chg >= 0 ? "+" : ""}${chg.toFixed(2)}%</span>
-      </span>`;
+      const dir = chg >= 0 ? "up" : "down";
+      return `
+        <div class="ticker-stock" style="--scolor:${st.color}">
+          <span class="ticker-sym">${st.sym}</span>
+          <span class="ticker-px">$${st.price.toFixed(2)}</span>
+          ${MM.marketUI.spark(st, 40, 18)}
+          <span class="ticker-chg ${dir}">${chg >= 0 ? "▲" : "▼"} ${Math.abs(chg).toFixed(1)}%</span>
+        </div>`;
     }).join("");
-    this.refs.ticker.innerHTML = items;
   },
 
   /* your deeds, with the controls to develop them */
@@ -5834,17 +5874,9 @@ MM.panels = {
   },
 
   /* ── feeds ──────────────────────────────── */
-  pushLog(entry) {
-    const box = this.refs.log;
-    if (!box) return;
-    const line = document.createElement("div");
-    line.className = "log-line";
-    if (entry.hex) line.style.setProperty("--pcolor", entry.hex);
-    else line.classList.add("log-line--sys");
-    line.innerHTML = entry.html;
-    box.prepend(line);
-    while (box.children.length > 14) box.lastChild.remove();
-  },
+  /* the on-board event log is gone — MM.log()/s.log still record every
+     event (bots, tests and anything else that reads game history still
+     see it), there's just nothing rendering it on the table anymore */
 
   pushChat(entry) {
     const box = this.refs.chat;
@@ -5938,9 +5970,11 @@ MM.screens = {
     this.modalEl.classList.remove("modal--single-action");
     this.modalEl.hidden = false;
     /* anything else taking over the shared modal (game-over showing up
-       mid-trade, say) preempts a live trades popup — tradeUI.open()
-       re-sets this true right after calling modal() for its own case */
+       mid-trade, an ⓘ card clicked from inside the Market popup itself)
+       preempts a live Market/Trades popup — their own open()/openPopup()
+       re-set this true right after calling modal() for their own case */
     if (MM.tradeUI) MM.tradeUI.isOpen = false;
+    if (MM.marketUI) MM.marketUI.isOpen = false;
   },
 
   closeModal() {
@@ -6377,6 +6411,7 @@ MM.app = {
     });
 
     document.querySelector('[data-action="open-trades"]').addEventListener("click", () => MM.tradeUI.open());
+    document.querySelector('[data-action="open-market"]').addEventListener("click", () => MM.marketUI.openPopup());
 
     document.getElementById("chat-form").addEventListener("submit", (e) => {
       e.preventDefault();

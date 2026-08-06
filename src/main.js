@@ -333,6 +333,7 @@ MM.app = {
     });
 
     document.querySelector('[data-action="open-trades"]').addEventListener("click", () => MM.tradeUI.open());
+    document.querySelector('[data-action="open-market"]').addEventListener("click", () => MM.marketUI.openPopup());
 
     document.getElementById("chat-form").addEventListener("submit", (e) => {
       e.preventDefault();

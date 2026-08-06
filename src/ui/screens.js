@@ -50,9 +50,11 @@ MM.screens = {
     this.modalEl.classList.remove("modal--single-action");
     this.modalEl.hidden = false;
     /* anything else taking over the shared modal (game-over showing up
-       mid-trade, say) preempts a live trades popup — tradeUI.open()
-       re-sets this true right after calling modal() for its own case */
+       mid-trade, an ⓘ card clicked from inside the Market popup itself)
+       preempts a live Market/Trades popup — their own open()/openPopup()
+       re-set this true right after calling modal() for their own case */
     if (MM.tradeUI) MM.tradeUI.isOpen = false;
+    if (MM.marketUI) MM.marketUI.isOpen = false;
   },
 
   closeModal() {

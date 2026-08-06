@@ -348,7 +348,12 @@
   font-size: 11.5px; font-weight: 600; cursor: pointer;
 }
 .chip-btn:hover { background: var(--accent); color: #fff; }
-.trade-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+/* Buy and Sell each get their own row with an adjacent Max, rather than
+   one ambiguous Max shared between both actions */
+.trade-actions { display: flex; flex-direction: column; gap: 8px; }
+.trade-action-row { display: flex; gap: 8px; }
+.trade-action-row .btn { flex: 1; min-width: 0; }
+.trade-action-row .chip-btn { flex: none; padding-left: 14px; padding-right: 14px; }
 
 .prop-list { display: flex; flex-direction: column; gap: 6px; }
 .prop-row {

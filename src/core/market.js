@@ -115,7 +115,18 @@ MM.market = {
   /* ── trading ────────────────────────────── */
   cost(s, sym, qty) { return Math.round(this.stock(s, sym).price * qty); },
 
-  maxBuy(s, player, sym) { return Math.floor(player.cash / this.stock(s, sym).price); },
+  /* the largest qty cost() will actually accept for this cash — walking
+     one step off the naive division catches the rare case where
+     floating-point division and cost()'s own Math.round land on
+     opposite sides of the affordability line from each other */
+  maxBuy(s, player, sym) {
+    const price = this.stock(s, sym).price;
+    if (!(price > 0)) return 0;
+    let qty = Math.max(0, Math.floor(player.cash / price));
+    while (qty > 0 && this.cost(s, sym, qty) > player.cash) qty -= 1;
+    while (this.cost(s, sym, qty + 1) <= player.cash) qty += 1;
+    return qty;
+  },
 
   buy(s, player, sym, qty) {
     const st = this.stock(s, sym);
