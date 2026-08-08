@@ -25,6 +25,11 @@ const PORT = process.env.PORT || 8787;
 const MAX_SEATS = 4;
 const ROOM_TTL_MS = 30 * 60 * 1000; /* garbage-collect an empty/abandoned room after 30 min */
 const CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; /* no 0/O/1/I — easier to read aloud */
+const HEARTBEAT_MS = +process.env.HEARTBEAT_MS || 25_000; /* comfortably under
+  the ~55-60s idle timeout most L7 proxies (including the one in front of a
+  Render web service) use to quietly drop a connection that's gone quiet —
+  a ping every 25s keeps it looking alive to any intermediary, not just to
+  us. Overridable so a test doesn't have to sit through a real 25s beat. */
 
 const rooms = new Map(); /* code -> { seats: Map<seatId, {ws, name, clientId, connected, queue}>, locked, lastSeen } */
 const MAX_QUEUE = 100; /* per-seat cap on messages held for a disconnected player */
@@ -86,7 +91,22 @@ const http = createServer((req, res) => {
 
 const wss = new WebSocketServer({ server: http });
 
+/* A connection that's gone silently dead — the common case is a home
+   wifi/NAT mapping expiring, a laptop sleeping, or a proxy's idle
+   timeout closing the pipe without either end getting a real close
+   frame — otherwise sits there forever "open" on both sides. Nothing
+   ever arrives, nothing ever errors, and the reconnect logic every
+   client already has never fires because it's never told anything
+   went wrong. This is the fix: ping every connection on a beat, and
+   drop anyone who didn't answer the *previous* one — worst case that's
+   about one interval (and never more than two) before a genuinely dead
+   seat is marked disconnected and the room moves on. A real client
+   answers a ping automatically at the browser/WebSocket-library level;
+   nothing on that side has to know this exists. */
 wss.on("connection", (ws) => {
+  ws.isAlive = true;
+  ws.on("pong", () => { ws.isAlive = true; });
+
   let room = null;
   let seat = null;
 
@@ -178,5 +198,19 @@ wss.on("connection", (ws) => {
     broadcast(room, { type: "roster", roster: roster(room) }, seat);
   });
 });
+
+const heartbeat = setInterval(() => {
+  wss.clients.forEach((ws) => {
+    /* didn't answer the ping we sent last beat — terminate() fires the
+       same 'close' handler a real disconnect would, so cleanup (seat
+       marked disconnected, roster broadcast) is the one existing path,
+       not a second copy of it */
+    if (ws.isAlive === false) { ws.terminate(); return; }
+    ws.isAlive = false;
+    ws.ping();
+  });
+}, HEARTBEAT_MS);
+heartbeat.unref();
+wss.on("close", () => clearInterval(heartbeat));
 
 http.listen(PORT, () => console.log(`MonoMoney relay listening on :${PORT}`));
